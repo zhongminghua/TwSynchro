@@ -1,0 +1,51 @@
+{
+  "PMS_bs": {
+    "Provider": "SqlServer",
+    "Host": "47.107.174.65\\KM,8190",
+    "Port": "3306",
+    "Database": "PMS_bs",
+    "User": "LFUser",
+    "Password": "LF123SPoss",
+    "Properties": {
+      "Pooling": "true",
+      "Min Pool Size": "10",
+      "Max Pool Size": "128",
+      "Connect Timeout": "5"
+    }
+  },
+  "PMS_Base": {
+    "Provider": "SqlServer",
+    "Host": "47.107.174.65\\KM,8190",
+    "Port": "3306",
+    "Database": "PMS_Base",
+    "User": "LFUser",
+    "Password": "LF123SPoss",
+    "Properties": {
+      "Pooling": "true",
+      "Min Pool Size": "10",
+      "Max Pool Size": "128",
+      "Connect Timeout": "5"
+    }
+  },
+  "Erp_Base": {
+    "Provider": "MySql",
+    "Host": "116.63.144.212",
+    "Port": "3306",
+    "Database": "Erp_Base",
+    "User": "root",
+    "Password": "tw369.com",
+    "Properties": {
+      "Pooling": "true",
+      "Min Pool Size": "10",
+      "Max Pool Size": "128",
+      "Connect Timeout": "5"
+    }
+  },
+  "Redis": {
+    "Host": "47.107.174.65",
+    "Name": "PMS_Base_LYDC",
+    "User": "LFUser",
+    "Password": "LF123SPoss",
+    "Properties": {}
+  }
+}
