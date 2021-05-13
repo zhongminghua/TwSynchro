@@ -9,18 +9,18 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
-namespace TwSynchro.UserModule
+namespace TwSynchro.OrganizeModule
 {
-    public class UserService
+    public class OrganizeService
     {
         public async static void Synchro(ILogger<Worker> _logger)
         {
-            _logger.LogInformation($"------同步用户数据开始------");
+            _logger.LogInformation($"------同步项目机构岗位数据开始------");
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            StringBuilder sql = new("SELECT ID,Name,Account,Password,(CASE Sex WHEN 0 THEN '女' ELSE '男' END) as Sex,Email,Mobile FROM rf_user;");
+            StringBuilder sql = new("SELECT * FROM rf_organize;");
 
             using var mySqlConn = DbService.GetDbConnection(DBType.MySql, "erp_base");
 
@@ -28,7 +28,9 @@ namespace TwSynchro.UserModule
 
             stopwatch.Restart();
 
-            var result = (await mySqlConn.QueryAsync<Organize>(sql.ToString())).ToList();
+            var result = await mySqlConn.QueryPagerAsync<Organize>(sql.ToString(),"ID",10,1);
+
+            var s = result.HasNext;
 
             _logger.LogInformation($"读取用户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -94,7 +96,7 @@ namespace TwSynchro.UserModule
                 trans.Rollback();
                 throw;
             }
-            _logger.LogInformation($"------同步用户数据结束------");
+            _logger.LogInformation($"------同步项目机构岗位结束------");
         }
     }
 }

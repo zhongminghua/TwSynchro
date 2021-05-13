@@ -34,7 +34,7 @@ namespace DapperFactory
         /// <param name="pageIndex">页码。</param>
         /// <param name="trans">数据库事务。</param>
         /// <returns></returns>
-        public static async Task<IResultPager<T>> QueryPagerAsync<T>(this IDbConnection conn, string sql, string orderBy,
+        public static async Task<ResultPager<T>> QueryPagerAsync<T>(this IDbConnection conn, string sql, string orderBy,
             int pageSize, int pageIndex, IDbTransaction? trans = null) where T : notnull
         {
             sql = sql.Trim(';');
