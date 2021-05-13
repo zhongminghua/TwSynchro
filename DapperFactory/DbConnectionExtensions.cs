@@ -1,4 +1,6 @@
 ﻿using Dapper;
+using DapperFactory.Enum;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
@@ -34,24 +36,30 @@ namespace DapperFactory
         /// <param name="pageIndex">页码。</param>
         /// <param name="trans">数据库事务。</param>
         /// <returns></returns>
-        public static async Task<ResultPager<T>> QueryPagerAsync<T>(this IDbConnection conn, string sql, string orderBy,
+        public static async Task<ResultPager<T>> QueryPagerAsync<T>(this IDbConnection conn, DBType dbType, string sql, string orderBy,
             int pageSize, int pageIndex, IDbTransaction? trans = null) where T : notnull
         {
             sql = sql.Trim(';');
 
-            sql = $@"SELECT count(1) FROM ({sql}) AS t;
+            var strSql = dbType switch
+            {
+                DBType.SqlServer => $@"
+                                    SELECT count(1) FROM ({sql}) AS t;
+                                    SELECT * FROM 
+                                    (
+                                    SELECT row_number() over (ORDER BY {orderBy}) AS RN,*
+                                    FROM 
+                                    ({sql}) AS t
+                                    ) AS t
+                                    WHERE t.RN BETWEEN ({pageIndex}-1)*{pageSize}+1 AND {pageIndex}*{pageSize};",
 
-                    SELECT * FROM 
-                    (
-                        SELECT row_number() over (ORDER BY {orderBy}) AS RN,*
-                        FROM 
-                        (
-                            {sql}
-                        ) AS t
-                    ) AS t
-                    WHERE t.RN BETWEEN ({pageIndex}-1)*{pageSize}+1 AND {pageIndex}*{pageSize};";
+                DBType.MySql => $@" SELECT count(1) FROM ({sql}) AS t;
+                                    {sql} LIMIT {pageIndex},{pageSize}
+                                    ",
+                _ => throw new NotImplementedException($"暂不支持{dbType}数据库")
+            };
 
-            var reader = await conn.QueryMultipleAsync(sql, null, trans);
+            var reader = await conn.QueryMultipleAsync(strSql, null, trans);
 
             var total = await reader.ReadFirstOrDefaultAsync<int>();
             var data = await reader.ReadAsync<T>();
@@ -60,5 +68,6 @@ namespace DapperFactory
 
             return result;
         }
+
     }
 }

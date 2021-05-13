@@ -4,6 +4,7 @@ using DapperFactory.Enum;
 using Entity;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
@@ -28,7 +29,7 @@ namespace TwSynchro.OrganizeModule
 
             stopwatch.Restart();
 
-            var result = await mySqlConn.QueryPagerAsync<Organize>(sql.ToString(),"ID",10,1);
+            var result = await mySqlConn.QueryPagerAsync<List<Organize>>(DBType.MySql,sql.ToString(),"ID",10,1);
 
             var s = result.HasNext;
 
