@@ -16,7 +16,7 @@ namespace TwSynchro.OrganizeModule
     {
         public async static void Synchro(ILogger<Worker> _logger)
         {
-         
+            ResultPager resultPager = new();
             _logger.LogInformation($"------同步项目机构岗位数据开始------");
 
             Stopwatch stopwatch = new Stopwatch();
@@ -30,9 +30,12 @@ namespace TwSynchro.OrganizeModule
 
             stopwatch.Restart();
 
-            var result = await mySqlConn.QueryPagerAsync<List<Organize>>(DBType.MySql,sql.ToString(),"ID",10,1);
+            var result = await mySqlConn.QueryPagerAsync<Organize>(DBType.MySql, sql.ToString(), "ID", 10, 1);
 
-            var s = result.HasNext;
+
+
+            //if(result.HasNext)
+            //    resultPager = new() { PageIndex = result.PageIndex + 1 };
 
             _logger.LogInformation($"读取用户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
