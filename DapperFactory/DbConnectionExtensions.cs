@@ -61,7 +61,7 @@ namespace DapperFactory
 
             var reader = await conn.QueryMultipleAsync(strSql, null, trans);
 
-            var total = await reader.ReadFirstOrDefaultAsync<int>();
+            var total = await reader.ReadFirstOrDefaultAsync<Int64>();
             var data = await reader.ReadAsync<T>();
 
             var result = new ResultPager<T> { PageSize = pageSize, PageIndex = pageIndex, TotalCount = total, Data = data };
