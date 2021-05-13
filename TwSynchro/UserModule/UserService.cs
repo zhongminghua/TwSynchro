@@ -28,7 +28,7 @@ namespace TwSynchro.UserModule
 
             stopwatch.Restart();
 
-            var result = (await mySqlConn.QueryAsync<Organize>(sql.ToString())).ToList();
+            var result = (await mySqlConn.QueryAsync<User>(sql.ToString())).ToList();
 
             _logger.LogInformation($"读取用户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 

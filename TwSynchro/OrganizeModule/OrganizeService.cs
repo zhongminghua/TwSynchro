@@ -52,23 +52,23 @@ namespace TwSynchro.OrganizeModule
 
             sql.Clear();
 
-            foreach (var itemUser in result)
+            foreach (var itemUser in result.Data)
             {
                 dr = dt.NewRow();
 
-                dr["UserCode"] = itemUser.ID;
-                dr["UserName"] = itemUser.Name;
-                dr["LoginCode"] = itemUser.Account;
-                dr["PassWord"] = itemUser.Password;
-                dr["Sex"] = itemUser.Sex;
-                dr["MobileTel"] = itemUser.Mobile;
-                dr["Email"] = itemUser.Email;
-                dr["IsFirstLogin"] = 1;
-                dr["IsUse"] = 1;
+                //dr["UserCode"] = itemUser.ID;
+                //dr["UserName"] = itemUser.Name;
+                //dr["LoginCode"] = itemUser.Account;
+                //dr["PassWord"] = itemUser.Password;
+                //dr["Sex"] = itemUser.Sex;
+                //dr["MobileTel"] = itemUser.Mobile;
+                //dr["Email"] = itemUser.Email;
+                //dr["IsFirstLogin"] = 1;
+                //dr["IsUse"] = 1;
 
                 dt.Rows.Add(dr);
 
-                sql.AppendLine($@"DELETE Tb_Sys_User WHERE UserCode='{itemUser.ID.ToString()}';");
+                //sql.AppendLine($@"DELETE Tb_Sys_User WHERE UserCode='{itemUser.ID.ToString()}';");
             }
 
             _logger.LogInformation($"生成用户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
