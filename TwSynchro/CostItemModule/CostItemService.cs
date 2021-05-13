@@ -60,16 +60,16 @@ namespace TwSynchro.CostItemModule
 
             sql.Clear();
 
-            foreach (var item in result)
-            {
-                dr = dt.NewRow();
+            //foreach (var item in result)
+            //{
+            //    dr = dt.NewRow();
 
 
 
-                dt.Rows.Add(dr);
+            //    dt.Rows.Add(dr);
 
-                sql.AppendLine($@"DELETE Tb_Sys_User WHERE UserCode='{itemUser.ID.ToString()}';");
-            }
+            //    sql.AppendLine($@"DELETE Tb_Sys_User WHERE UserCode='{itemUser.ID.ToString()}';");
+            //}
 
 
 
