@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using TwSynchro.UserModule;
+using TwSynchro.OrganizeModule;
 
 namespace TwSynchro
 {
@@ -75,7 +75,7 @@ namespace TwSynchro
         {
             return Task.Run(() =>
             {
-                UserService.Synchro(_logger);
+                OrganizeService.Synchro(_logger);
                 //while (!stoppingToken.IsCancellationRequested)
                 //{
 
@@ -89,11 +89,12 @@ namespace TwSynchro
         {
             return Task.Run(() =>
             {
-                while (!stoppingToken.IsCancellationRequested)
-                {
-                    _logger.LogInformation("第二个程序 running at: {time}", DateTimeOffset.Now);
-                    Thread.Sleep(1000);
-                }
+                OrganizeService.Synchro(_logger);
+                //while (!stoppingToken.IsCancellationRequested)
+                //{
+                //    _logger.LogInformation("第二个程序 running at: {time}", DateTimeOffset.Now);
+                //    Thread.Sleep(1000);
+                //}
             }, stoppingToken);
         }
 
