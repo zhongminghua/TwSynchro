@@ -33,7 +33,7 @@ namespace DapperFactory
             {
                 DBType.SqlServer => DbProviderFactories.GetFactory(SqlServerFactoryDescription.Default.InvariantName),
                 DBType.MySql => DbProviderFactories.GetFactory(MySqlFactoryDescription.Default.InvariantName),
-                _ => null
+                _ => throw new NotImplementedException($"暂不支持{dbType}数据库")
             };
 
             if (factory is null)
