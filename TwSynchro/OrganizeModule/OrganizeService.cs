@@ -16,6 +16,7 @@ namespace TwSynchro.OrganizeModule
     {
         public async static void Synchro(ILogger<Worker> _logger)
         {
+         
             _logger.LogInformation($"------同步项目机构岗位数据开始------");
 
             Stopwatch stopwatch = new Stopwatch();
