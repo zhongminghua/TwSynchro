@@ -49,7 +49,7 @@ namespace Entity
         public string WorkRole { get; set; }
 
         /// <summary>
-        /// 单位类型:1-总部，2-公司，3-区域，4-片区，5-项目
+        /// 单位类型:1-总部，2-大区,3-公司，4-区域，5-片区，6-项目
         /// </summary>
         public int OrganType { get; set; }
         /// <summary>
@@ -65,7 +65,7 @@ namespace Entity
         /// <summary>
         /// 接管时间
         /// </summary>
-        public DateTime TakeoverDate { get; set; }
+        public DateTime? TakeoverDate { get; set; }
 
         /// <summary>
         /// 管理性质:1-全委,2-半委,3-顾问
@@ -95,10 +95,12 @@ namespace Entity
         /// 社区
         /// </summary>
         public string Community { get; set; }
+
         /// <summary>
         /// 门牌号
         /// </summary>
         public string GateSign { get; set; }
+
         /// <summary>
         /// 详细地址
         /// </summary>
@@ -108,6 +110,7 @@ namespace Entity
         /// 合作方式:1-开发商合作,2-业委会合作
         /// </summary>
         public int CoopModel { get; set; }
+
         /// <summary>
         /// 联系电话
         /// </summary>
@@ -116,11 +119,11 @@ namespace Entity
         /// <summary>
         /// 收费方式:1-本月收本月,2-本月收上月
         /// </summary>
-        public int ChargingModel { get; set; }
+        public int? ChargingModel { get; set; }
         /// <summary>
         /// 序号
         /// </summary>
-        public int SortNum { get; set; }
+        public int? SortNum { get; set; }
         /// <summary>
         /// 通用岗位ID
         /// </summary>
