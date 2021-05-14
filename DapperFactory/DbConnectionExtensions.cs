@@ -54,7 +54,7 @@ namespace DapperFactory
                                     WHERE t.RN BETWEEN ({pageIndex}-1)*{pageSize}+1 AND {pageIndex}*{pageSize};",
 
                 DBType.MySql => $@" SELECT count(1) FROM ({sql}) AS t;
-                                    {sql} LIMIT {pageIndex},{pageSize}
+                                    {sql} limit {(pageIndex - 1) * pageSize},{pageSize}
                                     ",
                 _ => throw new NotImplementedException($"暂不支持{dbType}数据库")
             };
