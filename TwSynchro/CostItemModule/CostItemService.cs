@@ -80,7 +80,7 @@ namespace TwSynchro.CostItemModule
                 {
                     dr = dt.NewRow();
 
-                    dr["CorpCostID"] = item.ID;//主键
+                    dr["CorpCostID"] = item.CorpCostID;//主键
                     dr["CostCode"] = "";//
                     dr["CostSNum"] = item.CostSNum;//序号
                     dr["CostName"] = item.CostName;//收费科目
@@ -112,7 +112,7 @@ namespace TwSynchro.CostItemModule
 
                     dt.Rows.Add(dr);
 
-                    sql.AppendLine($@"DELETE Tb_HSPR_CorpCostItem WHERE CorpCostID='{item.ID}';");
+                    sql.AppendLine($@"DELETE Tb_HSPR_CorpCostItem WHERE CorpCostID='{item.CorpCostID}';");
                 }
                 _logger.LogInformation($"生成公司科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -127,7 +127,7 @@ namespace TwSynchro.CostItemModule
 
                     stopwatch.Restart();
 
-                    DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_Sys_User", trans);
+                    DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_CorpCostItem", trans);
 
                     _logger.LogInformation($"插入公司科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 

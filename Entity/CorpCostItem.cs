@@ -14,12 +14,12 @@ namespace Entity
         /// <summary>
         /// 公司收费科目id
         /// </summary>
-        public Guid ID { get; set; }
+        public Guid CorpCostID { get; set; }
 
         /// <summary>
         /// 父级收费项目id
         /// </summary>
-        public string Parent_Id { get; set; }
+        public Guid? Parent_Id { get; set; }
 
         /// <summary>
         /// 序号
