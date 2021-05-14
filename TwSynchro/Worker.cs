@@ -58,8 +58,8 @@ namespace TwSynchro
         {
             try
             {
-                //await Task.WhenAll(new[] { RunTaskOne(stoppingToken), RunTaskTwo(stoppingToken), RunTaskThree(stoppingToken) });
-                await Task.WhenAll(new[] { RunTaskOne(stoppingToken)});
+               await Task.WhenAll(new[] { RunTaskOne(stoppingToken), RunTaskTwo(stoppingToken), RunTaskThree(stoppingToken) });
+                //await Task.WhenAll(new[] { RunTaskOne(stoppingToken)});
             }
             catch (Exception ex)
             {

@@ -2,7 +2,7 @@
 
 namespace Utils
 {
-    public class DataTable
+    public class UtilsDataTable
     {
 
         public static void DataRowIsNull(DataRow dr, string columnName, object val)
