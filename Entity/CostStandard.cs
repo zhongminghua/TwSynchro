@@ -15,27 +15,27 @@ namespace Entity
         /// <summary>
         /// 主键
         /// </summary>
-        public Guid StanID { get; set; }
+        public object StanID { get; set; }
 
         /// <summary>
         /// 项目ID
         /// </summary>
-        public Guid CommID { get; set; }
+        public object CommID { get; set; }
 
         /// <summary>
         /// 项目科目ID
         /// </summary>
-        public Guid CostID { get; set; }
+        public object CostID { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public Guid CorpStanID { get; set; }
+        public object CorpStanID { get; set; }
 
         /// <summary>
         /// 公司科目ID
         /// </summary>
-        public Guid CorpCostID { get; set; }
+        public object CorpCostID { get; set; }
 
         /// <summary>
         /// 标准编号
