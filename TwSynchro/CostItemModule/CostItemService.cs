@@ -168,7 +168,7 @@ namespace TwSynchro.CostItemModule
 
                         stopwatch.Restart();
 
-                        DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_CorpCostItem", trans);
+                        await DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_CorpCostItem", trans);
 
                         _logger.LogInformation($"插入公司科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -392,7 +392,7 @@ namespace TwSynchro.CostItemModule
 
                     stopwatch.Restart();
 
-                    DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_CorpCostStandard", trans);
+                    await DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_CorpCostStandard", trans);
 
                     _logger.LogInformation($"插入公司标准数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -404,7 +404,7 @@ namespace TwSynchro.CostItemModule
 
                     stopwatch.Restart();
 
-                    DbBatch.InsertSingleTable(sqlServerConn, dttwo, "Tb_HSPR_CorpCostStanCondition", trans);
+                    await DbBatch.InsertSingleTable(sqlServerConn, dttwo, "Tb_HSPR_CorpCostStanCondition", trans);
 
                     _logger.LogInformation($"插入公司标准计算条件列表数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -596,7 +596,7 @@ namespace TwSynchro.CostItemModule
 
                             stopwatch.Restart();
 
-                            DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_CostItem", trans);
+                            await DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_CostItem", trans);
 
                             _logger.LogInformation($"插入项目科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -837,7 +837,7 @@ namespace TwSynchro.CostItemModule
 
                     stopwatch.Restart();
 
-                    DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_CostStandard", trans);
+                    await DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_CostStandard", trans);
 
                     _logger.LogInformation($"插入项目标准数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -849,7 +849,7 @@ namespace TwSynchro.CostItemModule
 
                     stopwatch.Restart();
 
-                    DbBatch.InsertSingleTable(sqlServerConn, dttwo, "Tb_HSPR_CostStanCondition", trans);
+                    await DbBatch.InsertSingleTable(sqlServerConn, dttwo, "Tb_HSPR_CostStanCondition", trans);
 
                     _logger.LogInformation($"插入项目标准计算条件列表数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -1034,7 +1034,7 @@ namespace TwSynchro.CostItemModule
 
                             stopwatch.Restart();
 
-                            DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_CostStanSetting", trans);
+                            await DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_CostStanSetting", trans);
 
                             _logger.LogInformation($"插入客户标准绑定数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 

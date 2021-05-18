@@ -130,7 +130,7 @@ namespace TwSynchro.CostItemModule
 
                         stopwatch.Restart();
 
-                        DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_TaxRateSetting", trans);
+                        await DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_TaxRateSetting", trans);
 
                         _logger.LogInformation($"插入增值税数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
