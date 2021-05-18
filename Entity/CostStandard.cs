@@ -9,10 +9,26 @@ namespace Entity
     /// <summary>
     /// 公司收费标准表
     /// </summary>
-    public record CorpCostStandard
+    public record CostStandard
     {
+
         /// <summary>
         /// 主键
+        /// </summary>
+        public Guid StanID { get; set; }
+
+        /// <summary>
+        /// 项目ID
+        /// </summary>
+        public Guid CommID { get; set; }
+
+        /// <summary>
+        /// 项目科目ID
+        /// </summary>
+        public Guid CostID { get; set; }
+
+        /// <summary>
+        /// 
         /// </summary>
         public Guid CorpStanID { get; set; }
 
