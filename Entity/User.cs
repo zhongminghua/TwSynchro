@@ -8,7 +8,7 @@ namespace Entity
     /// </summary>
     public record User
     {
-        public Guid ID { get; set; }
+        public object ID { get; set; }
 
         /// <summary>
         /// 姓名

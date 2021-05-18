@@ -1,8 +1,10 @@
-﻿using System;
+﻿using Entity;
+using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.Threading.Tasks;
 
-namespace DapperFactory
+namespace Utils
 {
     public class DbBatch
     {
@@ -13,8 +15,9 @@ namespace DapperFactory
         /// <param name="connectionString"></param>
         /// <param name="dt"></param>
         /// <param name="tableName"></param>
-        public static void InsertSingleTable(IDbConnection connection, DataTable dt, string tableName, IDbTransaction transaction = null)
+        public static async Task<ResultMessage> InsertSingleTable(IDbConnection connection, DataTable dt, string tableName, IDbTransaction transaction = null)
         {
+            ResultMessage resultMessage = new();
             //使用示例:
             //string strSql = $"SELECT * FROM Tb_TaProject WHERE 1<>1";
             //DataTable dt = new DbHelperSQLP(Bp.LoginSQLConnStr).Query(strSql).Tables[0];
@@ -29,10 +32,11 @@ namespace DapperFactory
             //}
             //string result = BatchOperate.InsertSingleTable(Bp.LoginSQLConnStr, dt, "Tb_TaProject");
 
-            if (dt.Rows.Count == 0) { return; }
+            if (dt.Rows.Count == 0) { return resultMessage; }
 
-            using (SqlBulkCopy bulkCopy = new SqlBulkCopy((SqlConnection)connection,SqlBulkCopyOptions.Default, (SqlTransaction)transaction))
+            try
             {
+                using SqlBulkCopy bulkCopy = new SqlBulkCopy((SqlConnection)connection, SqlBulkCopyOptions.Default, (SqlTransaction)transaction);
                 bulkCopy.BulkCopyTimeout = 30;
                 bulkCopy.BatchSize = dt.Rows.Count;
                 bulkCopy.DestinationTableName = tableName;
@@ -40,9 +44,14 @@ namespace DapperFactory
                 {
                     bulkCopy.ColumnMappings.Add(dt.Columns[j].ColumnName, dt.Columns[j].ColumnName);
                 }
-
-                bulkCopy.WriteToServer(dt);
+                await bulkCopy.WriteToServerAsync(dt);
             }
+            catch (Exception)
+            {
+                throw;
+            }
+
+            return resultMessage;
         }
 
 

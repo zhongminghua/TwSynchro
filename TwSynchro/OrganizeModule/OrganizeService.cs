@@ -9,12 +9,14 @@ using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Utils;
 
 namespace TwSynchro.OrganizeModule
 {
     public class OrganizeService
     {
+
         public async static void Synchro(ILogger<Worker> _logger)
         {
 
@@ -123,10 +125,10 @@ namespace TwSynchro.OrganizeModule
 
             List<Organize> listCleanData = new();
 
-            void CleanData(Guid id)
+            void CleanData(string id)
             {
 
-                var listChildNode = organizeData.Where(c => c.ParentId == id).ToList();
+                var listChildNode = organizeData.Where(c => c.ParentId.ToString() == id.ToString()).ToList();
 
                 //清洗数据
                 foreach (var modelOrganize in listChildNode)
@@ -144,27 +146,26 @@ namespace TwSynchro.OrganizeModule
                     {
                         var modelChildNode = listCleanData.Where(c => c.Id == modelOrganize.ParentId).FirstOrDefault();
 
-                        modelOrganize.LevelName =  $"{modelChildNode.LevelName}_{modelOrganize.Name}";
+                        modelOrganize.LevelName = $"{modelChildNode.LevelName}_{modelOrganize.Name}";
 
                         listCleanData.Add(modelOrganize with { });
 
-                        CleanData(modelOrganize.Id);
+                        CleanData(modelOrganize.Id.ToString());
 
                     }
 
                 }
             }
 
-            Guid firstID = Guid.Parse("00000000-0000-0000-0000-000000000000");
 
-            var firstModel = organizeData.Where(c => c.ParentId == firstID).FirstOrDefault();
+            var firstModel = organizeData.Where(c => c.ParentId.ToString() == "00000000-0000-0000-0000-000000000000").FirstOrDefault();
 
             firstModel.LevelName = firstModel.Name;
 
             listCleanData.Add(firstModel with { });
 
             //清洗数据
-            CleanData(firstModel.Id);
+            CleanData(firstModel.Id.ToString());
 
             foreach (var itemOrganize in listCleanData)
             {
@@ -315,9 +316,9 @@ namespace TwSynchro.OrganizeModule
 
             }
 
-            void AddDepartmentOrgan(Guid id)
+            void AddDepartmentOrgan(object id)
             {
-                Organize modelOrganize = listCleanData.Where(c => c.Id == id).FirstOrDefault();
+                Organize modelOrganize = listCleanData.Where(c => c.Id.ToString() == id.ToString()).FirstOrDefault();
 
                 if (modelOrganize is not null)
                 {
@@ -375,6 +376,16 @@ namespace TwSynchro.OrganizeModule
             }
 
 
+            await SynchroOrgan(sql.ToString(), dtTb_Sys_Organ, dtTb_Sys_OrganPartial);
+
+            await SynchroOrgan(sql.ToString(), dtTb_Sys_Organ, dtTb_Sys_OrganPartial);
+
+            await SynchroOrgan(sql.ToString(), dtTb_Sys_Organ, dtTb_Sys_OrganPartial);
+
+            await SynchroOrgan(sql.ToString(), dtTb_Sys_Organ, dtTb_Sys_OrganPartial);
+            await SynchroOrgan(sql.ToString(), dtTb_Sys_Organ, dtTb_Sys_OrganPartial);
+
+
             using var trans = sqlServerConn.OpenTransaction();
 
             try
@@ -422,6 +433,69 @@ namespace TwSynchro.OrganizeModule
             }
             //}
             _logger.LogInformation($"------同步项目机构岗位结束------");
+        }
+
+        public static async Task<ResultMessage> SynchroOrgan(string sql, DataTable dtTb_Sys_Organ, DataTable dtTb_Sys_OrganPartial)
+        {
+
+            ResultMessage resultMessage = new();
+
+            using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
+
+            using var trans = sqlServerConn.OpenTransaction();
+
+            try
+            {
+                int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
+
+                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Organ, "Tb_Sys_Organ", trans);
+
+                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_OrganPartial, "Tb_Sys_OrganPartial", trans);
+
+                resultMessage.Result = true;
+
+                trans.Commit();
+            }
+            catch (Exception ex)
+            {
+                resultMessage.Message = ex.ToString();
+
+                trans.Rollback();
+            }
+
+            return resultMessage;
+        }
+
+
+        public static async Task<ResultMessage> SynchroCommunity(string sql, DataTable dtTb_HSPR_Community, DataTable dtTb_HSPR_CommunityChargesMode)
+        {
+
+            ResultMessage resultMessage = new();
+
+            using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
+
+            using var trans = sqlServerConn.OpenTransaction();
+
+            try
+            {
+                int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
+
+                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Community, "Tb_HSPR_Community", trans);
+
+                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_CommunityChargesMode, "Tb_HSPR_CommunityChargesMode", trans);
+
+                resultMessage.Result = true;
+
+                trans.Commit();
+            }
+            catch (Exception ex)
+            {
+                resultMessage.Message = ex.ToString();
+
+                trans.Rollback();
+            }
+
+            return resultMessage;
         }
     }
 }

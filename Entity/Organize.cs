@@ -7,8 +7,8 @@ namespace Entity
     /// </summary>
     public record Organize
     {
-        public Guid Id { get; set; }
-        public Guid ParentId { get; set; }
+        public object Id { get; set; }
+        public object ParentId { get; set; }
 
         /// <summary>
         /// 层级名称

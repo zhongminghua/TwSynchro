@@ -8,9 +8,9 @@ namespace Entity
 {
     public class Dictionary
     {
-        public Guid Id { get; set; }
+        public object Id { get; set; }
 
-        public Guid ParentId { get; set; }
+        public object ParentId { get; set; }
 
         /// <summary>
         /// 标题
