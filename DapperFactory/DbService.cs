@@ -71,6 +71,7 @@ namespace DapperFactory
             var section = Configuration.GetSection(libraryName);
             if (section is null)
                 throw new Exception($"未配置数据库链接，节点名：{libraryName}");
+
             if (DbLinkParametersPool.TryGetValue(libraryName, out var modelLinkParameters))
                 return modelLinkParameters;
 
@@ -114,7 +115,7 @@ namespace DapperFactory
         /// <param name="subTreasuryId">分库id。</param>
         /// <param name="readonly">是否取只读数据库。</param>
         /// <returns></returns>
-        public static IDbConnection GetSqlServerBurstDbConnection(DBType dbType, DbBurstType burstType, int subTreasuryId, bool @readonly = false)
+        public static IDbConnection GetSqlBurstDbConnection(DBType dbType, DbBurstType burstType, int subTreasuryId, bool @readonly = false)
         {
             var burstTypeName = burstType switch
             {
@@ -166,19 +167,18 @@ namespace DapperFactory
             }
             else if (DBType.MySql == dbType)
             {
+
                 sql = @"SELECT database_ip_sqlserver AS Host,database_name AS DatabaseName,database_user AS User,database_pwd AS Password,database_port AS Port
                         FROM tb_base_burst where is_delete=0 AND burst_type=@BurstType and @SubTreasuryId >= start_value and @SubTreasuryId <= end_value";
 
                 using var bsConn = GetConnectionFromDbSettings(dbType, DBLibraryName.Erp_Base);
 
-                linkParameters = bsConn.QueryFirstOrDefault<SqlServerLinkParameters>(sql, new { SubTreasuryId = subTreasuryId, BurstType = burstTypeName });
-
+                linkParameters = bsConn.QueryFirstOrDefault<MySqlLinkParameters>(sql, new { SubTreasuryId = subTreasuryId, BurstType = burstTypeName });
 
             }
 
             if (linkParameters is null)
                 throw new Exception($"未找到分库{burstType}连接配置");
-
 
             if (subTreasuryId != 0)
                 DbLinkParametersPool.AddOrUpdate(key, _ => linkParameters, (_, _) => linkParameters);
@@ -187,10 +187,5 @@ namespace DapperFactory
             conn.Open();
             return conn;
         }
-
-
-
-
-
     }
 }

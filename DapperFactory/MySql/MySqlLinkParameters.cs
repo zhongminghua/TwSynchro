@@ -26,6 +26,17 @@ namespace DapperFactory.MySql
         };
 
         /// <summary>
+        /// 范围连接开始值。
+        /// </summary>
+        public int start_value { get; set; } = default!;
+
+        /// <summary>
+        /// 范围连接结束值。
+        /// </summary>
+        public int end_value { get; set; } = default!;
+
+
+        /// <summary>
         /// 初始化SqlServer数据库连接参数信息。
         /// </summary>
         public MySqlLinkParameters() => (Properties) = DefaultProperties;

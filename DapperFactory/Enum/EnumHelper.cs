@@ -19,5 +19,26 @@ namespace DapperFactory.Enum
             };
             return $"{name}";
         }
+        public static string GetDbBurstTypeName(DbBurstType dbBurstType)
+        {
+            var name = dbBurstType switch
+            {
+                DbBurstType.CP => "CP",
+                DbBurstType.Equipment => "EQ",
+                DbBurstType.Safe => "SAFE",
+                DbBurstType.Environment => "AMBIENT",
+                DbBurstType.Patrol => "PATROL",
+                DbBurstType.Supervision => "SUPERVISION",
+                DbBurstType.HouseInspection => "HI_DC",
+                DbBurstType.RiskManagement => "RM",
+                DbBurstType.Incident => "INCIDENT",
+                DbBurstType.Charge => "CHARGE",
+                DbBurstType.Visit => "VISIT",
+                DbBurstType.ReportStatistics => "RTS",
+                _ => ""
+            };
+            return $"{name}";
+        }
+        
     }
 }
