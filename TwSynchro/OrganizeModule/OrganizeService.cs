@@ -144,7 +144,7 @@ namespace TwSynchro.OrganizeModule
                     {
                         var modelChildNode = listCleanData.Where(c => c.Id == modelOrganize.ParentId).FirstOrDefault();
 
-                        modelOrganize.LevelName = $"{modelChildNode.LevelName}_{modelOrganize.Name}";
+                        modelOrganize.LevelName =  $"{modelChildNode.LevelName}_{modelOrganize.Name}";
 
                         listCleanData.Add(modelOrganize with { });
 

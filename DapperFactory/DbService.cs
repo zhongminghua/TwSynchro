@@ -178,7 +178,7 @@ namespace DapperFactory
             }
 
             if (linkParameters is null)
-                throw new Exception($"未找到分库{burstType}连接配置");
+                return null;
 
             if (subTreasuryId != 0)
                 DbLinkParametersPool.AddOrUpdate(key, _ => linkParameters, (_, _) => linkParameters);
