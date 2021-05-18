@@ -24,7 +24,7 @@ namespace TwSynchro.CostItemModule
             //await SynchroCorpCostStandard(_logger, pageSize);//公司标准
             //await SynchroCostItem(_logger, pageSize);//项目科目
             //await SynchroCostStandard(_logger, pageSize);//项目标准
-            //await SynchroCostStanSetting(_logger, pageSize);//客户标准绑定
+            await SynchroCostStanSetting(_logger, pageSize);//客户标准绑定
 
         }
 
@@ -50,7 +50,7 @@ namespace TwSynchro.CostItemModule
 
             StringBuilder sql = new();
 
-            using var mySqlConn = DbService.GetDbConnection(DBType.MySql,  DBLibraryName.Erp_Base);
+            using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
             _logger.LogInformation($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -97,30 +97,54 @@ namespace TwSynchro.CostItemModule
 
                     dr["CostName"] = item.CostName;//收费科目
 
-                    dr["CostType"] = 0;//费用性质                    
+                    dr["CostType"] = 0;//费用性质
+
                     dr["CostGeneType"] = 0;//是否允许输入费用
+
                     dr["CollUnitID"] = 0;
+
                     dr["DueDate"] = 1;
+
                     //dr["AccountsSign"] = null;
+
                     //dr["AccountsName"] = null;
+
                     dr["ChargeCycle"] = 0;//计费周期
+
                     dr["RoundingNum"] = item.RoundingNum;//计费取整位数：固定选项：元/角/分；必填
+
                     dr["IsBank"] = 0;//计费周期
+
                     dr["DelinDelay"] = 0;//合同违约金 按 天之后推迟
+
                     dr["DelinRates"] = 0;//合同违约金比率(天)
+
                     //dr["PreCostSign"] = null;//
+
                     //dr["Memo"] = null;//
+
                     dr["IsDelete"] = item.IsDelete;//是否删除
+
                     dr["IsTreeRoot"] = 0;//是否删除
-                    //dr["SysCostSign"] = null;//业务类别             
+
+                    //dr["SysCostSign"] = null;//业务类别
+
                     dr["DuePlotDate"] = 0;//
+
                     dr["CostBigType"] = 0;//是否包含费项
+
                     dr["DelinType"] = 0;//合同违约金
+
                     dr["DelinDay"] = 0;//
+
                     dr["IsSealed"] = item.IsSealed;//是否已封存（是否停用）
+
                     dr["BillType"] = item.BillType;//商品名称：必填(开票类别)
+
                     dr["BillCode"] = item.BillCode;//开票代码
+
                     dr["MaxDelinRate"] = 0;//合同违约金最大值
+
                     dr["Parent_Id"] = item.Parent_Id;//父级ID
 
                     dt.Rows.Add(dr);
@@ -260,7 +284,7 @@ namespace TwSynchro.CostItemModule
                 foreach (var item in result.Data)
                 {
                     dr = dt.NewRow();
-                    
+
                     UtilsDataTable.DataRowIsNull(dr, "CorpStanID", item.CorpStanID);//主键
 
                     UtilsDataTable.DataRowIsNull(dr, "CorpCostID", item.CorpCostID);//公司科目ID
@@ -436,155 +460,177 @@ namespace TwSynchro.CostItemModule
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            StringBuilder Strsql = new($@"select id AS CostID,comm_id AS CommID,parent_id AS Parent_Id,sort AS CostSNum,cost_name AS CostName,
-       min_unit AS RoundingNum,corp_cost_id AS CorpCostID,is_delete AS IsDelete from tb_charge_cost");
-
             StringBuilder sql = new();
-            
-            //using var mySqlConn = DbService.GetDbConnection(DBType.MySql, "Erp_Develop");
-            using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
-            _logger.LogInformation($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            sql.AppendLine($@"SELECT CommID,IntId,CommName FROM Tb_HSPR_Community WHERE IsDelete=0 AND IntId IS NOT NULL");
+
+            using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
+
+            var CommData = await sqlServerConn.QueryAsync<(string CommID, int IntID, string CommName)>(sql.ToString());
+
+            _logger.LogInformation($"查询需要同步的项目 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
-            int PageIndex = 1;
-
-            while (true)
+            foreach (var Comm in CommData)
             {
-                var result = await mySqlConn.QueryPagerAsync<CostItem>(DBType.MySql, Strsql.ToString(), "sort", pageSize, PageIndex);
+                _logger.LogInformation($"({Comm.CommName})项目同步开始");
 
-                _logger.LogInformation($"读取项目科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                StringBuilder Strsql = new($@"select id AS CostID,comm_id AS CommID,parent_id AS Parent_Id,sort AS CostSNum,cost_name AS CostName,
+                    min_unit AS RoundingNum,corp_cost_id AS CorpCostID,is_delete AS IsDelete from tb_charge_cost ");//WHERE comm_id='{Comm.CommID}'
+
+                //using var mySqlConn = DbService.GetDbConnection(DBType.MySql, "Erp_Develop");
+                using var mySqlConn = DbService.GetSqlBurstDbConnection(DBType.MySql, DbBurstType.Charge, Comm.IntID);
+
+                if (mySqlConn == null)
+                {
+                    _logger.LogInformation($"({Comm.CommName})项目在MySql未找到Charge库连接");
+                    break;
+                }
+
+                _logger.LogInformation($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 stopwatch.Restart();
 
-                using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
+                int PageIndex = 1;
 
-                sql.Clear();
+                while (true)
+                {
+                    var result = await mySqlConn.QueryPagerAsync<CostItem>(DBType.MySql, Strsql.ToString(), "sort", pageSize, PageIndex);
 
-                sql.AppendLine($@"select [CostID], [CommID], [CostSNum], [CostName], [CostType], [CostGeneType], [CollUnitID], [DueDate], 
+                    _logger.LogInformation($"读取项目科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+
+                    stopwatch.Restart();
+
+                    sql.Clear();
+
+                    sql.AppendLine($@"select [CostID], [CommID], [CostSNum], [CostName], [CostType], [CostGeneType], [CollUnitID], [DueDate], 
                                 [AccountsSign], [AccountsName], [ChargeCycle], [RoundingNum], [IsBank], [DelinDelay], [DelinRates], 
                                 [PreCostSign], [Memo], [IsDelete], [CorpCostID], [CostCode], [SysCostSign], [DuePlotDate], 
                                 [HighCorpCostID], [CostBigType], [DelinType], [DelinDay], [Parent_Id]  from Tb_HSPR_CostItem WHERE 1=0");
 
-                var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
+                    var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
 
-                DataTable dt = new DataTable("Tb_HSPR_CostItem");
+                    DataTable dt = new DataTable("Tb_HSPR_CostItem");
 
-                dt.Load(reader);
+                    dt.Load(reader);
 
-                DataRow dr;
+                    DataRow dr;
 
-                sql.Clear();
+                    sql.Clear();
 
-                foreach (var item in result.Data)
-                {
-                    dr = dt.NewRow();
-
-                    UtilsDataTable.DataRowIsNull(dr, "CostID", item.CostID);//主键
-
-                    UtilsDataTable.DataRowIsNull(dr, "CommID", item.CommID);//项目ID
-
-                    UtilsDataTable.DataRowIsNull(dr, "CostSNum", item.CostSNum);//序号
-
-                    UtilsDataTable.DataRowIsNull(dr, "CostName", item.CostName);//收费科目
-
-                    dr["CostType"] = 0;//费用性质
-                                       //
-                    dr["CostGeneType"] = 0;//是否允许输入费用
-
-                    dr["CollUnitID"] = 0;
-
-                    dr["DueDate"] = 1;
-
-                    //dr["AccountsSign"] = null;
-                    //dr["AccountsName"] = null;
-
-                    dr["ChargeCycle"] = 0;//计费周期
-
-                    UtilsDataTable.DataRowIsNull(dr, "RoundingNum", item.RoundingNum);//计费取整位数：固定选项：元/角/分；必填
-
-                    dr["IsBank"] = 0;//计费周期
-
-                    dr["DelinDelay"] = 0;//合同违约金 按 天之后推迟
-
-                    dr["DelinRates"] = 0;//合同违约金比率(天)
-
-                    //dr["PreCostSign"] = null;//
-                    //dr["Memo"] = null;//
-
-                    UtilsDataTable.DataRowIsNull(dr, "IsDelete", item.IsDelete);//是否删除
-
-                    UtilsDataTable.DataRowIsNull(dr, "CorpCostID", item.CorpCostID);//公司收费科目id
-
-                    //dr["CostCode"] = "";//
-
-                    //dr["SysCostSign"] = null;//业务类别
-
-                    //dr["DuePlotDate"] = 0;//
-
-                    //dr["HighCorpCostID"] = 0;//
-
-                    dr["CostBigType"] = 0;//是否包含费项
-
-                    dr["DelinType"] = 0;//合同违约金
-
-                    dr["DelinDay"] = 0;//
-
-                    UtilsDataTable.DataRowIsNull(dr, "Parent_Id", item.Parent_Id);//父级ID
-
-                    dt.Rows.Add(dr);
-
-                    sql.AppendLine($@"DELETE Tb_HSPR_CostItem WHERE CostID='{item.CostID}';");
-                }
-                _logger.LogInformation($"生成项目科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
-
-                stopwatch.Restart();
-
-                using var trans = sqlServerConn.OpenTransaction();
-
-
-                if (result.Data.Count() > 0)
-                {
-                    try
+                    foreach (var item in result.Data)
                     {
-                        int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
+                        dr = dt.NewRow();
 
-                        _logger.LogInformation($"删除项目科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
+                        UtilsDataTable.DataRowIsNull(dr, "CostID", item.CostID);//主键
 
-                        stopwatch.Restart();
+                        UtilsDataTable.DataRowIsNull(dr, "CommID", item.CommID);//项目ID
 
-                        DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_CostItem", trans);
+                        UtilsDataTable.DataRowIsNull(dr, "CostSNum", item.CostSNum);//序号
 
-                        _logger.LogInformation($"插入项目科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                        UtilsDataTable.DataRowIsNull(dr, "CostName", item.CostName);//收费科目
 
-                        stopwatch.Restart();
+                        dr["CostType"] = 0;//费用性质
+                                           //
+                        dr["CostGeneType"] = 0;//是否允许输入费用
 
-                        trans.Commit();
+                        dr["CollUnitID"] = 0;
 
-                        _logger.LogInformation($"第{PageIndex}次提交项目科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                        dr["DueDate"] = 1;
 
-                        stopwatch.Restart();
+                        //dr["AccountsSign"] = null;
+                        //dr["AccountsName"] = null;
+
+                        dr["ChargeCycle"] = 0;//计费周期
+
+                        UtilsDataTable.DataRowIsNull(dr, "RoundingNum", item.RoundingNum);//计费取整位数：固定选项：元/角/分；必填
+
+                        dr["IsBank"] = 0;//计费周期
+
+                        dr["DelinDelay"] = 0;//合同违约金 按 天之后推迟
+
+                        dr["DelinRates"] = 0;//合同违约金比率(天)
+
+                        //dr["PreCostSign"] = null;//
+                        //dr["Memo"] = null;//
+
+                        UtilsDataTable.DataRowIsNull(dr, "IsDelete", item.IsDelete);//是否删除
+
+                        UtilsDataTable.DataRowIsNull(dr, "CorpCostID", item.CorpCostID);//公司收费科目id
+
+                        //dr["CostCode"] = "";//
+
+                        //dr["SysCostSign"] = null;//业务类别
+
+                        //dr["DuePlotDate"] = 0;//
+
+                        //dr["HighCorpCostID"] = 0;//
+
+                        dr["CostBigType"] = 0;//是否包含费项
+
+                        dr["DelinType"] = 0;//合同违约金
+
+                        dr["DelinDay"] = 0;//
+
+                        UtilsDataTable.DataRowIsNull(dr, "Parent_Id", item.Parent_Id);//父级ID
+
+                        dt.Rows.Add(dr);
+
+                        sql.AppendLine($@"DELETE Tb_HSPR_CostItem WHERE CostID='{item.CostID}';");
                     }
-                    catch (Exception e)
+                    _logger.LogInformation($"生成项目科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+
+                    stopwatch.Restart();
+
+                    using var trans = sqlServerConn.OpenTransaction();
+
+
+                    if (result.Data.Count() > 0)
                     {
-                        trans.Rollback();
+                        try
+                        {
+                            int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
-                        rm.Result = false;
+                            _logger.LogInformation($"删除项目科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
-                        rm.Message = e.Message;
+                            stopwatch.Restart();
 
-                        _logger.LogInformation($"第{PageIndex}次提交项目科目发生错误；错误信息：{e.Message}");
+                            DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_CostItem", trans);
 
-                        return rm;
+                            _logger.LogInformation($"插入项目科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+
+                            stopwatch.Restart();
+
+                            trans.Commit();
+
+                            _logger.LogInformation($"第{PageIndex}次提交项目科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+
+                            stopwatch.Restart();
+                        }
+                        catch (Exception e)
+                        {
+                            trans.Rollback();
+
+                            rm.Result = false;
+
+                            rm.Message = e.Message;
+
+                            _logger.LogInformation($"第{PageIndex}次提交项目科目发生错误；错误信息：{e.Message}");
+
+                            return rm;
+                        }
+
                     }
+
+                    PageIndex++;//下一页
+
+                    if (!result.HasNext)
+                        break;
 
                 }
 
-                PageIndex++;//下一页
-
-                if (!result.HasNext)
-                    break;
+                _logger.LogInformation($"({Comm.CommName})项目同步结束");
 
             }
 
@@ -858,148 +904,170 @@ namespace TwSynchro.CostItemModule
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            StringBuilder Strsql = new($@"select id AS IID,comm_id AS CommID,customer_id AS CustID,resource_id AS RoomID,cost_id AS CostID,
-       meter_name AS MeterSign,calc_area AS CalcArea,calc_cycle AS ChargeCycle,is_delete AS IsDelete,
-       calc_method AS PayType,calc_amount AS StanSingleAmount,delete_user AS DelUserName,calc_number AS RoomBuildArea from tb_charge_fee_stan_setting");
-
             StringBuilder sql = new();
 
-            //using var mySqlConn = DbService.GetDbConnection(DBType.MySql, "Erp_Develop");
-            using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
+            sql.AppendLine($@"SELECT CommID,IntId,CommName FROM Tb_HSPR_Community WHERE IsDelete=0 AND IntId IS NOT NULL");
 
-            _logger.LogInformation($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
+
+            var CommData = await sqlServerConn.QueryAsync<(string CommID, int IntID, string CommName)>(sql.ToString());
+
+            _logger.LogInformation($"查询需要同步的项目 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
-            int PageIndex = 1;
-
-            while (true)
+            foreach (var Comm in CommData)
             {
-                var result = await mySqlConn.QueryPagerAsync<CostStanSetting>(DBType.MySql, Strsql.ToString(), "sort", pageSize, PageIndex);
+                _logger.LogInformation($"({Comm.CommName})项目同步开始");
 
-                _logger.LogInformation($"读取客户标准绑定数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                //WHERE comm_id='{Comm.CommID}'
+                StringBuilder Strsql = new($@"select id AS IID,comm_id AS CommID,customer_id AS CustID,resource_id AS RoomID,cost_id AS CostID,
+       meter_name AS MeterSign,calc_area AS CalcArea,calc_cycle AS ChargeCycle,is_delete AS IsDelete,
+       calc_method AS PayType,calc_amount AS StanSingleAmount,delete_user AS DelUserName,calc_number AS RoomBuildArea from tb_charge_fee_stan_setting");
+
+                //using var mySqlConn = DbService.GetDbConnection(DBType.MySql, "Erp_Develop");
+                using var mySqlConn = DbService.GetSqlBurstDbConnection(DBType.MySql, DbBurstType.Charge, Comm.IntID);
+
+                if (mySqlConn == null)
+                {
+                    _logger.LogInformation($"({Comm.CommName})项目在MySql未找到Charge库连接");
+                    break;
+                }
+
+                _logger.LogInformation($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 stopwatch.Restart();
 
-                using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
+                int PageIndex = 1;
 
-                sql.Clear();
+                while (true)
+                {
+                    var result = await mySqlConn.QueryPagerAsync<CostStanSetting>(DBType.MySql, Strsql.ToString(), "sort", pageSize, PageIndex);
 
-                sql.AppendLine($@"select [IID], [CommID], [CustID], [RoomID], [StanID], [IsInherit], [CostID], [HandID], [MeterSign], 
+                    _logger.LogInformation($"读取客户标准绑定数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+
+                    stopwatch.Restart();
+
+                    sql.Clear();
+
+                    sql.AppendLine($@"select [IID], [CommID], [CustID], [RoomID], [StanID], [IsInherit], [CostID], [HandID], [MeterSign], 
                             [FeesEndDate], [SetBeginDate], [SetEndDate], [CalcArea], [ChargeCycle], [CalcBeginDate], [IsDelete], 
                             [ChangeDate], [PayType], [AssumeCustID], [OldRoomID], [StanSingleAmount], [RoomBuildArea], [AuditState], 
                             [DelUserName] from Tb_HSPR_CostStanSetting WHERE 1=0");
 
-                var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
+                    var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
 
-                DataTable dt = new DataTable("Tb_HSPR_CostStanSetting");
+                    DataTable dt = new DataTable("Tb_HSPR_CostStanSetting");
 
-                dt.Load(reader);
+                    dt.Load(reader);
 
-                DataRow dr;
+                    DataRow dr;
 
-                sql.Clear();
+                    sql.Clear();
 
-                foreach (var item in result.Data)
-                {
-                    dr = dt.NewRow();
-
-                    UtilsDataTable.DataRowIsNull(dr, "IID", item.IID);//主键
-
-                    UtilsDataTable.DataRowIsNull(dr, "CommID", item.CommID);//项目ID
-
-                    UtilsDataTable.DataRowIsNull(dr, "CustID", item.CustID);//客户ID
-
-                    UtilsDataTable.DataRowIsNull(dr, "RoomID", item.RoomID);//RoomID
-
-                    UtilsDataTable.DataRowIsNull(dr, "StanID", item.StanID);//标准编码
-
-                    dr["IsInherit"] = 0; //出租时自动转给租户
-
-                    UtilsDataTable.DataRowIsNull(dr, "CostID", item.CostID);//项目科目编码
-
-                    dr["HandID"] = 0; //
-
-                    UtilsDataTable.DataRowIsNull(dr, "MeterSign", item.MeterSign);//表记
-
-                    UtilsDataTable.DataRowIsNull(dr, "FeesEndDate", item.FeesEndDate);//计费截止时间
-
-                    //dr["SetBeginDate"] = 0; //
-                    //dr["SetEndDate"] = 0; //
-
-                    UtilsDataTable.DataRowIsNull(dr, "StanSign", item.CalcArea);//计算面积
-
-                    UtilsDataTable.DataRowIsNull(dr, "ChargeCycle", item.ChargeCycle);//计费周期
-
-                    //dr["CalcBeginDate"] = 0; //计费开始日期
-
-                    UtilsDataTable.DataRowIsNull(dr, "IsDelete", item.IsDelete);//是否删除
-
-                    UtilsDataTable.DataRowIsNull(dr, "ChangeDate", DateTime.Now);//修改时间
-
-                    UtilsDataTable.DataRowIsNull(dr, "PayType", item.PayType);//计费方式
-
-                    //dr["AssumeCustID"] = null; //
-                    //dr["OldRoomID"] = null; //
-
-                    UtilsDataTable.DataRowIsNull(dr, "StanSingleAmount", item.StanSingleAmount);//计费单价
-
-                    UtilsDataTable.DataRowIsNull(dr, "RoomBuildArea", item.RoomBuildArea);//计费数量
-
-                    //dr["AuditState"] = null; //
-
-                    UtilsDataTable.DataRowIsNull(dr, "DelUserName", item.DelUserName);//删除人名称
-
-                    dt.Rows.Add(dr);
-
-                    sql.AppendLine($@"DELETE Tb_HSPR_CostStanSetting WHERE IID='{item.IID}';");
-                }
-                _logger.LogInformation($"生成客户标准绑定数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
-
-                stopwatch.Restart();
-
-                using var trans = sqlServerConn.OpenTransaction();
-                try
-                {
-                    if (!string.IsNullOrEmpty(sql.ToString()))
+                    foreach (var item in result.Data)
                     {
-                        int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
+                        dr = dt.NewRow();
 
-                        _logger.LogInformation($"删除客户标准绑定数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
+                        UtilsDataTable.DataRowIsNull(dr, "IID", item.IID);//主键
 
-                        stopwatch.Restart();
+                        UtilsDataTable.DataRowIsNull(dr, "CommID", item.CommID);//项目ID
 
-                        DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_CostStanSetting", trans);
+                        UtilsDataTable.DataRowIsNull(dr, "CustID", item.CustID);//客户ID
 
-                        _logger.LogInformation($"插入客户标准绑定数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                        UtilsDataTable.DataRowIsNull(dr, "RoomID", item.RoomID);//RoomID
 
-                        stopwatch.Restart();
+                        UtilsDataTable.DataRowIsNull(dr, "StanID", item.StanID);//标准编码
 
-                        trans.Commit();
+                        dr["IsInherit"] = 0; //出租时自动转给租户
 
-                        _logger.LogInformation($"第{PageIndex}次提交客户标准绑定数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                        UtilsDataTable.DataRowIsNull(dr, "CostID", item.CostID);//项目科目编码
 
-                        stopwatch.Restart();
+                        dr["HandID"] = 0; //
+
+                        UtilsDataTable.DataRowIsNull(dr, "MeterSign", item.MeterSign);//表记
+
+                        UtilsDataTable.DataRowIsNull(dr, "FeesEndDate", item.FeesEndDate);//计费截止时间
+
+                        //dr["SetBeginDate"] = 0; //
+                        //dr["SetEndDate"] = 0; //
+
+                        UtilsDataTable.DataRowIsNull(dr, "CalcArea", item.CalcArea);//计算面积
+
+                        UtilsDataTable.DataRowIsNull(dr, "ChargeCycle", item.ChargeCycle);//计费周期
+
+                        //dr["CalcBeginDate"] = 0; //计费开始日期
+
+                        UtilsDataTable.DataRowIsNull(dr, "IsDelete", item.IsDelete);//是否删除
+
+                        UtilsDataTable.DataRowIsNull(dr, "ChangeDate", DateTime.Now);//修改时间
+
+                        UtilsDataTable.DataRowIsNull(dr, "PayType", item.PayType);//计费方式
+
+                        //dr["AssumeCustID"] = null; //
+                        //dr["OldRoomID"] = null; //
+
+                        UtilsDataTable.DataRowIsNull(dr, "StanSingleAmount", item.StanSingleAmount);//计费单价
+
+                        UtilsDataTable.DataRowIsNull(dr, "RoomBuildArea", item.RoomBuildArea);//计费数量
+
+                        //dr["AuditState"] = null; //
+
+                        UtilsDataTable.DataRowIsNull(dr, "DelUserName", item.DelUserName);//删除人名称
+
+                        dt.Rows.Add(dr);
+
+                        sql.AppendLine($@"DELETE Tb_HSPR_CostStanSetting WHERE IID='{item.IID}';");
                     }
+                    _logger.LogInformation($"生成客户标准绑定数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+
+                    stopwatch.Restart();
+
+                    using var trans = sqlServerConn.OpenTransaction();
+                    try
+                    {
+                        if (!string.IsNullOrEmpty(sql.ToString()))
+                        {
+                            int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
+
+                            _logger.LogInformation($"删除客户标准绑定数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
+
+                            stopwatch.Restart();
+
+                            DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_CostStanSetting", trans);
+
+                            _logger.LogInformation($"插入客户标准绑定数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+
+                            stopwatch.Restart();
+
+                            trans.Commit();
+
+                            _logger.LogInformation($"第{PageIndex}次提交客户标准绑定数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+
+                            stopwatch.Restart();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        trans.Rollback();
+
+                        rm.Result = false;
+
+                        rm.Message = e.Message;
+
+                        _logger.LogInformation($"第{PageIndex}次提交客户标准绑定发生错误；错误信息：{e.Message}");
+
+                        return rm;
+                    }
+
+                    PageIndex++;//下一页
+
+                    if (!result.HasNext)
+                        break;
+
                 }
-                catch (Exception e)
-                {
-                    trans.Rollback();
 
-                    rm.Result = false;
-
-                    rm.Message = e.Message;
-
-                    _logger.LogInformation($"第{PageIndex}次提交客户标准绑定发生错误；错误信息：{e.Message}");
-
-                    return rm;
-                }
-
-                PageIndex++;//下一页
-
-                if (!result.HasNext)
-                    break;
-
+                _logger.LogInformation($"({Comm.CommName})项目同步结束");
             }
 
             _logger.LogInformation($"------同步客户标准绑定数据结束------");

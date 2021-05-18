@@ -11,32 +11,32 @@ namespace Entity
         /// <summary>
         /// 主键
         /// </summary>
-        public Guid IID { get; set; }
+        public object IID { get; set; }
 
         /// <summary>
         /// 项目ID
         /// </summary>
-        public Guid CommID { get; set; }
+        public object CommID { get; set; }
 
         /// <summary>
         /// 客户ID
         /// </summary>
-        public Guid CustID { get; set; }
+        public object CustID { get; set; }
 
         /// <summary>
         /// RoomID
         /// </summary>
-        public Guid RoomID { get; set; }
+        public object RoomID { get; set; }
 
         /// <summary>
         /// 标准编码
         /// </summary>
-        public Guid StanID { get; set; }
+        public object StanID { get; set; }
 
         /// <summary>
         /// 项目科目编码
         /// </summary>
-        public Guid CostID { get; set; }
+        public object CostID { get; set; }
 
         /// <summary>
         /// 表记

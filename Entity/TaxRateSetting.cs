@@ -11,17 +11,17 @@ namespace Entity
         /// <summary>
         /// 主键
         /// </summary>
-        public Guid TaxRateSettingID { get; set; }
+        public object TaxRateSettingID { get; set; }
 
         /// <summary>
         /// 项目ID
         /// </summary>
-        public Guid CommID { get; set; }
+        public object CommID { get; set; }
 
         /// <summary>
         /// 项目收费科目id
         /// </summary>
-        public Guid CorpCostID { get; set; }
+        public object CorpCostID { get; set; }
 
         /// <summary>
         /// 收费率

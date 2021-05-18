@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Entity
 {
     /// <summary>
-    /// 公司收费科目表
+    /// 项目收费科目表
     /// </summary>
     public record CostItem
     {
@@ -15,22 +15,22 @@ namespace Entity
         /// <summary>
         /// 项目收费科目id
         /// </summary>
-        public Guid CostID { get; set; }
+        public object CostID { get; set; }
 
         /// <summary>
         /// 项目ID
         /// </summary>
-        public Guid CommID { get; set; }
+        public object CommID { get; set; }
 
         /// <summary>
         /// 公司收费科目id
         /// </summary>
-        public Guid CorpCostID { get; set; }
+        public object CorpCostID { get; set; }
 
         /// <summary>
         /// 父级收费项目id
         /// </summary>
-        public Guid? Parent_Id { get; set; }
+        public object Parent_Id { get; set; }
 
         /// <summary>
         /// 序号
