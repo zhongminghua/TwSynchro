@@ -149,9 +149,9 @@ namespace TwSynchro.OrganizeModule
                     //    CleanData(modelOrganize.ParentId, modelOrganize.LevelName);
                     //}
 
-                    if (listCleanData.Where(c => c.Id == modelOrganize.Id).FirstOrDefault() is null)
+                    if (listCleanData.Where(c => c.Id.ToString() == modelOrganize.Id.ToString()).FirstOrDefault() is null)
                     {
-                        var modelChildNode = listCleanData.Where(c => c.Id == modelOrganize.ParentId).FirstOrDefault();
+                        var modelChildNode = listCleanData.Where(c => c.Id.ToString() == modelOrganize.ParentId.ToString()).FirstOrDefault();
 
                         modelOrganize.LevelName = $"{modelChildNode.LevelName}_{modelOrganize.Name}";
 
@@ -375,12 +375,12 @@ namespace TwSynchro.OrganizeModule
 
             stopwatch.Restart();
 
-            if (string.IsNullOrEmpty(sql.ToString()))
-            {
-                _logger.LogInformation($"数据为空,退出同步!");
+            //if (string.IsNullOrEmpty(sql.ToString()))
+            //{
+            //    _logger.LogInformation($"数据为空,退出同步!");
 
-                return;
-            }
+            //    return;
+            //}
 
 
 
@@ -431,19 +431,11 @@ namespace TwSynchro.OrganizeModule
 
                 resultMessage = await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Organ, "Tb_Sys_Organ", trans);
 
-                if (resultMessage.Result)
-                {
-                    resultMessage = await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_OrganPartial, "Tb_Sys_OrganPartial", trans);
-                }
+                resultMessage = await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_OrganPartial, "Tb_Sys_OrganPartial", trans);
 
-                if (!resultMessage.Result)
-                {
-                    trans.Commit();
-                }
-                else
-                {
-                    trans.Rollback();
-                }
+                trans.Commit();
+
+                resultMessage.Result = true;
 
             }
             catch (Exception ex)
@@ -470,18 +462,12 @@ namespace TwSynchro.OrganizeModule
                 int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
                 resultMessage = await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Community, "Tb_HSPR_Community", trans);
-                if (resultMessage.Result)
-                {
-                    resultMessage = await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_CommunityChargesMode, "Tb_HSPR_CommunityChargesMode", trans);
-                }
-                if (!resultMessage.Result)
-                {
-                    trans.Commit();
-                }
-                else
-                {
-                    trans.Rollback();
-                }
+
+                resultMessage = await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_CommunityChargesMode, "Tb_HSPR_CommunityChargesMode", trans);
+
+                trans.Commit();
+
+                resultMessage.Result = true;
 
             }
             catch (Exception ex)
@@ -509,14 +495,9 @@ namespace TwSynchro.OrganizeModule
 
                 resultMessage = await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Department, "Tb_Sys_Department", trans);
 
-                if (!resultMessage.Result)
-                {
-                    trans.Commit();
-                }
-                else
-                {
-                    trans.Rollback();
-                }
+                trans.Commit();
+
+                resultMessage.Result = true;
             }
             catch (Exception ex)
             {
@@ -543,14 +524,9 @@ namespace TwSynchro.OrganizeModule
 
                 resultMessage = await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Role, "Tb_Sys_Role", trans);
 
-                if (!resultMessage.Result)
-                {
-                    trans.Commit();
-                }
-                else
-                {
-                    trans.Rollback();
-                }
+                trans.Commit();
+
+                resultMessage.Result = true;
             }
             catch (Exception ex)
             {

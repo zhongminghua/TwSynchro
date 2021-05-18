@@ -34,22 +34,15 @@ namespace Utils
 
             if (dt.Rows.Count == 0) { return resultMessage; }
 
-            try
+            using SqlBulkCopy bulkCopy = new SqlBulkCopy((SqlConnection)connection, SqlBulkCopyOptions.Default, (SqlTransaction)transaction);
+            bulkCopy.BulkCopyTimeout = 30;
+            bulkCopy.BatchSize = dt.Rows.Count;
+            bulkCopy.DestinationTableName = tableName;
+            for (int j = 0; j < dt.Columns.Count; j++)
             {
-                using SqlBulkCopy bulkCopy = new SqlBulkCopy((SqlConnection)connection, SqlBulkCopyOptions.Default, (SqlTransaction)transaction);
-                bulkCopy.BulkCopyTimeout = 30;
-                bulkCopy.BatchSize = dt.Rows.Count;
-                bulkCopy.DestinationTableName = tableName;
-                for (int j = 0; j < dt.Columns.Count; j++)
-                {
-                    bulkCopy.ColumnMappings.Add(dt.Columns[j].ColumnName, dt.Columns[j].ColumnName);
-                }
-                await bulkCopy.WriteToServerAsync(dt);
+                bulkCopy.ColumnMappings.Add(dt.Columns[j].ColumnName, dt.Columns[j].ColumnName);
             }
-            catch (Exception)
-            {
-                throw;
-            }
+            await bulkCopy.WriteToServerAsync(dt);
 
             return resultMessage;
         }
