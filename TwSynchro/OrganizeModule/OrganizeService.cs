@@ -3,6 +3,7 @@ using DapperFactory;
 using DapperFactory.Enum;
 using Entity;
 using Microsoft.Extensions.Logging;
+using Swifter.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -54,6 +55,8 @@ namespace TwSynchro.OrganizeModule
 
             var readerMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
 
+            sql.Clear();
+
             var organizeData = readerMultiple.Read<Organize>().ToList();
 
             var dictionaryData = readerMultiple.Read<Dictionary>();
@@ -87,6 +90,10 @@ namespace TwSynchro.OrganizeModule
             sql.AppendLine("SELECT RoleCode,RoleName,ParentId,UpLevelName,SysRoleCode,IsSysRole,Sort FROM Tb_Sys_Role WHERE 1<>1;");
 
             sql.AppendLine("SELECT * FROM Tb_Sys_Department");
+
+            StringBuilder sqlOrgan = new(), sqlCommunity = new(), sqlDepartment = new(), sqlRole = new();
+
+
 
 
             var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
@@ -186,7 +193,7 @@ namespace TwSynchro.OrganizeModule
 
                     dtTb_Sys_Organ.Rows.Add(dr);
 
-                    sql.AppendLine($"DELETE Tb_Sys_Organ WHERE OrganCode='{itemOrganize.Id}';");
+                    sqlOrgan.AppendLine($"DELETE Tb_Sys_Organ WHERE OrganCode='{itemOrganize.Id}';");
 
                     if (itemOrganize.OrganType == 3 || itemOrganize.OrganType == 4 || itemOrganize.OrganType == 5)
                     {
@@ -209,7 +216,7 @@ namespace TwSynchro.OrganizeModule
 
                         dtTb_Sys_OrganPartial.Rows.Add(dr);
 
-                        sql.AppendLine($"DELETE Tb_Sys_OrganPartial WHERE OrganCode='{itemOrganize.Id}';");
+                        sqlOrgan.AppendLine($"DELETE Tb_Sys_OrganPartial WHERE OrganCode='{itemOrganize.Id}';");
                     }
 
                     if (itemOrganize.OrganType == 6)
@@ -250,7 +257,7 @@ namespace TwSynchro.OrganizeModule
 
                         dtTb_HSPR_Community.Rows.Add(dr);
 
-                        sql.AppendLine($"DELETE Tb_HSPR_Community WHERE CommID='{itemOrganize.Id}';");
+                        sqlCommunity.AppendLine($"DELETE Tb_HSPR_Community WHERE CommID='{itemOrganize.Id}';");
 
                         if (itemOrganize.ChargingModel is not null)
                         {
@@ -265,7 +272,7 @@ namespace TwSynchro.OrganizeModule
 
                             dtTb_HSPR_CommunityChargesMode.Rows.Add(dr);
 
-                            sql.AppendLine($"DELETE Tb_HSPR_CommunityChargesMode WHERE CommID='{itemOrganize.Id}';");
+                            sqlCommunity.AppendLine($"DELETE Tb_HSPR_CommunityChargesMode WHERE CommID='{itemOrganize.Id}';");
                         }
                     }
                 }
@@ -285,7 +292,7 @@ namespace TwSynchro.OrganizeModule
 
                     dtTb_Sys_Department.Rows.Add(dr);
 
-                    sql.AppendLine($"DELETE Tb_Sys_Department WHERE DepCode='{itemOrganize.Id}';");
+                    sqlDepartment.AppendLine($"DELETE Tb_Sys_Department WHERE DepCode='{itemOrganize.Id}';");
 
                     AddDepartmentOrgan(itemOrganize.ParentId);
 
@@ -310,7 +317,7 @@ namespace TwSynchro.OrganizeModule
 
                     dtTb_Sys_Role.Rows.Add(dr);
 
-                    sql.AppendLine($"DELETE Tb_Sys_Role WHERE RoleCode='{itemOrganize.Id}';");
+                    sqlRole.AppendLine($"DELETE Tb_Sys_Role WHERE RoleCode='{itemOrganize.Id}';");
 
                 }
 
@@ -336,7 +343,7 @@ namespace TwSynchro.OrganizeModule
 
                         dtTb_Sys_Department.Rows.Add(dr);
 
-                        sql.AppendLine($"DELETE Tb_Sys_Department WHERE DepCode='{modelOrganize.Id}';");
+                        sqlDepartment.AppendLine($"DELETE Tb_Sys_Department WHERE DepCode='{modelOrganize.Id}';");
 
                         AddDepartmentOrgan(modelOrganize.ParentId);
                     }
@@ -359,7 +366,7 @@ namespace TwSynchro.OrganizeModule
 
                 dtTb_Sys_Role.Rows.Add(dr);
 
-                sql.AppendLine($"DELETE Tb_Sys_Role WHERE RoleCode='{itemDictionary.Id}';");
+                sqlRole.AppendLine($"DELETE Tb_Sys_Role WHERE RoleCode='{itemDictionary.Id}';");
 
             }
 
@@ -376,62 +383,36 @@ namespace TwSynchro.OrganizeModule
             }
 
 
-            await SynchroOrgan(sql.ToString(), dtTb_Sys_Organ, dtTb_Sys_OrganPartial);
 
-            await SynchroOrgan(sql.ToString(), dtTb_Sys_Organ, dtTb_Sys_OrganPartial);
+            stopwatch.Restart();
+            ResultMessage resultMessage = new();
 
-            await SynchroOrgan(sql.ToString(), dtTb_Sys_Organ, dtTb_Sys_OrganPartial);
+            resultMessage = await SynchroOrgan(sqlOrgan.ToString(), dtTb_Sys_Organ, dtTb_Sys_OrganPartial);
 
-            await SynchroOrgan(sql.ToString(), dtTb_Sys_Organ, dtTb_Sys_OrganPartial);
-            await SynchroOrgan(sql.ToString(), dtTb_Sys_Organ, dtTb_Sys_OrganPartial);
+            stopwatch.Restart();
 
+            _logger.LogInformation($"插入区域数据 {JsonFormatter.SerializeObject(resultMessage)} 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
-            using var trans = sqlServerConn.OpenTransaction();
+            resultMessage = await SynchroCommunity(sqlCommunity.ToString(), dtTb_HSPR_Community, dtTb_HSPR_CommunityChargesMode);
 
-            try
-            {
-                int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
+            stopwatch.Restart();
 
-                _logger.LogInformation($"删除数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
+            _logger.LogInformation($"插入项目数据 {JsonFormatter.SerializeObject(resultMessage)} 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
-                stopwatch.Restart();
+            resultMessage = await SynchroDepartment(sqlDepartment.ToString(), dtTb_Sys_Department);
 
-                DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Organ, "Tb_Sys_Organ", trans);
+            stopwatch.Restart();
 
-                DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_OrganPartial, "Tb_Sys_OrganPartial", trans);
+            _logger.LogInformation($"插入机构数据 {JsonFormatter.SerializeObject(resultMessage)} 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
-                stopwatch.Restart();
+            stopwatch.Restart();
 
-                _logger.LogInformation($"插入区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            resultMessage = await SynchroRole(sqlRole.ToString(), dtTb_Sys_Role);
 
-                DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Community, "Tb_HSPR_Community", trans);
+            stopwatch.Stop();
 
-                DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_CommunityChargesMode, "Tb_HSPR_CommunityChargesMode", trans);
+            _logger.LogInformation($"插入角色数据 {JsonFormatter.SerializeObject(resultMessage)} 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
-                stopwatch.Stop();
-
-                _logger.LogInformation($"插入项目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
-
-                DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Department, "Tb_Sys_Department", trans);
-
-                stopwatch.Stop();
-
-                _logger.LogInformation($"插入机构数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
-
-                stopwatch.Stop();
-
-                DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Role, "Tb_Sys_Role", trans);
-
-                _logger.LogInformation($"插入角色数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
-
-                trans.Commit();
-            }
-            catch (Exception)
-            {
-                trans.Rollback();
-                throw;
-            }
-            //}
             _logger.LogInformation($"------同步项目机构岗位结束------");
         }
 
@@ -448,13 +429,22 @@ namespace TwSynchro.OrganizeModule
             {
                 int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
-                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Organ, "Tb_Sys_Organ", trans);
+                resultMessage = await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Organ, "Tb_Sys_Organ", trans);
 
-                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_OrganPartial, "Tb_Sys_OrganPartial", trans);
+                if (resultMessage.Result)
+                {
+                    resultMessage = await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_OrganPartial, "Tb_Sys_OrganPartial", trans);
+                }
 
-                resultMessage.Result = true;
+                if (!resultMessage.Result)
+                {
+                    trans.Commit();
+                }
+                else
+                {
+                    trans.Rollback();
+                }
 
-                trans.Commit();
             }
             catch (Exception ex)
             {
@@ -465,7 +455,6 @@ namespace TwSynchro.OrganizeModule
 
             return resultMessage;
         }
-
 
         public static async Task<ResultMessage> SynchroCommunity(string sql, DataTable dtTb_HSPR_Community, DataTable dtTb_HSPR_CommunityChargesMode)
         {
@@ -480,13 +469,88 @@ namespace TwSynchro.OrganizeModule
             {
                 int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
-                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Community, "Tb_HSPR_Community", trans);
+                resultMessage = await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Community, "Tb_HSPR_Community", trans);
+                if (resultMessage.Result)
+                {
+                    resultMessage = await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_CommunityChargesMode, "Tb_HSPR_CommunityChargesMode", trans);
+                }
+                if (!resultMessage.Result)
+                {
+                    trans.Commit();
+                }
+                else
+                {
+                    trans.Rollback();
+                }
 
-                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_CommunityChargesMode, "Tb_HSPR_CommunityChargesMode", trans);
+            }
+            catch (Exception ex)
+            {
+                resultMessage.Message = ex.ToString();
 
-                resultMessage.Result = true;
+                trans.Rollback();
+            }
 
-                trans.Commit();
+            return resultMessage;
+        }
+
+        public static async Task<ResultMessage> SynchroDepartment(string sql, DataTable dtTb_Sys_Department)
+        {
+
+            ResultMessage resultMessage = new();
+
+            using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
+
+            using var trans = sqlServerConn.OpenTransaction();
+
+            try
+            {
+                int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
+
+                resultMessage = await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Department, "Tb_Sys_Department", trans);
+
+                if (!resultMessage.Result)
+                {
+                    trans.Commit();
+                }
+                else
+                {
+                    trans.Rollback();
+                }
+            }
+            catch (Exception ex)
+            {
+                resultMessage.Message = ex.ToString();
+
+                trans.Rollback();
+            }
+
+            return resultMessage;
+        }
+
+        public static async Task<ResultMessage> SynchroRole(string sql, DataTable dtTb_Sys_Role)
+        {
+
+            ResultMessage resultMessage = new();
+
+            using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
+
+            using var trans = sqlServerConn.OpenTransaction();
+
+            try
+            {
+                int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
+
+                resultMessage = await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Role, "Tb_Sys_Role", trans);
+
+                if (!resultMessage.Result)
+                {
+                    trans.Commit();
+                }
+                else
+                {
+                    trans.Rollback();
+                }
             }
             catch (Exception ex)
             {

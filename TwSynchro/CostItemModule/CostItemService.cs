@@ -3,7 +3,7 @@ using DapperFactory;
 using DapperFactory.Enum;
 using Entity;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+using Swifter.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -295,7 +295,7 @@ namespace TwSynchro.CostItemModule
 
                     UtilsDataTable.DataRowIsNull(dr, "StanExplain", item.StanExplain);//标准说明
 
-                    Dictionary<string, object> dicStanFormula = JsonConvert.DeserializeObject<Dictionary<string, object>>(item.StanFormula);
+                    Dictionary<string, object> dicStanFormula = JsonFormatter.DeserializeObject<Dictionary<string, object>>(item.StanFormula);
 
                     UtilsDataTable.DataRowIsNull(dr, "StanFormula", GetStanFormula(dicStanFormula["label"].ToString()));//计算方式
 
@@ -314,7 +314,7 @@ namespace TwSynchro.CostItemModule
                     //计算条件列表
                     if (!string.IsNullOrEmpty(item.condition_content))
                     {
-                        List<Dictionary<string, object>> condition_content = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(item.condition_content);
+                        List<Dictionary<string, object>> condition_content = JsonFormatter.DeserializeObject<List<Dictionary<string, object>>>(item.condition_content);
 
                         foreach (var temp in condition_content)
                         {
@@ -335,7 +335,7 @@ namespace TwSynchro.CostItemModule
 
                     if (!string.IsNullOrEmpty(item.latefee_calc_date))
                     {
-                        Dictionary<string, object> dicDelin = JsonConvert.DeserializeObject<Dictionary<string, object>>(item.latefee_calc_date);
+                        Dictionary<string, object> dicDelin = JsonFormatter.DeserializeObject<Dictionary<string, object>>(item.latefee_calc_date);
 
                         string day = dicDelin["day"].ToString(), type = dicDelin["type"].ToString();
 
@@ -734,7 +734,7 @@ namespace TwSynchro.CostItemModule
 
                     UtilsDataTable.DataRowIsNull(dr, "StanExplain", item.StanExplain);//标准说明
 
-                    Dictionary<string, object> dicStanFormula = JsonConvert.DeserializeObject<Dictionary<string, object>>(item.StanFormula);
+                    Dictionary<string, object> dicStanFormula = JsonFormatter.DeserializeObject<Dictionary<string, object>>(item.StanFormula);
                     UtilsDataTable.DataRowIsNull(dr, "StanFormula", GetStanFormula(dicStanFormula["label"].ToString()));//计算方式
 
                     UtilsDataTable.DataRowIsNull(dr, "StanAmount", item.StanAmount);//通用收费标准
@@ -753,7 +753,7 @@ namespace TwSynchro.CostItemModule
                     //计算条件列表
                     if (!string.IsNullOrEmpty(item.condition_content))
                     {
-                        List<Dictionary<string, object>> condition_content = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(item.condition_content);
+                        List<Dictionary<string, object>> condition_content = JsonFormatter.DeserializeObject<List<Dictionary<string, object>>>(item.condition_content);
 
                         foreach (var temp in condition_content)
                         {
@@ -774,7 +774,7 @@ namespace TwSynchro.CostItemModule
 
                     if (!string.IsNullOrEmpty(item.latefee_calc_date))
                     {
-                        Dictionary<string, object> dicDelin = JsonConvert.DeserializeObject<Dictionary<string, object>>(item.latefee_calc_date);
+                        Dictionary<string, object> dicDelin = JsonFormatter.DeserializeObject<Dictionary<string, object>>(item.latefee_calc_date);
 
                         string day = dicDelin["day"].ToString(), type = dicDelin["type"].ToString();
 
