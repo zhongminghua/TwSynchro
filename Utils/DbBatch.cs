@@ -33,7 +33,7 @@ namespace DapperFactory
 
             using (SqlBulkCopy bulkCopy = new SqlBulkCopy((SqlConnection)connection,SqlBulkCopyOptions.Default, (SqlTransaction)transaction))
             {
-                //bulkCopy.BulkCopyTimeout = 30;
+                bulkCopy.BulkCopyTimeout = 30;
                 bulkCopy.BatchSize = dt.Rows.Count;
                 bulkCopy.DestinationTableName = tableName;
                 for (int j = 0; j < dt.Columns.Count; j++)

@@ -5,10 +5,17 @@ namespace Entity
     /// <summary>
     /// MySql 表名:rf_organize 项目机构岗位表
     /// </summary>
-    public class Organize
+    public record Organize
     {
         public Guid Id { get; set; }
         public Guid ParentId { get; set; }
+
+        /// <summary>
+        /// 层级名称
+        /// </summary>
+        public string LevelName { get; set; }
+
+
         /// <summary>
         /// 名称
         /// </summary>
@@ -127,6 +134,6 @@ namespace Entity
         /// <summary>
         /// 通用岗位ID
         /// </summary>
-        public Guid UniversalRoleId { get; set; }
+        public Guid? UniversalRoleId { get; set; }
     }
 }

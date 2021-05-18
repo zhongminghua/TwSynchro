@@ -89,7 +89,7 @@ namespace TwSynchro
         {
             return Task.Run(() =>
             {
-                OrganizeService.Synchro(_logger);
+                //OrganizeService.Synchro(_logger);
                 //while (!stoppingToken.IsCancellationRequested)
                 //{
                 //    _logger.LogInformation("第二个程序 running at: {time}", DateTimeOffset.Now);
@@ -102,11 +102,11 @@ namespace TwSynchro
         {
             return Task.Run(() =>
             {
-                while (!stoppingToken.IsCancellationRequested)
-                {
-                    _logger.LogInformation("第三个程序 running at: {time}", DateTimeOffset.Now);
-                    Thread.Sleep(1000);
-                }
+                //while (!stoppingToken.IsCancellationRequested)
+                //{
+                //    _logger.LogInformation("第三个程序 running at: {time}", DateTimeOffset.Now);
+                //    Thread.Sleep(1000);
+                //}
             }, stoppingToken);
         }
 

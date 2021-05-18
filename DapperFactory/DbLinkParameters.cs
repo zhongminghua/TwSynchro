@@ -21,7 +21,7 @@ namespace DapperFactory
         /// <summary>
         /// 数据库名称。
         /// </summary>
-        public string Database { get; init; } = default!;
+        public string DatabaseName { get; init; } = default!;
 
         /// <summary>
         /// 数据库登录账号。
@@ -51,8 +51,8 @@ namespace DapperFactory
         /// <param name="user">数据库登录账号。</param>
         /// <param name="password">数据库登录密码。</param>
         /// <param name="properties">数据库其它属性信息。</param>
-        protected DbLinkParameters([DisallowNull] string host, int? port, [DisallowNull] string database, [DisallowNull] string user, string password, Dictionary<string, string>? properties)
-            => (Host, Port, Database, User, Password, Properties) = (host, port, database, user, password, properties);
+        protected DbLinkParameters([DisallowNull] string host, int? port, [DisallowNull] string databaseName, [DisallowNull] string user, string password, Dictionary<string, string>? properties)
+            => (Host, Port, DatabaseName, User, Password, Properties) = (host, port, databaseName, user, password, properties);
 
         /// <summary>
         /// 获取数据库连接字符串。

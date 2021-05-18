@@ -22,7 +22,7 @@ namespace TwSynchro.UserModule
 
             StringBuilder sql = new("SELECT ID,Name,Account,Password,(CASE Sex WHEN 0 THEN '女' ELSE '男' END) as Sex,Email,Mobile FROM rf_user;");
 
-            using var mySqlConn = DbService.GetDbConnection(DBType.MySql, "erp_base");
+            using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
             _logger.LogInformation($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -34,7 +34,7 @@ namespace TwSynchro.UserModule
 
             stopwatch.Restart();
 
-            using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, "PMS_Base");
+            using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
 
             sql.Clear();
 
@@ -66,7 +66,7 @@ namespace TwSynchro.UserModule
 
                 dt.Rows.Add(dr);
 
-                sql.AppendLine($@"DELETE Tb_Sys_User WHERE UserCode='{itemUser.ID.ToString()}';");
+                sql.AppendLine($@"DELETE Tb_Sys_User WHERE UserCode='{itemUser.ID}';");
             }
 
             _logger.LogInformation($"生成用户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");

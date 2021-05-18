@@ -3,7 +3,7 @@
     "Provider": "SqlServer",
     "Host": "47.107.174.65\\KM,8190",
     "Port": "3306",
-    "Database": "PMS_bs",
+    "DatabaseName": "PMS_bs",
     "User": "LFUser",
     "Password": "LF123SPoss",
     "Properties": {
@@ -17,7 +17,7 @@
     "Provider": "SqlServer",
     "Host": "47.107.174.65\\KM,8190",
     "Port": "3306",
-    "Database": "PMS_Base",
+    "DatabaseName": "PMS_Base",
     "User": "LFUser",
     "Password": "LF123SPoss",
     "Properties": {
@@ -31,7 +31,7 @@
     "Provider": "MySql",
     "Host": "116.63.144.212",
     "Port": "3306",
-    "Database": "Erp_Base",
+    "DatabaseName": "Erp_Base",
     "User": "root",
     "Password": "tw369.com",
     "Properties": {

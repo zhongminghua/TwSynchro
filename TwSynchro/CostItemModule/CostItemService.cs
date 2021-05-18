@@ -45,7 +45,7 @@ namespace TwSynchro.CostItemModule
 
             StringBuilder sql = new();
 
-            using var mySqlConn = DbService.GetDbConnection(DBType.MySql, "Erp_Base");
+            using var mySqlConn = DbService.GetDbConnection(DBType.MySql,  DBLibraryName.Erp_Base);
 
             _logger.LogInformation($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -61,7 +61,7 @@ namespace TwSynchro.CostItemModule
 
                 stopwatch.Restart();
 
-                using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, "PMS_Base");
+                using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
 
                 sql.Clear();
 
@@ -199,7 +199,7 @@ namespace TwSynchro.CostItemModule
 
             StringBuilder sql = new();
 
-            using var mySqlConn = DbService.GetDbConnection(DBType.MySql, "Erp_Base");
+            using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
             _logger.LogInformation($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -215,7 +215,7 @@ namespace TwSynchro.CostItemModule
 
                 stopwatch.Restart();
 
-                using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, "PMS_Base");
+                using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.Erp_Base);
 
                 sql.Clear();
 
