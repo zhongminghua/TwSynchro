@@ -48,15 +48,16 @@ namespace TwSynchro.Utils
         /// <summary>
         /// 设置时间戳
         /// </summary>
-        /// <param name="sqlServerConn"></param>
+        /// <param name="sqlServerConn">数据库连接</param>
         /// <param name="key"></param>
-        /// <param name="value"></param>
-        public static async void SetTimestamp(IDbConnection sqlServerConn, string key, string value)
+        /// <param name="value">时间戳值</param>
+        /// <param name="minute">绝对过期时间（分钟）</param>
+        public static async void SetTimestamp(IDbConnection sqlServerConn, string key, string value, int minute)
         {
 
             // _timestampList.AddOrUpdate(key, _ => value, (_, _) => value);
 
-            CacheHelper.CacheInsertAddMinutes(key, value, 180);
+            CacheHelper.CacheInsertAddMinutes(key, value, minute);
 
             StringBuilder sql = new($@"SELECT COUNT(1) FROM Tb_Sys_SynchroTimestamp_MySql WHERE TimestampKey='{key}'");
 
