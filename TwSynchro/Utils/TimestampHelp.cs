@@ -45,7 +45,7 @@ namespace TwSynchro.Utils
         public static async void SetTimestampAsync(IDbConnection sqlServerConn, string key, string value, int minute)
         {
 
-            CacheHelper.CacheInsertFromMinutes(key, value, minute);
+            CacheHelper.CacheInsertAddMinutes(key, value, minute);
 
             string sql = $@"SELECT COUNT(1) FROM Tb_Sys_SynchroTimestamp_MySql WHERE TimestampKey='{key}'";
 
