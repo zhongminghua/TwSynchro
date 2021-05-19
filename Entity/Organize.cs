@@ -8,13 +8,13 @@ namespace Entity
     public record Organize
     {
         public object Id { get; set; }
+
         public object ParentId { get; set; }
 
         /// <summary>
         /// 层级名称
         /// </summary>
         public string LevelName { get; set; }
-
 
         /// <summary>
         /// 名称

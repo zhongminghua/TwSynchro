@@ -83,7 +83,7 @@ namespace TwSynchro.OrganizeModule
 
             sql.AppendLine("SELECT * FROM Tb_Sys_OrganPartial WHERE 1<>1;");
 
-            sql.AppendLine("SELECT CommID,CommName,CommKind,ManageTime,ManageKind,CommAddress,Province,City,Borough,Street,CommunityName,GateSign,Num,ParentId,Sort,IntId FROM Tb_HSPR_Community WHERE 1<>1;");
+            sql.AppendLine("SELECT CommID,OrganCode,CommName,CommKind,ManageTime,ManageKind,CommAddress,Province,City,Borough,Street,CommunityName,GateSign,Num,Sort,IntId FROM Tb_HSPR_Community WHERE 1<>1;");
 
             sql.AppendLine("SELECT * FROM Tb_HSPR_CommunityChargesMode WHERE 1<>1;");
 
@@ -215,6 +215,8 @@ namespace TwSynchro.OrganizeModule
 
                         dr["CommID"] = itemOrganize.Id;
 
+                        dr["OrganCode"] = itemOrganize.ParentId;
+
                         dr["CommName"] = itemOrganize.Name;
 
                         dr["CommKind"] = itemOrganize.CommKind; //项目业态
@@ -239,11 +241,11 @@ namespace TwSynchro.OrganizeModule
 
                         dr["Num"] = itemOrganize.SortNum;
 
-                        dr["ParentId"] = itemOrganize.ParentId;
-
                         dr["Sort"] = itemOrganize.Sort;
 
                         dr["IntId"] = itemOrganize.IntId;
+
+
 
                         dtTb_HSPR_Community.Rows.Add(dr);
 
@@ -273,6 +275,8 @@ namespace TwSynchro.OrganizeModule
                     dr = dtTb_Sys_Department.NewRow();
 
                     dr["DepCode"] = itemOrganize.Id;
+
+                    dr["SortDepCode"] = itemOrganize.Id;
 
                     dr["DepName"] = itemOrganize.Name;
 
@@ -325,6 +329,8 @@ namespace TwSynchro.OrganizeModule
 
                         dr["DepCode"] = modelOrganize.Id;
 
+                        dr["SortDepCode"] = modelOrganize.Id;
+                        
                         dr["DepName"] = modelOrganize.Name;
 
                         dr["ParentId"] = modelOrganize.ParentId;
