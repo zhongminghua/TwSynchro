@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TwSynchro.Utils;
 using Utils;
 
 namespace TwSynchro.CostItemModule
@@ -20,11 +21,11 @@ namespace TwSynchro.CostItemModule
         public async static void Synchro(ILogger<Worker> _logger)
         {
             int pageSize = 10;
-            //await SynchroCorpCostItem(_logger, pageSize);//公司科目
+            await SynchroCorpCostItem(_logger, pageSize);//公司科目
             //await SynchroCorpCostStandard(_logger, pageSize);//公司标准
             //await SynchroCostItem(_logger, pageSize);//项目科目
             //await SynchroCostStandard(_logger, pageSize);//项目标准
-            await SynchroCostStanSetting(_logger, pageSize);//客户标准绑定
+            //await SynchroCostStanSetting(_logger, pageSize);//客户标准绑定
 
         }
 
@@ -35,10 +36,11 @@ namespace TwSynchro.CostItemModule
         /// <param name="_logger"></param>
         public async static Task<ResultMessage> SynchroCorpCostItem(ILogger<Worker> _logger, int pageSize)
         {
-
             ResultMessage rm = new();
 
             rm.Result = true;
+
+            using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
 
             _logger.LogInformation($"------同步公司科目数据开始------");
 
@@ -66,7 +68,7 @@ namespace TwSynchro.CostItemModule
 
                 stopwatch.Restart();
 
-                using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
+               
 
                 sql.Clear();
 
