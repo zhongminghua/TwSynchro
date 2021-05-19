@@ -83,17 +83,20 @@ namespace TwSynchro.UserModule
 
                 stopwatch.Restart();
 
-                DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_Sys_User", trans);
+                await DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_Sys_User", trans);
 
                 stopwatch.Stop();
 
                 _logger.LogInformation($"插入用户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+
                 trans.Commit();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 trans.Rollback();
-                throw;
+
+                _logger.LogInformation($"插入用户数据失败:{ex.Message}{ex.StackTrace}");
+
             }
             _logger.LogInformation($"------同步用户数据结束------");
         }

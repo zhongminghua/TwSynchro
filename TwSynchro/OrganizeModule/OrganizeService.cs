@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.XPath;
 using Utils;
 
 namespace TwSynchro.OrganizeModule
@@ -50,6 +51,7 @@ namespace TwSynchro.OrganizeModule
             _logger.LogInformation($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
+
 
             //var result = await mySqlConn.QueryPagerAsync<Organize>(DBType.MySql, sql.ToString(), "ID", 10, pageIndex);
 
@@ -92,9 +94,6 @@ namespace TwSynchro.OrganizeModule
             sql.AppendLine("SELECT * FROM Tb_Sys_Department");
 
             StringBuilder sqlOrgan = new(), sqlCommunity = new(), sqlDepartment = new(), sqlRole = new();
-
-
-
 
             var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
 
@@ -140,20 +139,11 @@ namespace TwSynchro.OrganizeModule
                 //清洗数据
                 foreach (var modelOrganize in listChildNode)
                 {
-                    //var index = organizeData.IndexOf(modelOrganize);
-
-                    //if (string.IsNullOrEmpty(modelOrganize.LevelName))
-                    //{
-                    //    organizeData[index].LevelName = levelName is null ? modelOrganize.Name : $"{modelOrganize.Name}_{levelName}";
-
-                    //    CleanData(modelOrganize.ParentId, modelOrganize.LevelName);
-                    //}
-
                     if (listCleanData.Where(c => c.Id.ToString() == modelOrganize.Id.ToString()).FirstOrDefault() is null)
                     {
-                        var modelChildNode = listCleanData.Where(c => c.Id.ToString() == modelOrganize.ParentId.ToString()).FirstOrDefault();
+                        var modelParentChildNode = listCleanData.Where(c => c.Id.ToString() == modelOrganize.ParentId.ToString()).FirstOrDefault();
 
-                        modelOrganize.LevelName = $"{modelChildNode.LevelName}_{modelOrganize.Name}";
+                        modelOrganize.LevelName = $"{modelParentChildNode.LevelName}_{modelOrganize.Name}";
 
                         listCleanData.Add(modelOrganize with { });
 
@@ -370,40 +360,27 @@ namespace TwSynchro.OrganizeModule
 
             }
 
-
             _logger.LogInformation($"生成数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
-            //if (string.IsNullOrEmpty(sql.ToString()))
-            //{
-            //    _logger.LogInformation($"数据为空,退出同步!");
-
-            //    return;
-            //}
-
-
-
-            stopwatch.Restart();
             ResultMessage resultMessage = new();
 
             resultMessage = await SynchroOrgan(sqlOrgan.ToString(), dtTb_Sys_Organ, dtTb_Sys_OrganPartial);
 
-            stopwatch.Restart();
+            _logger.LogInformation($"插入区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
-            _logger.LogInformation($"插入区域数据 {JsonFormatter.SerializeObject(resultMessage)} 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            stopwatch.Restart();
 
             resultMessage = await SynchroCommunity(sqlCommunity.ToString(), dtTb_HSPR_Community, dtTb_HSPR_CommunityChargesMode);
 
-            stopwatch.Restart();
+            _logger.LogInformation($"插入项目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
-            _logger.LogInformation($"插入项目数据 {JsonFormatter.SerializeObject(resultMessage)} 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            stopwatch.Restart();
 
             resultMessage = await SynchroDepartment(sqlDepartment.ToString(), dtTb_Sys_Department);
 
-            stopwatch.Restart();
-
-            _logger.LogInformation($"插入机构数据 {JsonFormatter.SerializeObject(resultMessage)} 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            _logger.LogInformation($"插入机构数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
             stopwatch.Restart();
 
@@ -411,7 +388,7 @@ namespace TwSynchro.OrganizeModule
 
             stopwatch.Stop();
 
-            _logger.LogInformation($"插入角色数据 {JsonFormatter.SerializeObject(resultMessage)} 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            _logger.LogInformation($"插入岗位数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
             _logger.LogInformation($"------同步项目机构岗位结束------");
         }
@@ -429,18 +406,18 @@ namespace TwSynchro.OrganizeModule
             {
                 int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
-                resultMessage = await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Organ, "Tb_Sys_Organ", trans);
+                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Organ, "Tb_Sys_Organ", trans);
 
-                resultMessage = await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_OrganPartial, "Tb_Sys_OrganPartial", trans);
+                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_OrganPartial, "Tb_Sys_OrganPartial", trans);
 
                 trans.Commit();
 
-                resultMessage.Result = true;
+                resultMessage.SetSuccessResultMessage();
 
             }
             catch (Exception ex)
             {
-                resultMessage.Message = ex.ToString();
+                resultMessage.Message = $"{ex.Message}{ex.StackTrace}";
 
                 trans.Rollback();
             }
@@ -461,18 +438,18 @@ namespace TwSynchro.OrganizeModule
             {
                 int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
-                resultMessage = await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Community, "Tb_HSPR_Community", trans);
+                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Community, "Tb_HSPR_Community", trans);
 
-                resultMessage = await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_CommunityChargesMode, "Tb_HSPR_CommunityChargesMode", trans);
+                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_CommunityChargesMode, "Tb_HSPR_CommunityChargesMode", trans);
 
                 trans.Commit();
 
-                resultMessage.Result = true;
+                resultMessage.SetSuccessResultMessage();
 
             }
             catch (Exception ex)
             {
-                resultMessage.Message = ex.ToString();
+                resultMessage.Message = $"{ex.Message}{ex.StackTrace}";
 
                 trans.Rollback();
             }
@@ -493,15 +470,15 @@ namespace TwSynchro.OrganizeModule
             {
                 int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
-                resultMessage = await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Department, "Tb_Sys_Department", trans);
+                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Department, "Tb_Sys_Department", trans);
 
                 trans.Commit();
 
-                resultMessage.Result = true;
+                resultMessage.SetSuccessResultMessage();
             }
             catch (Exception ex)
             {
-                resultMessage.Message = ex.ToString();
+                resultMessage.Message = $"{ex.Message}{ex.StackTrace}";
 
                 trans.Rollback();
             }
@@ -522,15 +499,15 @@ namespace TwSynchro.OrganizeModule
             {
                 int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
-                resultMessage = await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Role, "Tb_Sys_Role", trans);
+                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Role, "Tb_Sys_Role", trans);
 
                 trans.Commit();
 
-                resultMessage.Result = true;
+                resultMessage.SetSuccessResultMessage();
             }
             catch (Exception ex)
             {
-                resultMessage.Message = ex.ToString();
+                resultMessage.Message = $"{ex.Message}{ex.StackTrace}";
 
                 trans.Rollback();
             }

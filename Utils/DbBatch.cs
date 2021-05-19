@@ -15,9 +15,8 @@ namespace Utils
         /// <param name="connectionString"></param>
         /// <param name="dt"></param>
         /// <param name="tableName"></param>
-        public static async Task<ResultMessage> InsertSingleTable(IDbConnection connection, DataTable dt, string tableName, IDbTransaction transaction = null)
+        public static async Task InsertSingleTable(IDbConnection connection, DataTable dt, string tableName, IDbTransaction transaction = null)
         {
-            ResultMessage resultMessage = new();
             //使用示例:
             //string strSql = $"SELECT * FROM Tb_TaProject WHERE 1<>1";
             //DataTable dt = new DbHelperSQLP(Bp.LoginSQLConnStr).Query(strSql).Tables[0];
@@ -32,7 +31,7 @@ namespace Utils
             //}
             //string result = BatchOperate.InsertSingleTable(Bp.LoginSQLConnStr, dt, "Tb_TaProject");
 
-            if (dt.Rows.Count == 0) { return resultMessage; }
+            if (dt.Rows.Count == 0) { return; }
 
             using SqlBulkCopy bulkCopy = new SqlBulkCopy((SqlConnection)connection, SqlBulkCopyOptions.Default, (SqlTransaction)transaction);
             bulkCopy.BulkCopyTimeout = 30;
@@ -42,9 +41,9 @@ namespace Utils
             {
                 bulkCopy.ColumnMappings.Add(dt.Columns[j].ColumnName, dt.Columns[j].ColumnName);
             }
+
             await bulkCopy.WriteToServerAsync(dt);
 
-            return resultMessage;
         }
 
 

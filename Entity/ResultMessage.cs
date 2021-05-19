@@ -8,17 +8,17 @@
         /// <summary>
         /// 操作处理结果。
         /// </summary>
-        public bool Result = default!;
+        public bool Result { get; set; } = default!;
 
         /// <summary>
         /// 消息。
         /// </summary>
-        public string Message = default!;
+        public string Message { get; set; } = default!;
 
         /// <summary>
         /// 响应操作处理结果及提示信息。
         /// </summary>
-        public ResultMessage() : this(false, null) { }
+        public ResultMessage() : this(false, "失败") { }
 
         /// <summary>
         /// 响应操作处理结果及提示信息。
@@ -36,6 +36,17 @@
             Result = result;
             Message = message;
         }
+
+        /// <summary>
+        /// 设置响应操作处理结果及成功提示信息。
+        /// </summary>
+        public void SetSuccessResultMessage()
+        {
+            Result = true;
+            Message = "成功";
+        }
+
+
     }
 
     /// <summary>
