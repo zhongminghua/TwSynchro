@@ -7,6 +7,9 @@ using NLog;
 using NLog.Extensions.Logging;
 using Microsoft.Extensions.Logging.Configuration;
 using DapperFactory;
+using Utils;
+using Entity;
+using Microsoft.Extensions.Configuration;
 
 namespace TwSynchro
 {
@@ -19,7 +22,6 @@ namespace TwSynchro
 
         public static IHostBuilder CreateHostBuilder(string[] args)
         {
-            //是否是windows平台
             bool isWinPlantform = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
             Console.WriteLine($"是否是windows平台:{isWinPlantform}");
 
@@ -34,6 +36,7 @@ namespace TwSynchro
                 {
                     services.AddMySqlFactory();
                     services.AddSqlServerFactory();
+                    services.Configure<AppSettings>(UtilsConfig.ReadConfig("appsettings.json").GetSection("StopMsec"));
                     services.AddHostedService<Worker>();
                 });
 

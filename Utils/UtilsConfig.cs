@@ -1,9 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.Json;
 using System;
 using System.IO;
 
-namespace DapperFactory
+namespace Utils
 {
 
     /// <summary>

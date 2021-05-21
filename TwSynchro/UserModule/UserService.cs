@@ -8,13 +8,14 @@ using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Utils;
 
 namespace TwSynchro.UserModule
 {
     public class UserService
     {
-        public async static void Synchro(ILogger<Worker> _logger)
+        public async static Task Synchro(ILogger<Worker> _logger)
         {
             _logger.LogInformation($"------同步用户数据开始------");
 
@@ -99,6 +100,7 @@ namespace TwSynchro.UserModule
 
             }
             _logger.LogInformation($"------同步用户数据结束------");
+
         }
     }
 }

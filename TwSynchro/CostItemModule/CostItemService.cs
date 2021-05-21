@@ -68,8 +68,6 @@ namespace TwSynchro.CostItemModule
 
                 stopwatch.Restart();
 
-               
-
                 sql.Clear();
 
                 sql.AppendLine($@"SELECT [CorpCostID], [CostCode], [CostSNum], [CostName], [CostType], [CostGeneType], [CollUnitID], 

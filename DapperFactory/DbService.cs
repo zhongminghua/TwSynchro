@@ -3,12 +3,10 @@ using DapperFactory.Enum;
 using DapperFactory.MySql;
 using DapperFactory.SqlServer;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Data;
-using System.IO;
-using System.Linq;
+using Utils;
 
 namespace DapperFactory
 {
@@ -117,22 +115,7 @@ namespace DapperFactory
         /// <returns></returns>
         public static IDbConnection GetSqlBurstDbConnection(DBType dbType, DbBurstType burstType, int subTreasuryId, bool @readonly = false)
         {
-            var burstTypeName = burstType switch
-            {
-                DbBurstType.CP => "CP",
-                DbBurstType.Equipment => "EQ",
-                DbBurstType.Safe => "SAFE",
-                DbBurstType.Environment => "AMBIENT",
-                DbBurstType.Patrol => "PATROL",
-                DbBurstType.Supervision => "SUPERVISION",
-                DbBurstType.HouseInspection => "HI_DC",
-                DbBurstType.RiskManagement => "RM",
-                DbBurstType.Incident => "INCIDENT",
-                DbBurstType.Charge => "CHARGE",
-                DbBurstType.Visit => "VISIT",
-                DbBurstType.ReportStatistics => "RTS",
-                _ => ""
-            };
+            var burstTypeName = EnumHelper.GetDbBurstTypeName(burstType);
 
             IDbConnection conn;
 
@@ -160,9 +143,9 @@ namespace DapperFactory
                         WHERE  CommID=@CommID AND BurstType=@BurstType;";
                 }
 
-                using var bsConn = GetConnectionFromDbSettings(dbType, DBLibraryName.PMS_Bs);
+                conn = GetConnectionFromDbSettings(dbType, DBLibraryName.PMS_Bs);
 
-                linkParameters = bsConn.QueryFirstOrDefault<SqlServerLinkParameters>(sql, new { CommID = subTreasuryId, BurstType = burstTypeName });
+                linkParameters = conn.QueryFirstOrDefault<SqlServerLinkParameters>(sql, new { CommID = subTreasuryId, BurstType = burstTypeName });
 
             }
             else if (DBType.MySql == dbType)
@@ -171,9 +154,9 @@ namespace DapperFactory
                 sql = @"SELECT database_ip_sqlserver AS Host,database_name AS DatabaseName,database_user AS User,database_pwd AS Password,database_port AS Port
                         FROM tb_base_burst where is_delete=0 AND burst_type=@BurstType and @SubTreasuryId >= start_value and @SubTreasuryId <= end_value";
 
-                using var bsConn = GetConnectionFromDbSettings(dbType, DBLibraryName.Erp_Base);
+                conn = GetConnectionFromDbSettings(dbType, DBLibraryName.Erp_Base);
 
-                linkParameters = bsConn.QueryFirstOrDefault<MySqlLinkParameters>(sql, new { SubTreasuryId = subTreasuryId, BurstType = burstTypeName });
+                linkParameters = conn.QueryFirstOrDefault<MySqlLinkParameters>(sql, new { SubTreasuryId = subTreasuryId, BurstType = burstTypeName });
 
             }
 

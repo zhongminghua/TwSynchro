@@ -1,8 +1,11 @@
+using Entity;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TwSynchro.CustomerModule;
 using TwSynchro.OrganizeModule;
 using TwSynchro.UserModule;
 
@@ -12,10 +15,12 @@ namespace TwSynchro
     {
 
         private readonly ILogger<Worker> _logger;
+        private readonly AppSettings _appSettings;
 
-        public Worker(ILogger<Worker> logger)
+        public Worker(ILogger<Worker> logger, IOptions<AppSettings> options)
         {
             _logger = logger;
+            _appSettings = options.Value;
         }
 
         /// <summary>
@@ -59,7 +64,7 @@ namespace TwSynchro
         {
             try
             {
-               await Task.WhenAll(new[] { RunTaskOne(stoppingToken), RunTaskTwo(stoppingToken), RunTaskThree(stoppingToken) });
+                await Task.WhenAll(new[] { RunTaskUser(stoppingToken), RunTaskTwo(stoppingToken), RunTaskThree(stoppingToken) });
                 //await Task.WhenAll(new[] { RunTaskOne(stoppingToken)});
             }
             catch (Exception ex)
@@ -72,18 +77,26 @@ namespace TwSynchro
             }
         }
 
-        protected Task RunTaskOne(CancellationToken stoppingToken)
+        protected Task RunTaskUser(CancellationToken stoppingToken)
         {
-            return Task.Run(() =>
-            {
-                OrganizeService.Synchro(_logger);
-                //while (!stoppingToken.IsCancellationRequested)
-                //{
+            return Task.Run(async () =>
+           {
 
-                //    _logger.LogInformation("第一个程序 running at: {time}", DateTimeOffset.Now);
-                //     Thread.Sleep(1000);
-                //}
-            }, stoppingToken);
+               while (!stoppingToken.IsCancellationRequested)
+               {
+                   try
+                   {
+
+                       await UserService.Synchro(_logger);
+
+                       Thread.Sleep(_appSettings.UserStopMsec);
+                   }
+                   catch (Exception ex)
+                   {
+                       _logger.LogError($"用户:\r\n{ex.Message}{ex.StackTrace}");
+                   }
+               }
+           }, stoppingToken);
         }
 
         protected Task RunTaskTwo(CancellationToken stoppingToken)

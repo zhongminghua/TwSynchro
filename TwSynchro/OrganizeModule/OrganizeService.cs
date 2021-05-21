@@ -10,6 +10,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.XPath;
 using Utils;
@@ -172,11 +173,8 @@ namespace TwSynchro.OrganizeModule
                     dr = dtTb_Sys_Organ.NewRow();
 
                     dr["OrganCode"] = itemOrganize.Id;
-
                     dr["OrganName"] = itemOrganize.Name;
-
                     dr["ParentId"] = itemOrganize.ParentId;
-
                     dr["Sort"] = itemOrganize.Sort;
 
                     if (itemOrganize.OrganType == 3) dr["IsComp"] = 1;
@@ -214,38 +212,21 @@ namespace TwSynchro.OrganizeModule
                         dr = dtTb_HSPR_Community.NewRow();
 
                         dr["CommID"] = itemOrganize.Id;
-
                         dr["OrganCode"] = itemOrganize.ParentId;
-
                         dr["CommName"] = itemOrganize.Name;
-
                         dr["CommKind"] = itemOrganize.CommKind; //项目业态
-
                         dr["ManageTime"] = itemOrganize.TakeoverDate;
-
                         dr["ManageKind"] = itemOrganize.TakeoverKind;
-
                         dr["CommAddress"] = itemOrganize.Address;
-
                         dr["Province"] = itemOrganize.Province;
-
                         dr["City"] = itemOrganize.City;
-
                         dr["Borough"] = itemOrganize.Area;
-
                         dr["Street"] = itemOrganize.Street;
-
                         dr["CommunityName"] = itemOrganize.Community;
-
                         dr["GateSign"] = itemOrganize.GateSign;
-
                         dr["Num"] = itemOrganize.SortNum;
-
                         dr["Sort"] = itemOrganize.Sort;
-
                         dr["IntId"] = itemOrganize.IntId;
-
-
 
                         dtTb_HSPR_Community.Rows.Add(dr);
 
@@ -257,9 +238,7 @@ namespace TwSynchro.OrganizeModule
                             dr = dtTb_HSPR_CommunityChargesMode.NewRow();
 
                             dr["IID"] = Guid.NewGuid().ToString();
-
                             dr["CommID"] = itemOrganize.Id;
-
                             dr["ChargesMode"] = itemOrganize.ChargingModel;
 
                             dtTb_HSPR_CommunityChargesMode.Rows.Add(dr);
@@ -275,13 +254,9 @@ namespace TwSynchro.OrganizeModule
                     dr = dtTb_Sys_Department.NewRow();
 
                     dr["DepCode"] = itemOrganize.Id;
-
                     dr["SortDepCode"] = itemOrganize.Id;
-
                     dr["DepName"] = itemOrganize.Name;
-
                     dr["ParentId"] = itemOrganize.ParentId;
-
                     dr["Sort"] = itemOrganize.Sort;
 
                     dtTb_Sys_Department.Rows.Add(dr);
@@ -397,6 +372,7 @@ namespace TwSynchro.OrganizeModule
             _logger.LogInformation($"插入岗位数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
             _logger.LogInformation($"------同步项目机构岗位结束------");
+
         }
 
         public static async Task<ResultMessage> SynchroOrgan(string sql, DataTable dtTb_Sys_Organ, DataTable dtTb_Sys_OrganPartial)

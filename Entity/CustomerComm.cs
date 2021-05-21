@@ -6,21 +6,32 @@ using System.Threading.Tasks;
 
 namespace Entity
 {
-    public class CustomerComm
+    public class CustomerComm : BaseModel
     {
 
         /// <summary>
-        /// 项目客户表id
+        /// 项目编码
         /// </summary>
-        public object id { get; set; }
+        public object comm_id { get; set; }
+        /// <summary>
+        /// 公司客户id
+        /// </summary>
+        public object customer_id { get; set; }
+        /// <summary>
+        /// 客户备注：存json
+        /// </summary>
+        public string remarks { get; set; }
+
         /// <summary>
         /// 客户姓名
         /// </summary>
         public string name { get; set; }
+
         /// <summary>
         /// 外文名称
         /// </summary>
         public string name_en { get; set; }
+
         /// <summary>
         /// 证件名称
         /// 0：居民身份证
@@ -38,6 +49,29 @@ namespace Entity
         /// 12：统一社会信用代码
         /// </summary>
         public int idcard_type { get; set; }
+
+        /// <summary>
+        /// 证件名称中文
+        /// </summary>
+        public string idcard_type_name => idcard_type switch
+        {
+            0 => "居民身份证",
+            1 => "临时居民身份证",
+            2 => "户口簿",
+            3 => "军人身份证件",
+            4 => "武装警察身份证件",
+            5 => "港澳居民往来内地通行证",
+            6 => "港澳居民居住证",
+            7 => "台湾居民来往大陆通行证",
+            8 => "台湾居民居住证",
+            9 => "护照",
+            10 => "社会保障卡",
+            11 => "驾驶证",
+            12 => "统一社会信用代码",
+            _ => ""
+        };
+
+
         /// <summary>
         /// 证件号码
         /// </summary>
@@ -90,6 +124,17 @@ namespace Entity
         /// 性别
         /// </summary>
         public int sex { get; set; }
+
+        /// <summary>
+        /// 证件名称中文
+        /// </summary>
+        public string sex_name => sex switch
+        {
+            0 => "女",
+            1 => "男",
+            _ => ""
+        };
+
         /// <summary>
         /// 出生日期
         /// </summary>
@@ -166,48 +211,7 @@ namespace Entity
         /// 客户自定义字段，根据客户类型自动判别
         /// </summary>
         public string customer_field { get; set; }
-        /// <summary>
-        /// 发起人
-        /// </summary>
-        public object create_user { get; set; }
-        /// <summary>
-        /// 发起时间
-        /// </summary>
-        public DateTime? create_date { get; set; }
-        /// <summary>
-        /// 修改人
-        /// </summary>
-        public object modify_user { get; set; }
-        /// <summary>
-        /// 修改时间
-        /// </summary>
-        public DateTime? modify_date { get; set; }
-        /// <summary>
-        /// 记录是否删除状态
-        /// </summary>
-        public int is_delete { get; set; }
-        /// <summary>
-        /// 删除人
-        /// </summary>
-        public string delete_user { get; set; }
-        /// <summary>
-        /// 删除时间
-        /// </summary>
-        public DateTime? delete_date { get; set; }
-
-        /// <summary>
-        /// 项目编码
-        /// </summary>
-        public object comm_id { get; set; }
-        /// <summary>
-        /// 公司客户id
-        /// </summary>
-        public object customer_id { get; set; }
-        /// <summary>
-        /// 客户备注：存json
-        /// </summary>
-        public string remarks { get; set; }
-
+   
 
     }
 }
