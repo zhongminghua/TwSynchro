@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TwSynchro.CostItemModule;
 using TwSynchro.CustomerModule;
 using TwSynchro.OrganizeModule;
 using TwSynchro.UserModule;
@@ -63,7 +64,7 @@ namespace TwSynchro
         {
             try
             {
-                await Task.WhenAll(new[] { RunTaskUser(stoppingToken)});
+                await Task.WhenAll(new[] { RunTaskCostItem(stoppingToken)});
 
                 //await Task.WhenAll(new[] { RunTaskUser(stoppingToken), RunTaskOrganize(stoppingToken), RunTaskCustomer(stoppingToken) });
             }
@@ -131,6 +132,27 @@ namespace TwSynchro
                     {
 
                         await CustomerService.Synchro(_logger);
+
+                        Thread.Sleep(_appSettings.UserStopMsec);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"ÓÃ»§:\r\n{ex.Message}{ex.StackTrace}");
+                    }
+                }
+            }, stoppingToken);
+        }
+
+        protected Task RunTaskCostItem(CancellationToken stoppingToken)
+        {
+            return Task.Run(async () =>
+            {
+
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        await CostItemService.Synchro(_logger, stoppingToken);
 
                         Thread.Sleep(_appSettings.UserStopMsec);
                     }

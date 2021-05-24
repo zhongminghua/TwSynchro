@@ -543,12 +543,12 @@ namespace TwSynchro.ResourceModule
 
         }
 
-        /// <summary>
-        /// 保存区域
-        /// </summary>
-        /// <param name="sql">删除区域sql</param>
-        /// <param name="dtTb_HSPR_Region">区域数据</param>
-        /// <returns></returns>
+            /// <summary>
+            /// 保存区域
+            /// </summary>
+            /// <param name="sql">删除区域sql</param>
+            /// <param name="dtTb_HSPR_Region">区域数据</param>
+            /// <returns></returns>
         public static async Task<ResultMessage> SynchroRegion(string sql, DataTable dtTb_HSPR_Region)
         {
 
