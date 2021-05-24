@@ -22,8 +22,8 @@ namespace TwSynchro.CostItemModule
         public async static Task Synchro(ILogger<Worker> _logger, CancellationToken stoppingToken)
         {
             int pageSize = 10;
-            await SynchroCorpCostItem(_logger, pageSize, stoppingToken);//公司科目
-            //await SynchroCorpCostStandard(_logger, pageSize);//公司标准
+            //await SynchroCorpCostItem(_logger, pageSize, stoppingToken);//公司科目
+            await SynchroCorpCostStandard(_logger, pageSize, stoppingToken);//公司标准
             //await SynchroCostItem(_logger, pageSize);//项目科目
             //await SynchroCostStandard(_logger, pageSize);//项目标准
             //await SynchroCostStanSetting(_logger, pageSize);//客户标准绑定
@@ -51,7 +51,8 @@ namespace TwSynchro.CostItemModule
             string timesTamp = await TimestampHelp.GetTimestampAsync("CorpCostItem");
 
             StringBuilder Strsql = new($@"SELECT id AS CorpCostID,parent_id AS Parent_Id,sort AS CostSNum,cost_name AS CostName,min_unit AS RoundingNum,
-       is_use AS IsSealed,product_name AS BillType,product_code AS BillCode,is_delete AS IsDelete FROM tb_base_charge_cost WHERE times_tamp>'{timesTamp}'");
+       is_use AS IsSealed,product_name AS BillType,product_code AS BillCode,is_delete AS IsDelete FROM tb_base_charge_cost ");
+       //is_use AS IsSealed,product_name AS BillType,product_code AS BillCode,is_delete AS IsDelete FROM tb_base_charge_cost WHERE times_tamp>'{timesTamp}'");
 
             StringBuilder sql = new();
 
@@ -231,7 +232,7 @@ namespace TwSynchro.CostItemModule
         /// 同步公司标准
         /// </summary>
         /// <param name="_logger"></param>
-        public async static Task<ResultMessage> SynchroCorpCostStandard(ILogger<Worker> _logger, int pageSize)
+        public async static Task<ResultMessage> SynchroCorpCostStandard(ILogger<Worker> _logger, int pageSize, CancellationToken stoppingToken)
         {
             ResultMessage rm = new();
 
@@ -253,7 +254,7 @@ namespace TwSynchro.CostItemModule
             StringBuilder sql = new();
             StringBuilder sqltwo = new();
 
-            using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
+            using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.PMS_Base);
 
             _logger.LogInformation($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -426,7 +427,7 @@ namespace TwSynchro.CostItemModule
 
                     stopwatch.Restart();
 
-                    //await DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_CorpCostStandard", trans);
+                    await DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_CorpCostStandard", stoppingToken, trans);
 
                     _logger.LogInformation($"插入公司标准数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
