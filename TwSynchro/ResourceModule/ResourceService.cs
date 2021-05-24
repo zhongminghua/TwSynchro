@@ -563,7 +563,7 @@ namespace TwSynchro.ResourceModule
                 if (!string.IsNullOrEmpty(sql))
                     await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
-                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Region, "Tb_HSPR_Region", trans);
+                //await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Region, "Tb_HSPR_Region", trans);
 
                 trans.Commit();
 
@@ -600,7 +600,7 @@ namespace TwSynchro.ResourceModule
                 if (!string.IsNullOrEmpty(sql))
                     await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
-                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Building, "Tb_HSPR_Building", trans);
+                //await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Building, "Tb_HSPR_Building", trans);
 
                 trans.Commit();
 
@@ -638,9 +638,9 @@ namespace TwSynchro.ResourceModule
                 if (!string.IsNullOrEmpty(sql))
                     await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
-                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Room, "Tb_HSPR_Room", trans);
+                //await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Room, "Tb_HSPR_Room", trans);
 
-                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_RoomStateHis, "Tb_HSPR_RoomStateHis", trans);
+                //await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_RoomStateHis, "Tb_HSPR_RoomStateHis", trans);
 
                 trans.Commit();
 
@@ -677,7 +677,7 @@ namespace TwSynchro.ResourceModule
                 if (!string.IsNullOrEmpty(sql))
                     await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
-                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Carpark, "Tb_HSPR_Carpark", trans);
+                //await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Carpark, "Tb_HSPR_Carpark", trans);
 
                 trans.Commit();
 
@@ -714,7 +714,7 @@ namespace TwSynchro.ResourceModule
                 if (!string.IsNullOrEmpty(sql))
                     await sqlServerConn.ExecuteAsync(sql, transaction: trans);
 
-                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Parking, "Tb_HSPR_Parking", trans);
+                //await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Parking, "Tb_HSPR_Parking", trans);
 
                 trans.Commit();
 

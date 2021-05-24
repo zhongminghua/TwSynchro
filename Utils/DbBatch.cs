@@ -16,7 +16,7 @@ namespace Utils
         /// <param name="connectionString"></param>
         /// <param name="dt"></param>
         /// <param name="tableName"></param>
-        public static async Task InsertSingleTable(IDbConnection connection, DataTable dt, string tableName, IDbTransaction transaction, CancellationToken stoppingToken)
+        public static async Task InsertSingleTable(IDbConnection connection, DataTable dt, string tableName, CancellationToken stoppingToken, IDbTransaction transaction = null)
         {
             //使用示例:
             //string strSql = $"SELECT * FROM Tb_TaProject WHERE 1<>1";

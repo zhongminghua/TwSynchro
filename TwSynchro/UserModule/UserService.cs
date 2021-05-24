@@ -85,7 +85,7 @@ namespace TwSynchro.UserModule
 
                 stopwatch.Restart();
 
-                await DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_Sys_User", trans, stoppingToken);
+                await DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_Sys_User", stoppingToken,trans);
 
                 stopwatch.Stop();
 
