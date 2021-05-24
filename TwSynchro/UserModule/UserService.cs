@@ -41,7 +41,7 @@ namespace TwSynchro.UserModule
 
             sql.Clear();
 
-            sql.AppendLine("SELECT UserCode,UserName,LoginCode,PassWord,Sex,MobileTel,Email,IsFirstLogin,IsUse FROM Tb_Sys_User WHERE 1<>1;");
+            sql.AppendLine("SELECT UserCode,UserName,LoginCode,PassWord,Sex,MobileTel,Email,IsFirstLogin,IsUse FROM Tb_Sys_User WITH(NOLOCK) WHERE 1<>1;");
 
             var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
 
