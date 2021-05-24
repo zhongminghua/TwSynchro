@@ -8,6 +8,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Utils;
 
@@ -15,7 +16,7 @@ namespace TwSynchro.UserModule
 {
     public class UserService
     {
-        public async static Task Synchro(ILogger<Worker> _logger)
+        public async static Task Synchro(ILogger<Worker> _logger, CancellationToken stoppingToken)
         {
             _logger.LogInformation($"------同步用户数据开始------");
 
@@ -84,7 +85,7 @@ namespace TwSynchro.UserModule
 
                 stopwatch.Restart();
 
-                await DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_Sys_User", trans);
+                await DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_Sys_User", trans, stoppingToken);
 
                 stopwatch.Stop();
 

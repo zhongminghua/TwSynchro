@@ -2,6 +2,7 @@
 using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Utils
@@ -15,7 +16,7 @@ namespace Utils
         /// <param name="connectionString"></param>
         /// <param name="dt"></param>
         /// <param name="tableName"></param>
-        public static async Task InsertSingleTable(IDbConnection connection, DataTable dt, string tableName, IDbTransaction transaction = null)
+        public static async Task InsertSingleTable(IDbConnection connection, DataTable dt, string tableName, IDbTransaction transaction, CancellationToken stoppingToken)
         {
             //使用示例:
             //string strSql = $"SELECT * FROM Tb_TaProject WHERE 1<>1";
@@ -33,7 +34,7 @@ namespace Utils
 
             if (dt.Rows.Count == 0) { return; }
 
-            using SqlBulkCopy bulkCopy = new SqlBulkCopy((SqlConnection)connection, SqlBulkCopyOptions.Default, (SqlTransaction)transaction);
+            using SqlBulkCopy bulkCopy = new SqlBulkCopy((SqlConnection)connection, SqlBulkCopyOptions.TableLock | SqlBulkCopyOptions.KeepIdentity | SqlBulkCopyOptions.KeepNulls, (SqlTransaction)transaction);
             bulkCopy.BulkCopyTimeout = 30;
             bulkCopy.BatchSize = dt.Rows.Count;
             bulkCopy.DestinationTableName = tableName;
@@ -42,7 +43,7 @@ namespace Utils
                 bulkCopy.ColumnMappings.Add(dt.Columns[j].ColumnName, dt.Columns[j].ColumnName);
             }
 
-            await bulkCopy.WriteToServerAsync(dt);
+            await bulkCopy.WriteToServerAsync(dt, stoppingToken);
 
         }
 

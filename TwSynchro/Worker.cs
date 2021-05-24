@@ -16,7 +16,6 @@ namespace TwSynchro
 
         private readonly ILogger<Worker> _logger;
         private readonly AppSettings _appSettings;
-
         public Worker(ILogger<Worker> logger, IOptions<AppSettings> options)
         {
             _logger = logger;
@@ -31,13 +30,13 @@ namespace TwSynchro
         public override Task StartAsync(CancellationToken
          cancellationToken)
         {
-            _logger.LogInformation("服务开始");
-            _logger.LogTrace($"跟踪信息");
-            _logger.LogDebug($"调试信息");
-            _logger.LogInformation($"普通信息");
-            _logger.LogWarning($"警告信息");
-            _logger.LogError($"错误信息");
-            _logger.LogCritical($"致命错误信息");
+            //_logger.LogInformation("服务开始");
+            //_logger.LogTrace($"跟踪信息");
+            //_logger.LogDebug($"调试信息");
+            //_logger.LogInformation($"普通信息");
+            //_logger.LogWarning($"警告信息");
+            //_logger.LogError($"错误信息");
+            //_logger.LogCritical($"致命错误信息");
             return base.StartAsync(cancellationToken);
         }
 
@@ -64,8 +63,9 @@ namespace TwSynchro
         {
             try
             {
-                await Task.WhenAll(new[] { RunTaskUser(stoppingToken), RunTaskTwo(stoppingToken), RunTaskThree(stoppingToken) });
-                //await Task.WhenAll(new[] { RunTaskOne(stoppingToken)});
+                await Task.WhenAll(new[] { RunTaskUser(stoppingToken)});
+
+                //await Task.WhenAll(new[] { RunTaskUser(stoppingToken), RunTaskOrganize(stoppingToken), RunTaskCustomer(stoppingToken) });
             }
             catch (Exception ex)
             {
@@ -87,7 +87,7 @@ namespace TwSynchro
                    try
                    {
 
-                       await UserService.Synchro(_logger);
+                       await UserService.Synchro(_logger, stoppingToken);
 
                        Thread.Sleep(_appSettings.UserStopMsec);
                    }
@@ -99,28 +99,46 @@ namespace TwSynchro
            }, stoppingToken);
         }
 
-        protected Task RunTaskTwo(CancellationToken stoppingToken)
+        protected Task RunTaskOrganize(CancellationToken stoppingToken)
         {
-            return Task.Run(() =>
+            return Task.Run(async () =>
             {
-                //OrganizeService.Synchro(_logger);
-                //while (!stoppingToken.IsCancellationRequested)
-                //{
-                //    _logger.LogInformation("第二个程序 running at: {time}", DateTimeOffset.Now);
-                //    Thread.Sleep(1000);
-                //}
+
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        await OrganizeService.Synchro(_logger);
+
+                        Thread.Sleep(_appSettings.UserStopMsec);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"用户:\r\n{ex.Message}{ex.StackTrace}");
+                    }
+                }
             }, stoppingToken);
         }
 
-        protected Task RunTaskThree(CancellationToken stoppingToken)
+        protected Task RunTaskCustomer(CancellationToken stoppingToken)
         {
-            return Task.Run(() =>
+            return Task.Run(async () =>
             {
-                //while (!stoppingToken.IsCancellationRequested)
-                //{
-                //    _logger.LogInformation("第三个程序 running at: {time}", DateTimeOffset.Now);
-                //    Thread.Sleep(1000);
-                //}
+
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    try
+                    {
+
+                        await CustomerService.Synchro(_logger);
+
+                        Thread.Sleep(_appSettings.UserStopMsec);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"用户:\r\n{ex.Message}{ex.StackTrace}");
+                    }
+                }
             }, stoppingToken);
         }
 

@@ -9,13 +9,14 @@ using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Utils;
 
 namespace TwSynchro.CustomerModule
 {
     public class CustomerService
     {
-        public async static void Synchro(ILogger<Worker> _logger)
+        public async static Task Synchro(ILogger<Worker> _logger)
         {
             _logger.LogInformation($"------同步客户数据开始------");
 
@@ -203,19 +204,19 @@ namespace TwSynchro.CustomerModule
 
                 stopwatch.Restart();
 
-                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Customer, "Tb_HSPR_Customer", trans);
+                //await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Customer, "Tb_HSPR_Customer", trans);
 
                 _logger.LogInformation($"插入客户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 stopwatch.Restart();
 
-                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_CustomerLive, "Tb_HSPR_CustomerLive", trans);
+                //await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_CustomerLive, "Tb_HSPR_CustomerLive", trans);
 
                 _logger.LogInformation($"插入Tb_HSPR_CustomerLive数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 stopwatch.Restart();
 
-                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Household, "Tb_HSPR_Household", trans);
+                //await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Household, "Tb_HSPR_Household", trans);
 
                 stopwatch.Stop();
 
