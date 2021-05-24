@@ -31,12 +31,12 @@ namespace TwSynchro.Utils
                 var data = (await sqlServerConn.QueryAsync<string>(sql)).ToList();
 
                 if (data.Count > 0)
-                    timestamp = DateTime.Parse(data[0]).ToString("yyyy-MM-dd HH:mm:ss");
+                    timestamp = data[0];
                 else
-                    timestamp = DateTime.Now.AddYears(-10).ToString("yyyy-MM-dd HH:mm:ss");
+                    timestamp = DateTime.Now.AddYears(-10);
 
             }
-            return timestamp.ToString();
+            return DateTime.Parse(timestamp.ToString()).ToString("yyyy-MM-dd HH:mm:ss");
         }
 
         /// <summary>
