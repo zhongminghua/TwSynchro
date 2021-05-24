@@ -63,7 +63,7 @@ namespace TwSynchro
         {
             try
             {
-                await Task.WhenAll(new[] { RunTaskUser(stoppingToken)});
+                await Task.WhenAll(new[] { RunTaskOrganize(stoppingToken)});
 
                 //await Task.WhenAll(new[] { RunTaskUser(stoppingToken), RunTaskOrganize(stoppingToken), RunTaskCustomer(stoppingToken) });
             }
@@ -108,7 +108,7 @@ namespace TwSynchro
                 {
                     try
                     {
-                        await OrganizeService.Synchro(_logger);
+                        await OrganizeService.Synchro(_logger, stoppingToken);
 
                         Thread.Sleep(_appSettings.UserStopMsec);
                     }

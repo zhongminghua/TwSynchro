@@ -20,7 +20,7 @@ namespace TwSynchro.OrganizeModule
     public class OrganizeService
     {
 
-        public async static Task Synchro(ILogger<Worker> _logger)
+        public async static Task Synchro(ILogger<Worker> _logger, CancellationToken stoppingToken)
         {
 
             _logger.LogInformation($"------同步项目机构岗位数据开始------");
@@ -347,7 +347,7 @@ namespace TwSynchro.OrganizeModule
 
             ResultMessage resultMessage = new();
 
-            resultMessage = await SynchroOrgan(sqlOrgan.ToString(), dtTb_Sys_Organ, dtTb_Sys_OrganPartial);
+            resultMessage = await SynchroOrgan(stoppingToken,sqlOrgan.ToString(), dtTb_Sys_Organ, dtTb_Sys_OrganPartial);
 
             _logger.LogInformation($"插入区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
@@ -375,7 +375,7 @@ namespace TwSynchro.OrganizeModule
 
         }
 
-        public static async Task<ResultMessage> SynchroOrgan(string sql, DataTable dtTb_Sys_Organ, DataTable dtTb_Sys_OrganPartial)
+        public static async Task<ResultMessage> SynchroOrgan( CancellationToken stoppingToken,string sql, DataTable dtTb_Sys_Organ, DataTable dtTb_Sys_OrganPartial)
         {
 
             ResultMessage resultMessage = new();
@@ -388,9 +388,9 @@ namespace TwSynchro.OrganizeModule
             {
                 int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
-                //await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Organ, "Tb_Sys_Organ", trans);
+                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Organ, "Tb_Sys_Organ", stoppingToken, trans);
 
-                //await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_OrganPartial, "Tb_Sys_OrganPartial", trans);
+                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_OrganPartial, "Tb_Sys_OrganPartial", stoppingToken, trans);
 
                 trans.Commit();
 
