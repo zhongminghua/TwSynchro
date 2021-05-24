@@ -47,8 +47,10 @@ namespace TwSynchro.CostItemModule
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
+            string timesTamp = await TimestampHelp.GetTimestampAsync("CorpCostItem");
+
             StringBuilder Strsql = new($@"SELECT id AS CorpCostID,parent_id AS Parent_Id,sort AS CostSNum,cost_name AS CostName,min_unit AS RoundingNum,
-       is_use AS IsSealed,product_name AS BillType,product_code AS BillCode,is_delete AS IsDelete FROM tb_base_charge_cost");
+       is_use AS IsSealed,product_name AS BillType,product_code AS BillCode,is_delete AS IsDelete FROM tb_base_charge_cost WHERE times_tamp>'{timesTamp}'");
 
             StringBuilder sql = new();
 
@@ -59,6 +61,14 @@ namespace TwSynchro.CostItemModule
             stopwatch.Restart();
 
             int PageIndex = 1;
+
+            #region 读取当前最大时间戳
+
+            sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_base_charge_cost");
+
+            var times_tamp = (await mySqlConn.QueryAsync<string>(sql.ToString())).ToList();
+
+            #endregion
 
             while (true)
             {
@@ -87,6 +97,8 @@ namespace TwSynchro.CostItemModule
 
                 foreach (var item in result.Data)
                 {
+                    #region 读取行
+
                     dr = dt.NewRow();
 
                     dr["CorpCostID"] = item.CorpCostID;//主键
@@ -149,6 +161,8 @@ namespace TwSynchro.CostItemModule
 
                     dt.Rows.Add(dr);
 
+                    #endregion
+
                     sql.AppendLine($@"DELETE Tb_HSPR_CorpCostItem WHERE CorpCostID='{item.CorpCostID}';");
                 }
                 _logger.LogInformation($"生成公司科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
@@ -157,42 +171,41 @@ namespace TwSynchro.CostItemModule
 
                 using var trans = sqlServerConn.OpenTransaction();
 
-
-                if (result.Data.Count() > 0)
+                try
                 {
-                    try
-                    {
-                        int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
-                        _logger.LogInformation($"删除公司科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
+                    int rowsAffected = 0;
 
-                        stopwatch.Restart();
+                    if (result.Data.Count() > 0)
+                        rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
-                        await DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_CorpCostItem", trans);
+                    _logger.LogInformation($"删除公司科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
-                        _logger.LogInformation($"插入公司科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                    stopwatch.Restart();
 
-                        stopwatch.Restart();
+                    await DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_CorpCostItem", trans);
 
-                        trans.Commit();
+                    _logger.LogInformation($"插入公司科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
-                        _logger.LogInformation($"第{PageIndex}次提交公司科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                    stopwatch.Restart();
 
-                        stopwatch.Restart();
-                    }
-                    catch (Exception e)
-                    {
-                        trans.Rollback();
+                    trans.Commit();
 
-                        rm.Result = false;
+                    _logger.LogInformation($"第{PageIndex}次提交公司科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
-                        rm.Message = e.Message;
+                    stopwatch.Restart();
+                }
+                catch (Exception e)
+                {
+                    trans.Rollback();
 
-                        _logger.LogInformation($"第{PageIndex}次提交公司科目发生错误；错误信息：{e.Message}");
+                    rm.Result = false;
 
-                        return rm;
-                    }
+                    rm.Message = e.Message;
 
+                    _logger.LogInformation($"第{PageIndex}次提交公司科目发生错误；错误信息：{e.Message}");
+
+                    return rm;
                 }
 
                 PageIndex++;//下一页
@@ -201,6 +214,9 @@ namespace TwSynchro.CostItemModule
                     break;
 
             }
+
+            //保存时间戳
+            TimestampHelp.SetTimestampAsync("CorpCostItem", times_tamp[0], 180);
 
             _logger.LogInformation($"------同步公司科目数据结束------");
 
@@ -225,10 +241,13 @@ namespace TwSynchro.CostItemModule
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
+            string timesTamp = await TimestampHelp.GetTimestampAsync("CorpCostStandard");
+
             StringBuilder Strsql = new($@"SELECT id AS CorpStanID,cost_id AS CorpCostID, stan_code AS StanSign,stan_name AS StanName,stan_memo AS StanExplain,
        calc_type AS StanFormula,stan_price AS StanAmount,stop_use_date AS StanEndDate,is_condition_calc AS IsCondition,
        condition_content,calc_condition AS　ConditionField,latefee_rate AS DelinRates ,latefee_calc_date,is_delete AS IsDelete,
-       calc_condition_type AS IsStanRange,min_unit AS AmountRounded,stan_ratio AS Modulus,allow_comm_modify AS IsCanUpdate FROM  tb_base_charge_stan");
+       calc_condition_type AS IsStanRange,min_unit AS AmountRounded,stan_ratio AS Modulus,allow_comm_modify AS IsCanUpdate FROM  tb_base_charge_stan 
+            WHERE times_tamp>'{timesTamp}'");
 
             StringBuilder sql = new();
             StringBuilder sqltwo = new();
@@ -240,6 +259,16 @@ namespace TwSynchro.CostItemModule
             stopwatch.Restart();
 
             int PageIndex = 1;
+
+            #region 读取当前最大时间戳
+
+            sql.Clear();
+
+            sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_base_charge_stan");
+
+            var times_tamp = (await mySqlConn.QueryAsync<string>(sql.ToString())).ToList();
+
+            #endregion
 
             while (true)
             {
@@ -283,6 +312,8 @@ namespace TwSynchro.CostItemModule
 
                 foreach (var item in result.Data)
                 {
+                    #region 读取行数据
+
                     dr = dt.NewRow();
 
                     UtilsDataTable.DataRowIsNull(dr, "CorpStanID", item.CorpStanID);//主键
@@ -377,6 +408,8 @@ namespace TwSynchro.CostItemModule
 
                     dt.Rows.Add(dr);
 
+                    #endregion
+
                     sql.AppendLine($@"DELETE Tb_HSPR_CorpCostStandard WHERE CorpStanID='{item.CorpStanID}';");
                 }
                 _logger.LogInformation($"生成公司标准数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
@@ -436,6 +469,9 @@ namespace TwSynchro.CostItemModule
 
             }
 
+            //保存时间戳
+            TimestampHelp.SetTimestampAsync("CorpCostStandard", times_tamp[0], 180);
+
             _logger.LogInformation($"------同步公司标准数据结束------");
 
             return rm;
@@ -476,8 +512,11 @@ namespace TwSynchro.CostItemModule
             {
                 _logger.LogInformation($"({Comm.CommName})项目同步开始");
 
+                string timesTamp = await TimestampHelp.GetTimestampAsync("CostItem-"+Comm.CommID);
+
                 StringBuilder Strsql = new($@"select id AS CostID,comm_id AS CommID,parent_id AS Parent_Id,sort AS CostSNum,cost_name AS CostName,
-                    min_unit AS RoundingNum,corp_cost_id AS CorpCostID,is_delete AS IsDelete from tb_charge_cost ");//WHERE comm_id='{Comm.CommID}'
+                    min_unit AS RoundingNum,corp_cost_id AS CorpCostID,is_delete AS IsDelete from tb_charge_cost  
+                        WHERE comm_id='{Comm.CommID}' AND times_tamp>'{timesTamp}'");//WHERE comm_id='{Comm.CommID}'
 
                 //using var mySqlConn = DbService.GetDbConnection(DBType.MySql, "Erp_Develop");
                 using var mySqlConn = DbService.GetSqlBurstDbConnection(DBType.MySql, DbBurstType.Charge, Comm.IntID);
@@ -493,6 +532,16 @@ namespace TwSynchro.CostItemModule
                 stopwatch.Restart();
 
                 int PageIndex = 1;
+
+                #region 读取当前最大时间戳
+
+                sql.Clear();
+
+                sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_charge_cost WHERE comm_id='{Comm.CommID}'");
+
+                var times_tamp = (await mySqlConn.QueryAsync<string>(sql.ToString())).ToList();
+
+                #endregion
 
                 while (true)
                 {
@@ -521,6 +570,8 @@ namespace TwSynchro.CostItemModule
 
                     foreach (var item in result.Data)
                     {
+                        #region 读取行数据
+
                         dr = dt.NewRow();
 
                         UtilsDataTable.DataRowIsNull(dr, "CostID", item.CostID);//主键
@@ -577,6 +628,8 @@ namespace TwSynchro.CostItemModule
 
                         dt.Rows.Add(dr);
 
+                        #endregion
+
                         sql.AppendLine($@"DELETE Tb_HSPR_CostItem WHERE CostID='{item.CostID}';");
                     }
                     _logger.LogInformation($"生成项目科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
@@ -585,42 +638,40 @@ namespace TwSynchro.CostItemModule
 
                     using var trans = sqlServerConn.OpenTransaction();
 
-
-                    if (result.Data.Count() > 0)
+                    try
                     {
-                        try
-                        {
-                            int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
+                        int rowsAffected = 0;
 
-                            _logger.LogInformation($"删除项目科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
+                        if (result.Data.Count() > 0)
+                            rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
-                            stopwatch.Restart();
+                        _logger.LogInformation($"删除项目科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
-                            await DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_CostItem", trans);
+                        stopwatch.Restart();
 
-                            _logger.LogInformation($"插入项目科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                        await DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_CostItem", trans);
 
-                            stopwatch.Restart();
+                        _logger.LogInformation($"插入项目科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
-                            trans.Commit();
+                        stopwatch.Restart();
 
-                            _logger.LogInformation($"第{PageIndex}次提交项目科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                        trans.Commit();
 
-                            stopwatch.Restart();
-                        }
-                        catch (Exception e)
-                        {
-                            trans.Rollback();
+                        _logger.LogInformation($"第{PageIndex}次提交项目科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
-                            rm.Result = false;
+                        stopwatch.Restart();
+                    }
+                    catch (Exception e)
+                    {
+                        trans.Rollback();
 
-                            rm.Message = e.Message;
+                        rm.Result = false;
 
-                            _logger.LogInformation($"第{PageIndex}次提交项目科目发生错误；错误信息：{e.Message}");
+                        rm.Message = e.Message;
 
-                            return rm;
-                        }
+                        _logger.LogInformation($"第{PageIndex}次提交项目科目发生错误；错误信息：{e.Message}");
 
+                        return rm;
                     }
 
                     PageIndex++;//下一页
@@ -629,6 +680,9 @@ namespace TwSynchro.CostItemModule
                         break;
 
                 }
+
+                //保存时间戳
+                TimestampHelp.SetTimestampAsync("CostItem-" + Comm.CommID, times_tamp[0], 180);
 
                 _logger.LogInformation($"({Comm.CommName})项目同步结束");
 
@@ -657,11 +711,14 @@ namespace TwSynchro.CostItemModule
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
+            string timesTamp = await TimestampHelp.GetTimestampAsync("CostStandard");
+
             StringBuilder Strsql = new($@"SELECT id AS StanID,comm_id AS CommID,cost_id AS CostID,stan_code AS StanSign,stan_name AS StanName,
                        stan_memo AS StanExplain,calc_type AS StanFormula,stan_price AS StanAmount,is_condition_calc AS IsCondition,
                        condition_content,calc_condition AS ConditionField,latefee_rate AS DelinRates,latefee_calc_date ,is_delete AS IsDelete,
                        calc_condition_type AS IsStanRange,corp_stan_id AS CorpStanID,corp_cost_id AS CorpCostID,
-                       min_unit AS AmountRounded,stan_ratio AS Modulus,allow_comm_modify AS IsCanUpdate FROM  tb_base_charge_comm_stan");
+                       min_unit AS AmountRounded,stan_ratio AS Modulus,allow_comm_modify AS IsCanUpdate FROM  tb_base_charge_comm_stan 
+                        WHERE times_tamp>'{timesTamp}'");
 
             StringBuilder sql = new();
 
@@ -674,6 +731,16 @@ namespace TwSynchro.CostItemModule
             stopwatch.Restart();
 
             int PageIndex = 1;
+
+            #region 读取当前最大时间戳
+
+            sql.Clear();
+
+            sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_base_charge_comm_stan");
+
+            var times_tamp = (await mySqlConn.QueryAsync<string>(sql.ToString())).ToList();
+
+            #endregion
 
             while (true)
             {
@@ -720,6 +787,8 @@ namespace TwSynchro.CostItemModule
 
                 foreach (var item in result.Data)
                 {
+                    #region 读取行数据
+
                     dr = dt.NewRow();
 
                     UtilsDataTable.DataRowIsNull(dr, "StanID", item.StanID);//主键
@@ -822,6 +891,8 @@ namespace TwSynchro.CostItemModule
 
                     dt.Rows.Add(dr);
 
+                    #endregion
+
                     sql.AppendLine($@"DELETE Tb_HSPR_CostStandard WHERE StanID='{item.StanID}';");
                 }
                 _logger.LogInformation($"生成项目标准数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
@@ -881,6 +952,9 @@ namespace TwSynchro.CostItemModule
 
             }
 
+            //保存时间戳
+            TimestampHelp.SetTimestampAsync("CostStandard", times_tamp[0], 180);
+
             _logger.LogInformation($"------同步项目标准数据结束------");
 
             return rm;
@@ -920,11 +994,6 @@ namespace TwSynchro.CostItemModule
             {
                 _logger.LogInformation($"({Comm.CommName})项目同步开始");
 
-                //WHERE comm_id='{Comm.CommID}'
-                StringBuilder Strsql = new($@"select id AS IID,comm_id AS CommID,customer_id AS CustID,resource_id AS RoomID,cost_id AS CostID,
-       meter_name AS MeterSign,calc_area AS CalcArea,calc_cycle AS ChargeCycle,is_delete AS IsDelete,
-       calc_method AS PayType,calc_amount AS StanSingleAmount,delete_user AS DelUserName,calc_number AS RoomBuildArea from tb_charge_fee_stan_setting");
-
                 //using var mySqlConn = DbService.GetDbConnection(DBType.MySql, "Erp_Develop");
                 using var mySqlConn = DbService.GetSqlBurstDbConnection(DBType.MySql, DbBurstType.Charge, Comm.IntID);
 
@@ -934,11 +1003,28 @@ namespace TwSynchro.CostItemModule
                     break;
                 }
 
+                string timesTamp = await TimestampHelp.GetTimestampAsync("CostStanSetting-"+Comm.CommID);
+
+                StringBuilder Strsql = new($@"select id AS IID,comm_id AS CommID,customer_id AS CustID,resource_id AS RoomID,cost_id AS CostID,
+       meter_name AS MeterSign,calc_area AS CalcArea,calc_cycle AS ChargeCycle,is_delete AS IsDelete,
+       calc_method AS PayType,calc_amount AS StanSingleAmount,delete_user AS DelUserName,calc_number AS RoomBuildArea from tb_charge_fee_stan_setting
+                WHERE comm_id='{Comm.CommID}' AND times_tamp>'{timesTamp}'");
+
                 _logger.LogInformation($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 stopwatch.Restart();
 
                 int PageIndex = 1;
+
+                #region 读取当前最大时间戳
+
+                sql.Clear();
+
+                sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_charge_fee_stan_setting");
+
+                var times_tamp = (await mySqlConn.QueryAsync<string>(sql.ToString())).ToList();
+
+                #endregion
 
                 while (true)
                 {
@@ -967,6 +1053,8 @@ namespace TwSynchro.CostItemModule
 
                     foreach (var item in result.Data)
                     {
+                        #region 读取行数据
+
                         dr = dt.NewRow();
 
                         UtilsDataTable.DataRowIsNull(dr, "IID", item.IID);//主键
@@ -1017,6 +1105,8 @@ namespace TwSynchro.CostItemModule
 
                         dt.Rows.Add(dr);
 
+                        #endregion
+
                         sql.AppendLine($@"DELETE Tb_HSPR_CostStanSetting WHERE IID='{item.IID}';");
                     }
                     _logger.LogInformation($"生成客户标准绑定数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
@@ -1066,6 +1156,9 @@ namespace TwSynchro.CostItemModule
                         break;
 
                 }
+
+                //保存时间戳
+                TimestampHelp.SetTimestampAsync("CostStanSetting-" + Comm.CommID, times_tamp[0], 180);
 
                 _logger.LogInformation($"({Comm.CommName})项目同步结束");
             }
