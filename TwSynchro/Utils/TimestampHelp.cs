@@ -1,4 +1,6 @@
 ﻿using Dapper;
+using DapperFactory;
+using DapperFactory.Enum;
 using System;
 using System.Data;
 using System.Linq;
@@ -15,9 +17,11 @@ namespace TwSynchro.Utils
         /// <param name="sqlServerConn"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        public static async Task<string> GetTimestampAsync(IDbConnection sqlServerConn, string key)
+        public static async Task<string> GetTimestampAsync(string key)
         {
             object timestamp = CacheHelper.CacheValue(key);
+
+            using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
 
             if (timestamp is null)
             {
@@ -42,8 +46,9 @@ namespace TwSynchro.Utils
         /// <param name="key"></param>
         /// <param name="value">时间戳值</param>
         /// <param name="minute">绝对过期时间（分钟）</param>
-        public static async void SetTimestampAsync(IDbConnection sqlServerConn, string key, string value, int minute)
+        public static async void SetTimestampAsync(string key, string value, int minute)
         {
+            using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
 
             CacheHelper.CacheInsertAddMinutes(key, value, minute);
 

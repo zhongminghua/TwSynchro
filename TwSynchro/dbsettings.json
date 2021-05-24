@@ -29,7 +29,7 @@
   },
   "Erp_Base": {
     "Provider": "MySql",
-    "Host": "139.9.248.136",
+    "Host": "116.63.144.212",
     "Port": "3306",
     "DatabaseName": "Erp_Base",
     "User": "root",
