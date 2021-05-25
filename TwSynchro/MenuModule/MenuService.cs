@@ -14,16 +14,17 @@ using Utils;
 
 namespace TwSynchro.UserModule
 {
-    public class UserService
+    public class MenuService
     {
         public async static Task Synchro(ILogger<Worker> _logger, CancellationToken stoppingToken)
         {
-            _logger.LogInformation($"------同步用户数据开始------");
+            _logger.LogInformation($"------同步菜单数据开始------");
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            StringBuilder sql = new("SELECT ID,Name,Account,Password,(CASE Sex WHEN 0 THEN '女' ELSE '男' END) as Sex,Email,Mobile FROM rf_user;");
+            StringBuilder sql = new($@"SELECT b.Address,a.Id,a.Title,a.ParentId FROM rf_menu a
+                                           LEFT JOIN rf_applibrary b ON a.AppLibraryId = b.Id");
 
             using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
@@ -31,9 +32,9 @@ namespace TwSynchro.UserModule
 
             stopwatch.Restart();
 
-            var result = (await mySqlConn.QueryAsync<User>(sql.ToString())).ToList();
+            var result = (await mySqlConn.QueryAsync<Menu>(sql.ToString())).ToList();
 
-            _logger.LogInformation($"读取用户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            _logger.LogInformation($"读取菜单数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -41,11 +42,11 @@ namespace TwSynchro.UserModule
 
             sql.Clear();
 
-            sql.AppendLine("SELECT UserCode,UserName,LoginCode,PassWord,Sex,MobileTel,Email,IsFirstLogin,IsUse FROM Tb_Sys_User WITH(NOLOCK) WHERE 1<>1;");
+            sql.AppendLine("SELECT PNodeCode,PNodeName,ParentId,URLPage FROM Tb_Sys_PowerNode WHERE 1<>1;");
 
             var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
 
-            DataTable dt = new DataTable("Tb_Sys_User");
+            DataTable dt = new DataTable("Tb_Sys_PowerNode");
 
             dt.Load(reader);
 
@@ -53,26 +54,21 @@ namespace TwSynchro.UserModule
 
             sql.Clear();
 
-            foreach (var itemUser in result)
+            foreach (var itemMenu in result)
             {
                 dr = dt.NewRow();
 
-                dr["UserCode"] = itemUser.ID;
-                dr["UserName"] = itemUser.Name;
-                dr["LoginCode"] = itemUser.Account;
-                dr["PassWord"] = itemUser.Password;
-                dr["Sex"] = itemUser.Sex;
-                dr["MobileTel"] = itemUser.Mobile;
-                dr["Email"] = itemUser.Email;
-                dr["IsFirstLogin"] = 1;
-                dr["IsUse"] = 1;
+                dr["PNodeCode"] = itemMenu.Id;
+                dr["PNodeName"] = itemMenu.Title;
+                dr["ParentId"] = itemMenu.ParentId;
+                dr["URLPage"] = itemMenu.Address;
 
                 dt.Rows.Add(dr);
 
-                sql.AppendLine($@"DELETE Tb_Sys_User WHERE UserCode='{itemUser.ID}';");
+                sql.AppendLine($@"DELETE Tb_Sys_PowerNode WHERE UserCode='{itemMenu.Id}';");
             }
 
-            _logger.LogInformation($"生成用户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            _logger.LogInformation($"生成菜单数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -81,7 +77,7 @@ namespace TwSynchro.UserModule
             {
                 int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
-                _logger.LogInformation($"删除用户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
+                _logger.LogInformation($"删除菜单数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
                 stopwatch.Restart();
 
@@ -89,7 +85,7 @@ namespace TwSynchro.UserModule
 
                 stopwatch.Stop();
 
-                _logger.LogInformation($"插入用户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                _logger.LogInformation($"插入菜单数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 trans.Commit();
             }
@@ -97,10 +93,10 @@ namespace TwSynchro.UserModule
             {
                 trans.Rollback();
 
-                _logger.LogInformation($"插入用户数据失败:{ex.Message}{ex.StackTrace}");
+                _logger.LogInformation($"插入菜单数据失败:{ex.Message}{ex.StackTrace}");
 
             }
-            _logger.LogInformation($"------同步用户数据结束------");
+            _logger.LogInformation($"------同步菜单数据结束------");
 
         }
     }

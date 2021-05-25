@@ -89,13 +89,14 @@ namespace TwSynchro
                    {
 
                        await UserService.Synchro(_logger, stoppingToken);
-
-                       Thread.Sleep(_appSettings.UserStopMsec);
+                    
                    }
                    catch (Exception ex)
                    {
                        _logger.LogError($"用户:\r\n{ex.Message}{ex.StackTrace}");
                    }
+
+                   Thread.Sleep(_appSettings.UserStopMsec);
                }
            }, stoppingToken);
         }
@@ -111,12 +112,14 @@ namespace TwSynchro
                     {
                         await OrganizeService.Synchro(_logger, stoppingToken);
 
-                        Thread.Sleep(_appSettings.UserStopMsec);
+                       
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError($"用户:\r\n{ex.Message}{ex.StackTrace}");
+                        _logger.LogError($"机构:\r\n{ex.Message}{ex.StackTrace}");
                     }
+
+                    Thread.Sleep(_appSettings.UserStopMsec);
                 }
             }, stoppingToken);
         }
@@ -137,7 +140,7 @@ namespace TwSynchro
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError($"用户:\r\n{ex.Message}{ex.StackTrace}");
+                        _logger.LogError($"客户:\r\n{ex.Message}{ex.StackTrace}");
                     }
                 }
             }, stoppingToken);

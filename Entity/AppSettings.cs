@@ -11,17 +11,17 @@ namespace Entity
         /// <summary>
         /// 同步用户停留时间。
         /// </summary>
-        public int UserStopMsec { set; get; }
+        public int UserStopMsec { set; get; } = 1000;
 
         /// <summary>
         /// 同步项目机构岗位停留时间。
         /// </summary>
-        public int OrganizeStopMsec { set; get; }
+        public int OrganizeStopMsec { set; get; } = 1000;
 
         /// <summary>
         /// 同步客户停留时间。
         /// </summary>
-        public int CustomerStopMsec { set; get; }
+        public int CustomerStopMsec { set; get; } = 1000;
 
     }
 }
