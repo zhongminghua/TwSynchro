@@ -56,7 +56,7 @@ namespace TwSynchro.Utils
 
             int count = sqlServerConn.QuerySingle<int>(sql.ToString());
 
-            if (count > 1)
+            if (count > 0)
                 sql = $"UPDATE Tb_Sys_SynchroTimestamp_MySql SET TimestampValue='{value}' WHERE TimestampKey='{key}'";
             else
                 sql = $"INSERT INTO Tb_Sys_SynchroTimestamp_MySql(TimestampKey,TimestampValue) VALUES ('{key}','{value}')";

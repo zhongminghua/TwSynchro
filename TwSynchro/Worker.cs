@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using TwSynchro.CostItemModule;
 using TwSynchro.CustomerModule;
 using TwSynchro.OrganizeModule;
+using TwSynchro.ResourceModule;
 using TwSynchro.UserModule;
 
 namespace TwSynchro
@@ -154,11 +155,59 @@ namespace TwSynchro
                     {
                         await CostItemService.Synchro(_logger, stoppingToken);
 
-                        Thread.Sleep(_appSettings.UserStopMsec);
+                        Thread.Sleep(_appSettings.CostItemStopMsec);
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError($"用户:\r\n{ex.Message}{ex.StackTrace}");
+                        _logger.LogError($"收费科目、标准:\r\n{ex.Message}{ex.StackTrace}");
+                    }
+                }
+            }, stoppingToken);
+        }
+
+        /// <summary>
+        /// 税率
+        /// </summary>
+        /// <param name="stoppingToken"></param>
+        /// <returns></returns>
+        protected Task RunTaskTaxRateSetting(CancellationToken stoppingToken)
+        {
+            return Task.Run(async () =>
+            {
+
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        await TaxRateSettingService.Synchro(_logger, stoppingToken);
+
+                        Thread.Sleep(_appSettings.TaxRateSettingStopMsec);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"税率:\r\n{ex.Message}{ex.StackTrace}");
+                    }
+                }
+            }, stoppingToken);
+        }
+
+
+        protected Task RunTaskResource(CancellationToken stoppingToken)
+        {
+            return Task.Run(async () =>
+            {
+                //await ResourceService.Synchro(_logger, stoppingToken);
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        await ResourceService.Synchro(_logger, stoppingToken);
+
+                        Thread.Sleep(_appSettings.ResourceStopMsec);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"资源:\r\n{ex.Message}{ex.StackTrace}");
                     }
                 }
             }, stoppingToken);

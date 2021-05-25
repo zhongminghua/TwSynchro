@@ -8,6 +8,8 @@ using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using TwSynchro.Utils;
 using Utils;
 
@@ -19,7 +21,7 @@ namespace TwSynchro.CostItemModule
         /// 增值税率同步
         /// </summary>
         /// <param name="_logger"></param>
-        public async static void Synchro(ILogger<Worker> _logger)
+        public async static Task Synchro(ILogger<Worker> _logger, CancellationToken stoppingToken)
         {
             _logger.LogInformation($"------同步增值税数据开始------");
 
@@ -65,10 +67,10 @@ namespace TwSynchro.CostItemModule
 
                 sql.Clear();
 
-                sql.AppendLine($@"select [TaxRateSettingID], [CommID], [CorpCostID], [TaxRate], [RecordedTaxRate], 
-                                [UnrecordedTaxRate], [ContractPenaltyRate], [StartDate], [EndDate], [AuditStatus], 
-                                [IsRealEstateRecord], [IsContractPenalty], [OperationUserCode], [OperationDate], 
-                                [IsDelete], [IsLock], [TaxpayerScale], [spbm], [spmc], [spsm], [ggxh], [dw] from Tb_HSPR_TaxRateSetting WHERE 1=0");
+                sql.AppendLine($@"select [TaxRateSettingID], [CommID], [CorpCostID], [TaxRate],
+                                [ContractPenaltyRate], [StartDate], [EndDate], [AuditStatus], 
+                                [IsContractPenalty], [OperationUserCode], [OperationDate], 
+                                [IsDelete] from Tb_HSPR_TaxRateSetting WHERE 1=0");
 
                 var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
 
@@ -92,10 +94,6 @@ namespace TwSynchro.CostItemModule
 
                     UtilsDataTable.DataRowIsNull(dr, "TaxRate", item.TaxRate);//收费率
 
-                    //dr["RecordedTaxRate"] = null;//已备案税率
-
-                    //dr["UnrecordedTaxRate"] = null;//未备案税率
-
                     UtilsDataTable.DataRowIsNull(dr, "ContractPenaltyRate", item.ContractPenaltyRate);//合同违约金税率
 
                     UtilsDataTable.DataRowIsNull(dr, "StartDate", item.StartDate);//开始时间
@@ -104,8 +102,6 @@ namespace TwSynchro.CostItemModule
 
                     dr["AuditStatus"] = 1;//审核状态
 
-                    //dr["IsRealEstateRecord"] = null;//是否需要不动产备案
-
                     UtilsDataTable.DataRowIsNull(dr, "IsContractPenalty", item.IsContractPenalty);//合同违约金税率
 
                     UtilsDataTable.DataRowIsNull(dr, "OperationUserCode", item.OperationUserCode);//操作人
@@ -113,14 +109,6 @@ namespace TwSynchro.CostItemModule
                     UtilsDataTable.DataRowIsNull(dr, "OperationDate", item.OperationDate);//操作时间
 
                     UtilsDataTable.DataRowIsNull(dr, "IsDelete", item.IsDelete);//是否删除
-
-                    //dr["IsLock"] = null;//是否锁定
-                    //dr["TaxpayerScale"] = null;//
-                    //dr["spbm"] = null;//
-                    //dr["spmc"] = null;//
-                    //dr["spsm"] = null;//
-                    //dr["ggxh"] = null;//
-                    //dr["dw"] = null;//
 
                     dt.Rows.Add(dr);
 
@@ -133,35 +121,36 @@ namespace TwSynchro.CostItemModule
                 using var trans = sqlServerConn.OpenTransaction();
 
 
-                if (result.Data.Count() > 0)
+                try
                 {
-                    try
-                    {
-                        int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
+                    int rowsAffected = 0;
 
-                        _logger.LogInformation($"删除增值税数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
+                    if (!string.IsNullOrEmpty(sql.ToString()))
+                        rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
-                        stopwatch.Restart();
+                    _logger.LogInformation($"删除增值税数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
-                        //await DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_TaxRateSetting", trans);
+                    stopwatch.Restart();
 
-                        _logger.LogInformation($"插入增值税数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                    await DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_TaxRateSetting", stoppingToken, trans);
 
-                        stopwatch.Restart();
+                    _logger.LogInformation($"插入增值税数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
-                        trans.Commit();
+                    stopwatch.Restart();
 
-                        _logger.LogInformation($"第{PageIndex}次提交增值税数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                    trans.Commit();
 
-                        stopwatch.Restart();
-                    }
-                    catch (Exception e)
-                    {
-                        trans.Rollback();
+                    _logger.LogInformation($"第{PageIndex}次提交增值税数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
-                        _logger.LogInformation($"第{PageIndex}次提交增值税发生错误；错误信息：{e.Message}");
-                    }
+                    stopwatch.Restart();
+                }
+                catch (Exception e)
+                {
+                    trans.Rollback();
 
+                    _logger.LogInformation($"第{PageIndex}次提交增值税发生错误；错误信息：{e.Message}");
+
+                    return;
                 }
 
                 PageIndex++;//下一页

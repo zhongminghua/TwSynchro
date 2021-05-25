@@ -23,5 +23,20 @@ namespace Entity
         /// </summary>
         public int CustomerStopMsec { set; get; }
 
+        /// <summary>
+        /// 收费科目，标准停留时间。
+        /// </summary>
+        public int CostItemStopMsec { set; get; }
+
+        /// <summary>
+        /// 税率停留时间。
+        /// </summary>
+        public int TaxRateSettingStopMsec { set; get; }
+
+        /// <summary>
+        /// 资源停留时间。
+        /// </summary>
+        public int ResourceStopMsec { set; get; }
+
     }
 }
