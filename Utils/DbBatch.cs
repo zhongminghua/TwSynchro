@@ -34,10 +34,11 @@ namespace Utils
 
             if (dt.Rows.Count == 0) { return; }
 
-            using SqlBulkCopy bulkCopy = new SqlBulkCopy((SqlConnection)connection, SqlBulkCopyOptions.TableLock | SqlBulkCopyOptions.KeepIdentity | SqlBulkCopyOptions.KeepNulls, (SqlTransaction)transaction);
+            using SqlBulkCopy bulkCopy = new SqlBulkCopy((SqlConnection)connection,SqlBulkCopyOptions.KeepIdentity | SqlBulkCopyOptions.KeepNulls, (SqlTransaction)transaction);
             bulkCopy.BulkCopyTimeout = 30;
             bulkCopy.BatchSize = dt.Rows.Count;
             bulkCopy.DestinationTableName = tableName;
+
             for (int j = 0; j < dt.Columns.Count; j++)
             {
                 bulkCopy.ColumnMappings.Add(dt.Columns[j].ColumnName, dt.Columns[j].ColumnName);
