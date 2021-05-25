@@ -31,12 +31,12 @@ namespace TwSynchro.Utils
                 var data = (await sqlServerConn.QueryAsync<string>(sql)).ToList();
 
                 if (data.Count > 0)
-                    timestamp = DateTime.Parse(data[0]).ToString("yyyy-MM-dd HH:mm:ss");
+                    timestamp = data[0];
                 else
-                    timestamp = DateTime.Now.AddYears(-10).ToString("yyyy-MM-dd HH:mm:ss");
+                    timestamp = DateTime.Now.AddYears(-10);
 
             }
-            return timestamp.ToString();
+            return DateTime.Parse(timestamp.ToString()).ToString("yyyy-MM-dd HH:mm:ss");
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace TwSynchro.Utils
 
             int count = sqlServerConn.QuerySingle<int>(sql.ToString());
 
-            if (count > 1)
+            if (count > 0)
                 sql = $"UPDATE Tb_Sys_SynchroTimestamp_MySql SET TimestampValue='{value}' WHERE TimestampKey='{key}'";
             else
                 sql = $"INSERT INTO Tb_Sys_SynchroTimestamp_MySql(TimestampKey,TimestampValue) VALUES ('{key}','{value}')";
