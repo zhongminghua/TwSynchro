@@ -51,7 +51,7 @@ namespace TwSynchro.ResourceModule
 
             string timesTamp = UtilsSynchroTimestamp.GetTimestamp("ResourceRegion");
 
-            StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=0 AND times_tamp>'{timesTamp}'");
+            StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=0 AND time_stamp>'{timesTamp}'");
 
             using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
@@ -87,7 +87,7 @@ namespace TwSynchro.ResourceModule
 
             sql.Clear();
 
-            sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=0");
+            sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=0");
 
             var newTimes_tamp = (mySqlConn.Query<string>(sql.ToString())).ToList();
 
@@ -186,7 +186,7 @@ namespace TwSynchro.ResourceModule
 
             string timesTamp = UtilsSynchroTimestamp.GetTimestamp("ResourceBuilding");
 
-            StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=1 AND times_tamp>'{timesTamp}'");
+            StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=1 AND time_stamp>'{timesTamp}'");
 
             using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
@@ -225,7 +225,7 @@ namespace TwSynchro.ResourceModule
 
             sql.Clear();
 
-            sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=1");
+            sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=1");
 
             var newTimes_Tamp = (mySqlConn.Query<string>(sql.ToString())).ToList();
 
@@ -333,7 +333,7 @@ namespace TwSynchro.ResourceModule
 
             string timesTamp = UtilsSynchroTimestamp.GetTimestamp("ResourceRoom");
 
-            StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=3 AND times_tamp>'{timesTamp}'");
+            StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=3 AND time_stamp>'{timesTamp}'");
 
             //获取要同步的数据
             var readerMultiple = mySqlConn.QueryMultiple(sql.ToString());
@@ -354,7 +354,7 @@ namespace TwSynchro.ResourceModule
             //获取customer_live表数据
             sql.Append(@$"SELECT comm_id,customer_id,resource_id FROM tb_base_masterdata_customer_live 
                         WHERE resource_id in (SELECT id FROM tb_base_masterdata_resource WHERE 
-                                                resource_attr=1 AND resource_type=3 AND times_tamp>'{timesTamp}') AND first_contact=2");
+                                                resource_attr=1 AND resource_type=3 AND time_stamp>'{timesTamp}') AND first_contact=2");
 
             var customerLiveMultiple = mySqlConn.QueryMultiple(sql.ToString());
 
@@ -418,7 +418,7 @@ namespace TwSynchro.ResourceModule
 
             sql.Clear();
 
-            sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=3 ");
+            sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=3 ");
 
             var newTimes_Tamp = (mySqlConn.Query<string>(sql.ToString())).ToList();
 
@@ -645,7 +645,7 @@ namespace TwSynchro.ResourceModule
 
             string timesTamp = UtilsSynchroTimestamp.GetTimestamp("ResourceCarpark");
 
-            StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_attr=2 AND resource_type=4 AND times_tamp>'{timesTamp}'");
+            StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_attr=2 AND resource_type=4 AND time_stamp>'{timesTamp}'");
 
             //获取要同步的数据
             var readerMultiple = mySqlConn.QueryMultiple(sql.ToString());
@@ -677,7 +677,7 @@ namespace TwSynchro.ResourceModule
 
             sql.Clear();
 
-            sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_base_masterdata_resource WHERE resource_attr=2 AND resource_type=4");
+            sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_base_masterdata_resource WHERE resource_attr=2 AND resource_type=4");
 
             var newTimes_Tamp = (mySqlConn.Query<string>(sql.ToString())).ToList();
 
@@ -779,7 +779,7 @@ namespace TwSynchro.ResourceModule
 
             string timesTamp = UtilsSynchroTimestamp.GetTimestamp("ResourceParking");
 
-            StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_attr=2 AND resource_type=5 AND times_tamp>'{timesTamp}'");
+            StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_attr=2 AND resource_type=5 AND time_stamp>'{timesTamp}'");
 
             //获取要同步的数据
             var readerMultiple = mySqlConn.QueryMultiple(sql.ToString());
@@ -791,7 +791,7 @@ namespace TwSynchro.ResourceModule
             //获取customer_live表数据
             sql.Append(@$"SELECT comm_id,customer_id,resource_id FROM tb_base_masterdata_customer_live 
                         WHERE resource_id in (SELECT id FROM tb_base_masterdata_resource WHERE 
-                                                resource_attr=2 AND resource_type=5 AND times_tamp>'{timesTamp}') AND first_contact=2");
+                                                resource_attr=2 AND resource_type=5 AND time_stamp>'{timesTamp}') AND first_contact=2");
 
             var customerLiveMultiple = mySqlConn.QueryMultiple(sql.ToString());
 
@@ -825,7 +825,7 @@ namespace TwSynchro.ResourceModule
 
             sql.Clear();
 
-            sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_base_masterdata_resource WHERE resource_attr=2 AND resource_type=5");
+            sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_base_masterdata_resource WHERE resource_attr=2 AND resource_type=5");
 
             var newTimes_Tamp = (mySqlConn.Query<string>(sql.ToString())).ToList();
 
@@ -966,7 +966,7 @@ namespace TwSynchro.ResourceModule
 
         //    string timesTamp =  UtilsSynchroTimestamp.GetTimestamp("Resource");
 
-        //    StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE times_tamp>'{timesTamp}'");
+        //    StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE time_stamp>'{timesTamp}'");
 
         //    using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
@@ -983,7 +983,7 @@ namespace TwSynchro.ResourceModule
 
         //    //获取customer_live表数据
         //    sql.Append(@$"SELECT comm_id,customer_id,resource_id FROM tb_base_masterdata_customer_live 
-        //                WHERE resource_id in (SELECT id FROM tb_base_masterdata_resource WHERE times_tamp>'{timesTamp}') AND first_contact=2");
+        //                WHERE resource_id in (SELECT id FROM tb_base_masterdata_resource WHERE time_stamp>'{timesTamp}') AND first_contact=2");
 
         //    var customerLiveMultiple =  mySqlConn.QueryMultiple(sql.ToString());
 
@@ -1085,9 +1085,9 @@ namespace TwSynchro.ResourceModule
 
         //    sql.Clear();
 
-        //    sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_base_masterdata_resource");
+        //    sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_base_masterdata_resource");
 
-        //    var times_tamp = ( mySqlConn.Query<string>(sql.ToString())).ToList();
+        //    var time_stamp = ( mySqlConn.Query<string>(sql.ToString())).ToList();
 
         //    #endregion
 
@@ -1470,7 +1470,7 @@ namespace TwSynchro.ResourceModule
         //    #endregion
 
         //    //保存时间戳
-        //    UtilsSynchroTimestamp.SetTimestamp("Resource", times_tamp[0], 180);
+        //    UtilsSynchroTimestamp.SetTimestamp("Resource", time_stamp[0], 180);
 
         //    _logger.LogInformation($"------同步资源数据结束------");
 

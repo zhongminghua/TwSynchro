@@ -21,12 +21,12 @@ namespace TwSynchro.Utils
         {
             object timestamp = CacheHelper.CacheValue(key);
 
-            using var sqlServerConn =  DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
+            using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
 
             if (timestamp is null)
             {
 
-                var sql = $"SELECT TOP 1 TimestampValue FROM Tb_Sys_SynchroTimestamp_MySql WHERE TimestampKey='{key}'";
+                var sql = $"SELECT TOP 1 Ts_Value FROM Tb_Synchro_TimeStamp WHERE Ts_Key='{key}'";
 
                 var timestampValue = sqlServerConn.QueryFirstOrDefault<string>(sql);
 
@@ -46,20 +46,20 @@ namespace TwSynchro.Utils
         /// <param name="key"></param>
         /// <param name="value">时间戳值</param>
         /// <param name="minute">绝对过期时间（分钟）</param>
-        public static void SetTimestamp(string key, string value, int minute)
+        public static void SetTimestamp(string key, object value, int minute = 5)
         {
             using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
 
             CacheHelper.CacheInsertAddMinutes(key, value, minute);
 
-            string sql = $"SELECT COUNT(1) FROM Tb_Sys_SynchroTimestamp_MySql WHERE TimestampKey='{key}'";
+            string sql = $"SELECT COUNT(1) FROM Tb_Synchro_TimeStamp WHERE Ts_Key='{key}'";
 
             int count = sqlServerConn.QuerySingle<int>(sql.ToString());
 
             if (count > 0)
-                sql = $"UPDATE Tb_Sys_SynchroTimestamp_MySql SET TimestampValue='{value}' WHERE TimestampKey='{key}'";
+                sql = $"UPDATE Tb_Synchro_TimeStamp SET Ts_Value='{value}' WHERE Ts_Key='{key}'";
             else
-                sql = $"INSERT INTO Tb_Sys_SynchroTimestamp_MySql(TimestampKey,TimestampValue) VALUES ('{key}','{value}')";
+                sql = $"INSERT INTO Tb_Synchro_TimeStamp(Ts_Key,Ts_Value) VALUES ('{key}','{value}')";
 
             sqlServerConn.Execute(sql.ToString());
 

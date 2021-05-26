@@ -9,6 +9,7 @@ using TwSynchro.CostItemModule;
 using TwSynchro.CustomerModule;
 using TwSynchro.MenuModule;
 using TwSynchro.OrganizeModule;
+using TwSynchro.OrganizeUserModule;
 using TwSynchro.ResourceModule;
 using TwSynchro.UserModule;
 
@@ -33,7 +34,7 @@ namespace TwSynchro
         public override Task StartAsync(CancellationToken
          cancellationToken)
         {
-            //_logger.LogInformation("服务开始");
+            _logger.LogInformation("服务开始");
             //_logger.LogTrace($"跟踪信息");
             //_logger.LogDebug($"调试信息");
             //_logger.LogInformation($"普通信息");
@@ -66,7 +67,7 @@ namespace TwSynchro
         {
             try
             {
-                await Task.WhenAll(new[] { RunTaskMenu(stoppingToken) });
+                await Task.WhenAll(new[] { RunTaskOrganizeUser(stoppingToken) });
 
                 //await Task.WhenAll(new[] { RunTaskUser(stoppingToken), RunTaskOrganize(stoppingToken), RunTaskCustomer(stoppingToken) });
             }
@@ -169,6 +170,30 @@ namespace TwSynchro
                 }
             }, stoppingToken);
         }
+
+        protected Task RunTaskOrganizeUser(CancellationToken stoppingToken)
+        {
+            return Task.Run(() =>
+            {
+
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        OrganizeUserService.Synchro(_logger);
+
+                        Thread.Sleep(_appSettings.UserStopMsec);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"菜单:\r\n{ex.Message}{ex.StackTrace}");
+                    }
+                }
+            }, stoppingToken);
+        }
+
+
+
         protected Task RunTaskCostItem(CancellationToken stoppingToken)
         {
             return Task.Run(() =>
