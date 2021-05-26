@@ -131,9 +131,22 @@ namespace Entity
         /// 序号
         /// </summary>
         public int? SortNum { get; set; }
+
+
         /// <summary>
         /// 通用岗位ID
         /// </summary>
-        public Guid? UniversalRoleId { get; set; }
+        public object UniversalRoleId { get; set; }
+
+
+        /// <summary>
+        /// 是否删除
+        /// </summary>
+        public int Is_Delete { get; set; }
+
+        /// <summary>
+        /// 时间戳
+        /// </summary>
+        public DateTime time_stamp { get; set; }
     }
 }

@@ -32,7 +32,5 @@ namespace Entity
         public DateTime time_stamp { get; set; }
         
 
-
-
     }
 }

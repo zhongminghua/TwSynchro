@@ -37,5 +37,15 @@ namespace Entity
         /// 手机号
         /// </summary>
         public string Mobile { get; set; }
+
+        /// <summary>
+        /// 是否删除
+        /// </summary>
+        public int Is_Delete { get; set; }
+
+        /// <summary>
+        /// 时间戳
+        /// </summary>
+        public DateTime time_stamp { get; set; }
     }
 }

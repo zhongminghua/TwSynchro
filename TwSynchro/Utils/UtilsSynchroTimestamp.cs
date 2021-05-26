@@ -50,6 +50,8 @@ namespace TwSynchro.Utils
         {
             using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
 
+            value = DateTime.Parse(value.ToString()).ToString("yyyy-MM-dd HH:mm:ss");
+
             CacheHelper.CacheInsertAddMinutes(key, value, minute);
 
             string sql = $"SELECT COUNT(1) FROM Tb_Synchro_TimeStamp WHERE Ts_Key='{key}'";
