@@ -16,7 +16,7 @@ namespace TwSynchro.CustomerModule
 {
     public class CustomerService
     {
-        public async static Task Synchro(ILogger<Worker> _logger)
+        public  static void Synchro(ILogger<Worker> _logger)
         {
             _logger.LogInformation($"------同步客户数据开始------");
 
@@ -52,7 +52,7 @@ namespace TwSynchro.CustomerModule
 
             stopwatch.Restart();
 
-            var readerMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
+            var readerMultiple =  mySqlConn.QueryMultiple(sql.ToString());
 
             var dataCustomerComm = readerMultiple.Read<CustomerComm>();
 
@@ -77,7 +77,7 @@ namespace TwSynchro.CustomerModule
 
             using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
 
-            var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
+            var reader =  sqlServerConn.ExecuteReader(sql.ToString());
 
             _logger.LogInformation($"创建SqlServer连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -198,25 +198,25 @@ namespace TwSynchro.CustomerModule
             using var trans = sqlServerConn.OpenTransaction();
             try
             {
-                int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
+                int rowsAffected =  sqlServerConn.Execute(sql.ToString(), transaction: trans);
 
                 _logger.LogInformation($"删除客户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
                 stopwatch.Restart();
 
-                //await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Customer, "Tb_HSPR_Customer", trans);
+                // DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Customer, "Tb_HSPR_Customer", trans);
 
                 _logger.LogInformation($"插入客户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 stopwatch.Restart();
 
-                //await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_CustomerLive, "Tb_HSPR_CustomerLive", trans);
+                // DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_CustomerLive, "Tb_HSPR_CustomerLive", trans);
 
                 _logger.LogInformation($"插入Tb_HSPR_CustomerLive数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 stopwatch.Restart();
 
-                //await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Household, "Tb_HSPR_Household", trans);
+                // DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Household, "Tb_HSPR_Household", trans);
 
                 stopwatch.Stop();
 

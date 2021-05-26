@@ -22,6 +22,12 @@ namespace Entity
         /// </summary>
         public string Address { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Is_Delete { get; set; }
+        
+
 
     }
 }

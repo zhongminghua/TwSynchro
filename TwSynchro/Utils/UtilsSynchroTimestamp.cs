@@ -9,7 +9,7 @@ using Utils;
 
 namespace TwSynchro.Utils
 {
-    public static class TimestampHelp
+    public static class UtilsSynchroTimestamp
     {
         /// <summary>
         /// 读取时间戳
@@ -17,25 +17,25 @@ namespace TwSynchro.Utils
         /// <param name="sqlServerConn"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        public static async Task<string> GetTimestampAsync(string key)
+        public static string GetTimestamp(string key)
         {
             object timestamp = CacheHelper.CacheValue(key);
 
-            using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
+            using var sqlServerConn =  DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
 
             if (timestamp is null)
             {
 
-                string sql = $"SELECT TOP 1 TimestampValue FROM Tb_Sys_SynchroTimestamp_MySql WHERE TimestampKey='{key}'";
+                var sql = $"SELECT TOP 1 TimestampValue FROM Tb_Sys_SynchroTimestamp_MySql WHERE TimestampKey='{key}'";
 
-                var data = (await sqlServerConn.QueryAsync<string>(sql)).ToList();
+                var timestampValue = sqlServerConn.QueryFirstOrDefault<string>(sql);
 
-                if (data.Count > 0)
-                    timestamp = data[0];
+                if (!string.IsNullOrEmpty(timestampValue))
+                    timestamp = timestampValue;
                 else
                     timestamp = DateTime.Now.AddYears(-10);
-
             }
+
             return DateTime.Parse(timestamp.ToString()).ToString("yyyy-MM-dd HH:mm:ss");
         }
 
@@ -46,7 +46,7 @@ namespace TwSynchro.Utils
         /// <param name="key"></param>
         /// <param name="value">时间戳值</param>
         /// <param name="minute">绝对过期时间（分钟）</param>
-        public static async void SetTimestampAsync(string key, string value, int minute)
+        public static void SetTimestamp(string key, string value, int minute)
         {
             using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
 
@@ -61,7 +61,7 @@ namespace TwSynchro.Utils
             else
                 sql = $"INSERT INTO Tb_Sys_SynchroTimestamp_MySql(TimestampKey,TimestampValue) VALUES ('{key}','{value}')";
 
-            await sqlServerConn.ExecuteAsync(sql.ToString());
+            sqlServerConn.Execute(sql.ToString());
 
         }
 

@@ -16,7 +16,7 @@ namespace TwSynchro.UserModule
 {
     public class UserService
     {
-        public async static Task Synchro(ILogger<Worker> _logger, CancellationToken stoppingToken)
+        public  static void Synchro(ILogger<Worker> _logger)
         {
             _logger.LogInformation($"------同步用户数据开始------");
 
@@ -31,7 +31,7 @@ namespace TwSynchro.UserModule
 
             stopwatch.Restart();
 
-            var result = (await mySqlConn.QueryAsync<User>(sql.ToString())).ToList();
+            var result = ( mySqlConn.Query<User>(sql.ToString())).ToList();
 
             _logger.LogInformation($"读取用户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -43,7 +43,7 @@ namespace TwSynchro.UserModule
 
             sql.AppendLine("SELECT UserCode,UserName,LoginCode,PassWord,Sex,MobileTel,Email,IsFirstLogin,IsUse FROM Tb_Sys_User WITH(NOLOCK) WHERE 1<>1;");
 
-            var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
+            var reader =  sqlServerConn.ExecuteReader(sql.ToString());
 
             DataTable dt = new DataTable("Tb_Sys_User");
 
@@ -79,13 +79,13 @@ namespace TwSynchro.UserModule
             using var trans = sqlServerConn.OpenTransaction();
             try
             {
-                int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
+                int rowsAffected =  sqlServerConn.Execute(sql.ToString(), transaction: trans);
 
                 _logger.LogInformation($"删除用户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
                 stopwatch.Restart();
 
-                await DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_Sys_User", stoppingToken, trans);
+                 DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_Sys_User",  trans);
 
                 stopwatch.Stop();
 

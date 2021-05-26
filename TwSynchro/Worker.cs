@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TwSynchro.CostItemModule;
 using TwSynchro.CustomerModule;
+using TwSynchro.MenuModule;
 using TwSynchro.OrganizeModule;
 using TwSynchro.ResourceModule;
 using TwSynchro.UserModule;
@@ -65,7 +66,7 @@ namespace TwSynchro
         {
             try
             {
-                await Task.WhenAll(new[] { RunTaskOrganize(stoppingToken)});
+                await Task.WhenAll(new[] { RunTaskMenu(stoppingToken) });
 
                 //await Task.WhenAll(new[] { RunTaskUser(stoppingToken), RunTaskOrganize(stoppingToken), RunTaskCustomer(stoppingToken) });
             }
@@ -81,20 +82,43 @@ namespace TwSynchro
 
         protected Task RunTaskUser(CancellationToken stoppingToken)
         {
-            return Task.Run(async () =>
+            return Task.Run(() =>
+          {
+
+              while (!stoppingToken.IsCancellationRequested)
+              {
+                  try
+                  {
+
+                      UserService.Synchro(_logger);
+
+                  }
+                  catch (Exception ex)
+                  {
+                      _logger.LogError($"用户:\r\n{ex.Message}{ex.StackTrace}");
+                  }
+
+                  Thread.Sleep(_appSettings.UserStopMsec);
+              }
+          }, stoppingToken);
+        }
+
+        protected Task RunTaskOrganize(CancellationToken stoppingToken)
+        {
+            return Task.Run(() =>
            {
 
                while (!stoppingToken.IsCancellationRequested)
                {
                    try
                    {
+                       OrganizeService.Synchro(_logger);
 
-                       await UserService.Synchro(_logger, stoppingToken);
-                    
+
                    }
                    catch (Exception ex)
                    {
-                       _logger.LogError($"用户:\r\n{ex.Message}{ex.StackTrace}");
+                       _logger.LogError($"机构:\r\n{ex.Message}{ex.StackTrace}");
                    }
 
                    Thread.Sleep(_appSettings.UserStopMsec);
@@ -102,32 +126,31 @@ namespace TwSynchro
            }, stoppingToken);
         }
 
-        protected Task RunTaskOrganize(CancellationToken stoppingToken)
-        {
-            return Task.Run(async () =>
-            {
-
-                while (!stoppingToken.IsCancellationRequested)
-                {
-                    try
-                    {
-                        await OrganizeService.Synchro(_logger, stoppingToken);
-
-                       
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError($"机构:\r\n{ex.Message}{ex.StackTrace}");
-                    }
-
-                    Thread.Sleep(_appSettings.UserStopMsec);
-                }
-            }, stoppingToken);
-        }
-
         protected Task RunTaskCustomer(CancellationToken stoppingToken)
         {
-            return Task.Run(async () =>
+            return Task.Run(() =>
+           {
+
+               while (!stoppingToken.IsCancellationRequested)
+               {
+                   try
+                   {
+
+                       CustomerService.Synchro(_logger);
+
+                       Thread.Sleep(_appSettings.UserStopMsec);
+                   }
+                   catch (Exception ex)
+                   {
+                       _logger.LogError($"客户:\r\n{ex.Message}{ex.StackTrace}");
+                   }
+               }
+           }, stoppingToken);
+        }
+
+        protected Task RunTaskMenu(CancellationToken stoppingToken)
+        {
+            return Task.Run(() =>
             {
 
                 while (!stoppingToken.IsCancellationRequested)
@@ -135,37 +158,36 @@ namespace TwSynchro
                     try
                     {
 
-                        await CustomerService.Synchro(_logger);
+                        MenuService.Synchro(_logger);
 
                         Thread.Sleep(_appSettings.UserStopMsec);
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError($"客户:\r\n{ex.Message}{ex.StackTrace}");
+                        _logger.LogError($"菜单:\r\n{ex.Message}{ex.StackTrace}");
                     }
                 }
             }, stoppingToken);
         }
-
         protected Task RunTaskCostItem(CancellationToken stoppingToken)
         {
-            return Task.Run(async () =>
-            {
+            return Task.Run(() =>
+           {
 
-                while (!stoppingToken.IsCancellationRequested)
-                {
-                    try
-                    {
-                        await CostItemService.Synchro(_logger, stoppingToken);
+               while (!stoppingToken.IsCancellationRequested)
+               {
+                   try
+                   {
+                       CostItemService.Synchro(_logger);
 
-                        Thread.Sleep(_appSettings.CostItemStopMsec);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError($"收费科目、标准:\r\n{ex.Message}{ex.StackTrace}");
-                    }
-                }
-            }, stoppingToken);
+                       Thread.Sleep(_appSettings.CostItemStopMsec);
+                   }
+                   catch (Exception ex)
+                   {
+                       _logger.LogError($"收费科目、标准:\r\n{ex.Message}{ex.StackTrace}");
+                   }
+               }
+           }, stoppingToken);
         }
 
         /// <summary>
@@ -175,45 +197,45 @@ namespace TwSynchro
         /// <returns></returns>
         protected Task RunTaskTaxRateSetting(CancellationToken stoppingToken)
         {
-            return Task.Run(async () =>
-            {
+            return Task.Run(() =>
+           {
 
-                while (!stoppingToken.IsCancellationRequested)
-                {
-                    try
-                    {
-                        await TaxRateSettingService.Synchro(_logger, stoppingToken);
+               while (!stoppingToken.IsCancellationRequested)
+               {
+                   try
+                   {
+                       TaxRateSettingService.Synchro(_logger);
 
-                        Thread.Sleep(_appSettings.TaxRateSettingStopMsec);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError($"税率:\r\n{ex.Message}{ex.StackTrace}");
-                    }
-                }
-            }, stoppingToken);
+                       Thread.Sleep(_appSettings.TaxRateSettingStopMsec);
+                   }
+                   catch (Exception ex)
+                   {
+                       _logger.LogError($"税率:\r\n{ex.Message}{ex.StackTrace}");
+                   }
+               }
+           }, stoppingToken);
         }
 
 
         protected Task RunTaskResource(CancellationToken stoppingToken)
         {
-            return Task.Run(async () =>
-            {
+            return Task.Run(() =>
+           {
                 //await ResourceService.Synchro(_logger, stoppingToken);
                 while (!stoppingToken.IsCancellationRequested)
-                {
-                    try
-                    {
-                        await ResourceService.Synchro(_logger, stoppingToken);
+               {
+                   try
+                   {
+                       ResourceService.Synchro(_logger);
 
-                        Thread.Sleep(_appSettings.ResourceStopMsec);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError($"资源:\r\n{ex.Message}{ex.StackTrace}");
-                    }
-                }
-            }, stoppingToken);
+                       Thread.Sleep(_appSettings.ResourceStopMsec);
+                   }
+                   catch (Exception ex)
+                   {
+                       _logger.LogError($"资源:\r\n{ex.Message}{ex.StackTrace}");
+                   }
+               }
+           }, stoppingToken);
         }
 
     }

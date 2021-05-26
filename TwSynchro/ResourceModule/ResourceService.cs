@@ -22,14 +22,14 @@ namespace TwSynchro.ResourceModule
         /// 资源同步
         /// </summary>
         /// <param name="_logger"></param>
-        public async static Task Synchro(ILogger<Worker> _logger, CancellationToken stoppingToken)
+        public static void Synchro(ILogger<Worker> _logger)
         {
 
-            await SynchroRegion(_logger, stoppingToken);//区域
-            await SynchroBuilding(_logger, stoppingToken);//楼栋
-            await SynchroRoom(_logger, stoppingToken);//房屋
-            await SynchroCarpark(_logger, stoppingToken);//车位区域
-            await SynchroParking(_logger, stoppingToken);//车位
+            SynchroRegion(_logger);//区域
+            SynchroBuilding(_logger);//楼栋
+            SynchroRoom(_logger);//房屋
+            SynchroCarpark(_logger);//车位区域
+            SynchroParking(_logger);//车位
         }
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace TwSynchro.ResourceModule
         /// <param name="_logger"></param>
         /// <param name="stoppingToken"></param>
         /// <returns></returns>
-        public static async Task<ResultMessage> SynchroRegion(ILogger<Worker> _logger, CancellationToken stoppingToken)
+        public static ResultMessage SynchroRegion(ILogger<Worker> _logger)
         {
             ResultMessage rm = new();
 
@@ -49,7 +49,7 @@ namespace TwSynchro.ResourceModule
 
             using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
 
-            string timesTamp = await TimestampHelp.GetTimestampAsync("ResourceRegion");
+            string timesTamp = UtilsSynchroTimestamp.GetTimestamp("ResourceRegion");
 
             StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=0 AND times_tamp>'{timesTamp}'");
 
@@ -60,7 +60,7 @@ namespace TwSynchro.ResourceModule
             stopwatch.Restart();
 
             //获取要同步的数据
-            var readerMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
+            var readerMultiple = mySqlConn.QueryMultiple(sql.ToString());
 
             var ResourceData = readerMultiple.Read<Resource>().ToList();
 
@@ -72,7 +72,7 @@ namespace TwSynchro.ResourceModule
 
             sql.AppendLine("SELECT RegionID,CommID,RegionName,RegionSNum,IsDelete,SynchFlag FROM Tb_HSPR_Region WHERE 1<>1;");
 
-            var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
+            var reader = sqlServerConn.ExecuteReader(sql.ToString());
 
             //区域
             DataTable dtTb_HSPR_Region = new DataTable("Tb_HSPR_Region");
@@ -89,7 +89,7 @@ namespace TwSynchro.ResourceModule
 
             sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=0");
 
-            var newTimes_tamp = (await mySqlConn.QueryAsync<string>(sql.ToString())).ToList();
+            var newTimes_tamp = (mySqlConn.Query<string>(sql.ToString())).ToList();
 
             #endregion
 
@@ -129,13 +129,13 @@ namespace TwSynchro.ResourceModule
                 int rowsAffected = 0;
 
                 if (!string.IsNullOrEmpty(sqlRegionDel.ToString()))
-                    rowsAffected = await sqlServerConn.ExecuteAsync(sqlRegionDel.ToString(), transaction: trans);
+                    rowsAffected = sqlServerConn.Execute(sqlRegionDel.ToString(), transaction: trans);
 
                 _logger.LogInformation($"删除区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
                 stopwatch.Restart();
 
-                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Region, "Tb_HSPR_Region", stoppingToken, trans);
+                DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Region, "Tb_HSPR_Region", trans);
 
                 _logger.LogInformation($"插入区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -159,7 +159,7 @@ namespace TwSynchro.ResourceModule
                 return rm;
             }
 
-            TimestampHelp.SetTimestampAsync("ResourceRegion", newTimes_tamp[0], 180);
+            UtilsSynchroTimestamp.SetTimestamp("ResourceRegion", newTimes_tamp[0], 180);
 
             _logger.LogInformation($"------同步区域数据结束------");
 
@@ -172,7 +172,7 @@ namespace TwSynchro.ResourceModule
         /// <param name="_logger"></param>
         /// <param name="stoppingToken"></param>
         /// <returns></returns>
-        public static async Task<ResultMessage> SynchroBuilding(ILogger<Worker> _logger, CancellationToken stoppingToken)
+        public static ResultMessage SynchroBuilding(ILogger<Worker> _logger)
         {
 
             ResultMessage rm = new();
@@ -184,7 +184,7 @@ namespace TwSynchro.ResourceModule
 
             using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
 
-            string timesTamp = await TimestampHelp.GetTimestampAsync("ResourceBuilding");
+            string timesTamp = UtilsSynchroTimestamp.GetTimestamp("ResourceBuilding");
 
             StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=1 AND times_tamp>'{timesTamp}'");
 
@@ -195,7 +195,7 @@ namespace TwSynchro.ResourceModule
             stopwatch.Restart();
 
             //获取要同步的数据
-            var readerMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
+            var readerMultiple = mySqlConn.QueryMultiple(sql.ToString());
 
             var ResourceData = readerMultiple.Read<Resource>().ToList();
 
@@ -204,7 +204,7 @@ namespace TwSynchro.ResourceModule
             sql.AppendLine(@"SELECT BuildID,CommID,BuildSign,BuildName     
                , RegionSNum, IsDelete, SynchFlag FROM Tb_HSPR_Building WHERE 1<>1;");
 
-            var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
+            var reader = sqlServerConn.ExecuteReader(sql.ToString());
 
             _logger.LogInformation($"读取楼栋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -227,7 +227,7 @@ namespace TwSynchro.ResourceModule
 
             sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=1");
 
-            var newTimes_Tamp = (await mySqlConn.QueryAsync<string>(sql.ToString())).ToList();
+            var newTimes_Tamp = (mySqlConn.Query<string>(sql.ToString())).ToList();
 
             #endregion
 
@@ -269,13 +269,13 @@ namespace TwSynchro.ResourceModule
                 int rowsAffected = 0;
 
                 if (!string.IsNullOrEmpty(sqlBuildingDel.ToString()))
-                    rowsAffected = await sqlServerConn.ExecuteAsync(sqlBuildingDel.ToString(), transaction: trans);
+                    rowsAffected = sqlServerConn.Execute(sqlBuildingDel.ToString(), transaction: trans);
 
                 _logger.LogInformation($"删除楼栋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
                 stopwatch.Restart();
 
-                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Building, "Tb_HSPR_Building", stoppingToken, trans);
+                DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Building, "Tb_HSPR_Building",  trans);
 
                 _logger.LogInformation($"插入楼栋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -300,7 +300,7 @@ namespace TwSynchro.ResourceModule
             }
 
             //保存时间戳
-            TimestampHelp.SetTimestampAsync("ResourceBuilding", newTimes_Tamp[0], 180);
+            UtilsSynchroTimestamp.SetTimestamp("ResourceBuilding", newTimes_Tamp[0], 180);
 
             _logger.LogInformation($"------同步楼栋数据结束------");
 
@@ -313,7 +313,7 @@ namespace TwSynchro.ResourceModule
         /// <param name="_logger"></param>
         /// <param name="stoppingToken"></param>
         /// <returns></returns>
-        public static async Task<ResultMessage> SynchroRoom(ILogger<Worker> _logger, CancellationToken stoppingToken)
+        public static ResultMessage SynchroRoom(ILogger<Worker> _logger)
         {
 
             ResultMessage rm = new();
@@ -331,12 +331,12 @@ namespace TwSynchro.ResourceModule
 
             stopwatch.Restart();
 
-            string timesTamp = await TimestampHelp.GetTimestampAsync("ResourceRoom");
+            string timesTamp = UtilsSynchroTimestamp.GetTimestamp("ResourceRoom");
 
             StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=3 AND times_tamp>'{timesTamp}'");
 
             //获取要同步的数据
-            var readerMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
+            var readerMultiple = mySqlConn.QueryMultiple(sql.ToString());
 
             var ResourceData = readerMultiple.Read<Resource>().ToList();
 
@@ -345,7 +345,7 @@ namespace TwSynchro.ResourceModule
             // 获取区域，楼栋，单元数据
             sql.Append("SELECT * FROM tb_base_masterdata_resource WHERE resource_attr=1 AND (resource_type=0 OR resource_type=1 OR resource_type=2);");
 
-            var readerMultiple_Father = await mySqlConn.QueryMultipleAsync(sql.ToString());
+            var readerMultiple_Father = mySqlConn.QueryMultiple(sql.ToString());
 
             var resourceData_Father = readerMultiple_Father.Read<Resource>().ToList();
 
@@ -356,7 +356,7 @@ namespace TwSynchro.ResourceModule
                         WHERE resource_id in (SELECT id FROM tb_base_masterdata_resource WHERE 
                                                 resource_attr=1 AND resource_type=3 AND times_tamp>'{timesTamp}') AND first_contact=2");
 
-            var customerLiveMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
+            var customerLiveMultiple = mySqlConn.QueryMultiple(sql.ToString());
 
             var customerLiveData = customerLiveMultiple.Read<(Guid comm_id, Guid customer_id, Guid resource_id)>().ToList();
 
@@ -375,7 +375,7 @@ namespace TwSynchro.ResourceModule
 
             sql.AppendLine("SELECT [CommID], [CustID], [RoomID], [NewRoomState], [RoomState], [UserCode], [ChangeDate]  FROM Tb_HSPR_RoomStateHis WHERE 1<>1;");
 
-            var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
+            var reader = sqlServerConn.ExecuteReader(sql.ToString());
 
             //房屋
             DataTable dtTb_HSPR_Room = new DataTable("Tb_HSPR_Room");
@@ -400,7 +400,7 @@ namespace TwSynchro.ResourceModule
 
             sql.Append($"SELECT RoomID,RoomState FROM Tb_HSPR_Room  WHERE 1=1 AND RoomID IN ({rommIDs})");
 
-            var roomStateData = await sqlServerConn.QueryAsync<(object roomID, string roomState)>(sql.ToString());
+            var roomStateData = sqlServerConn.Query<(object roomID, string roomState)>(sql.ToString());
 
             #endregion
 
@@ -420,7 +420,7 @@ namespace TwSynchro.ResourceModule
 
             sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=3 ");
 
-            var newTimes_Tamp = (await mySqlConn.QueryAsync<string>(sql.ToString())).ToList();
+            var newTimes_Tamp = (mySqlConn.Query<string>(sql.ToString())).ToList();
 
             #endregion
 
@@ -575,19 +575,19 @@ namespace TwSynchro.ResourceModule
                 int rowsAffected = 0;
 
                 if (!string.IsNullOrEmpty(sqlRoomDel.ToString()))
-                    rowsAffected = await sqlServerConn.ExecuteAsync(sqlRoomDel.ToString(), transaction: trans);
+                    rowsAffected = sqlServerConn.Execute(sqlRoomDel.ToString(), transaction: trans);
 
                 _logger.LogInformation($"删除房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
                 stopwatch.Restart();
 
-                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Room, "Tb_HSPR_Room", stoppingToken, trans);
+                DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Room, "Tb_HSPR_Room",  trans);
 
                 _logger.LogInformation($"插入房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 stopwatch.Restart();
 
-                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_RoomStateHis, "Tb_HSPR_RoomStateHis", stoppingToken, trans);
+                DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_RoomStateHis, "Tb_HSPR_RoomStateHis",  trans);
 
                 _logger.LogInformation($"插入历史房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -612,7 +612,7 @@ namespace TwSynchro.ResourceModule
             }
 
             //保存时间戳
-            TimestampHelp.SetTimestampAsync("ResourceRoom", newTimes_Tamp[0], 180);
+            UtilsSynchroTimestamp.SetTimestamp("ResourceRoom", newTimes_Tamp[0], 180);
 
             _logger.LogInformation($"------同步房屋数据结束------");
 
@@ -625,7 +625,7 @@ namespace TwSynchro.ResourceModule
         /// <param name="_logger"></param>
         /// <param name="stoppingToken"></param>
         /// <returns></returns>
-        public static async Task<ResultMessage> SynchroCarpark(ILogger<Worker> _logger, CancellationToken stoppingToken)
+        public static ResultMessage SynchroCarpark(ILogger<Worker> _logger)
         {
 
             ResultMessage rm = new();
@@ -643,12 +643,12 @@ namespace TwSynchro.ResourceModule
 
             stopwatch.Restart();
 
-            string timesTamp = await TimestampHelp.GetTimestampAsync("ResourceCarpark");
+            string timesTamp = UtilsSynchroTimestamp.GetTimestamp("ResourceCarpark");
 
             StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_attr=2 AND resource_type=4 AND times_tamp>'{timesTamp}'");
 
             //获取要同步的数据
-            var readerMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
+            var readerMultiple = mySqlConn.QueryMultiple(sql.ToString());
 
             var ResourceData = readerMultiple.Read<Resource>().ToList();
 
@@ -660,7 +660,7 @@ namespace TwSynchro.ResourceModule
 
             sql.AppendLine("SELECT CarparkID,CommID,CarparkName,IsDelete,SynchFlag FROM Tb_HSPR_Carpark WHERE 1<>1;");
 
-            var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
+            var reader = sqlServerConn.ExecuteReader(sql.ToString());
 
             //车位区域
             DataTable dtTb_HSPR_Carpark = new DataTable("Tb_HSPR_Carpark");
@@ -679,7 +679,7 @@ namespace TwSynchro.ResourceModule
 
             sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_base_masterdata_resource WHERE resource_attr=2 AND resource_type=4");
 
-            var newTimes_Tamp = (await mySqlConn.QueryAsync<string>(sql.ToString())).ToList();
+            var newTimes_Tamp = (mySqlConn.Query<string>(sql.ToString())).ToList();
 
             #endregion
 
@@ -715,13 +715,13 @@ namespace TwSynchro.ResourceModule
                 int rowsAffected = 0;
 
                 if (!string.IsNullOrEmpty(sqlCarparkDel.ToString()))
-                    rowsAffected = await sqlServerConn.ExecuteAsync(sqlCarparkDel.ToString(), transaction: trans);
+                    rowsAffected = sqlServerConn.Execute(sqlCarparkDel.ToString(), transaction: trans);
 
                 _logger.LogInformation($"删除车位区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
                 stopwatch.Restart();
 
-                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Carpark, "Tb_HSPR_Carpark", stoppingToken, trans);
+                DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Carpark, "Tb_HSPR_Carpark",  trans);
 
                 _logger.LogInformation($"插入车位区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -746,7 +746,7 @@ namespace TwSynchro.ResourceModule
             }
 
             //保存时间戳
-            TimestampHelp.SetTimestampAsync("ResourceCarpark", newTimes_Tamp[0], 180);
+            UtilsSynchroTimestamp.SetTimestamp("ResourceCarpark", newTimes_Tamp[0], 180);
 
             _logger.LogInformation($"------同步车位区域数据结束------");
 
@@ -759,7 +759,7 @@ namespace TwSynchro.ResourceModule
         /// <param name="_logger"></param>
         /// <param name="stoppingToken"></param>
         /// <returns></returns>
-        public static async Task<ResultMessage> SynchroParking(ILogger<Worker> _logger, CancellationToken stoppingToken)
+        public static ResultMessage SynchroParking(ILogger<Worker> _logger)
         {
 
             ResultMessage rm = new();
@@ -777,12 +777,12 @@ namespace TwSynchro.ResourceModule
 
             stopwatch.Restart();
 
-            string timesTamp = await TimestampHelp.GetTimestampAsync("ResourceParking");
+            string timesTamp = UtilsSynchroTimestamp.GetTimestamp("ResourceParking");
 
             StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_attr=2 AND resource_type=5 AND times_tamp>'{timesTamp}'");
 
             //获取要同步的数据
-            var readerMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
+            var readerMultiple = mySqlConn.QueryMultiple(sql.ToString());
 
             var ResourceData = readerMultiple.Read<Resource>().ToList();
 
@@ -793,7 +793,7 @@ namespace TwSynchro.ResourceModule
                         WHERE resource_id in (SELECT id FROM tb_base_masterdata_resource WHERE 
                                                 resource_attr=2 AND resource_type=5 AND times_tamp>'{timesTamp}') AND first_contact=2");
 
-            var customerLiveMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
+            var customerLiveMultiple = mySqlConn.QueryMultiple(sql.ToString());
 
             var customerLiveData = customerLiveMultiple.Read<(Guid comm_id, Guid customer_id, Guid resource_id)>().ToList();
 
@@ -807,7 +807,7 @@ namespace TwSynchro.ResourceModule
 		                    PropertyUses,UseState,IsDelete,ParkCategory,SynchFlag,
 		                    IsPropertyService,ParkWriteDate FROM Tb_HSPR_Parking WHERE 1<>1;");
 
-            var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
+            var reader = sqlServerConn.ExecuteReader(sql.ToString());
 
             //车位
             DataTable dtTb_HSPR_Parking = new DataTable("Tb_HSPR_Parking");
@@ -827,7 +827,7 @@ namespace TwSynchro.ResourceModule
 
             sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_base_masterdata_resource WHERE resource_attr=2 AND resource_type=5");
 
-            var newTimes_Tamp = (await mySqlConn.QueryAsync<string>(sql.ToString())).ToList();
+            var newTimes_Tamp = (mySqlConn.Query<string>(sql.ToString())).ToList();
 
             #endregion
 
@@ -846,7 +846,7 @@ namespace TwSynchro.ResourceModule
                 dr["CommID"] = Resource.comm_id;//项目编码
 
                 UtilsDataTable.DataRowIsNull(dr, "CustID", customerLiveModel.Count() > 0 ? customerLiveModel.FirstOrDefault().customer_id : ""); //客户ID(只取第一条)
-               
+
                 //获取房屋
                 //model = GetResource(FatherList, "1", "3");
 
@@ -890,13 +890,13 @@ namespace TwSynchro.ResourceModule
                 int rowsAffected = 0;
 
                 if (!string.IsNullOrEmpty(sqlParkingDel.ToString()))
-                    rowsAffected=await sqlServerConn.ExecuteAsync(sqlParkingDel.ToString(), transaction: trans);
+                    rowsAffected = sqlServerConn.Execute(sqlParkingDel.ToString(), transaction: trans);
 
                 _logger.LogInformation($"删除车位数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
                 stopwatch.Restart();
 
-                await DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Parking, "Tb_HSPR_Parking", stoppingToken, trans);
+                DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Parking, "Tb_HSPR_Parking",  trans);
 
                 _logger.LogInformation($"插入车位数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -921,7 +921,7 @@ namespace TwSynchro.ResourceModule
             }
 
             //保存时间戳
-            TimestampHelp.SetTimestampAsync("ResourceParking", newTimes_Tamp[0], 180);
+            UtilsSynchroTimestamp.SetTimestamp("ResourceParking", newTimes_Tamp[0], 180);
 
             _logger.LogInformation($"------同步车位数据结束------");
 
@@ -953,8 +953,8 @@ namespace TwSynchro.ResourceModule
             return query.Concat(query.SelectMany(t => GetFatherList(list, t.parent_id.ToString())));
         }
 
-        
-        //public async static void Synchro(ILogger<Worker> _logger)
+
+        //public  static void Synchro(ILogger<Worker> _logger)
         //{
 
         //    _logger.LogInformation($"------同步资源数据开始------");
@@ -964,7 +964,7 @@ namespace TwSynchro.ResourceModule
 
         //    using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
 
-        //    string timesTamp = await TimestampHelp.GetTimestampAsync("Resource");
+        //    string timesTamp =  UtilsSynchroTimestamp.GetTimestamp("Resource");
 
         //    StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE times_tamp>'{timesTamp}'");
 
@@ -975,7 +975,7 @@ namespace TwSynchro.ResourceModule
         //    stopwatch.Restart();
 
         //    //获取要同步的数据
-        //    var readerMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
+        //    var readerMultiple =  mySqlConn.QueryMultiple(sql.ToString());
 
         //    var ResourceData = readerMultiple.Read<Resource>().ToList();
 
@@ -985,7 +985,7 @@ namespace TwSynchro.ResourceModule
         //    sql.Append(@$"SELECT comm_id,customer_id,resource_id FROM tb_base_masterdata_customer_live 
         //                WHERE resource_id in (SELECT id FROM tb_base_masterdata_resource WHERE times_tamp>'{timesTamp}') AND first_contact=2");
 
-        //    var customerLiveMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
+        //    var customerLiveMultiple =  mySqlConn.QueryMultiple(sql.ToString());
 
         //    var customerLiveData = customerLiveMultiple.Read<(Guid comm_id, Guid customer_id, Guid resource_id)>().ToList();
 
@@ -1021,7 +1021,7 @@ namespace TwSynchro.ResourceModule
 
         //    #endregion
 
-        //    var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
+        //    var reader =  sqlServerConn.ExecuteReader(sql.ToString());
 
         //    #region 定义（区域，楼栋，房屋，车位区域，车位）DataTable变量
         //    //区域
@@ -1067,7 +1067,7 @@ namespace TwSynchro.ResourceModule
 
         //    sql.Append($"SELECT RoomID,RoomState FROM Tb_HSPR_Room  WHERE 1=1 AND RoomID IN ({rommIDs})");
 
-        //    var roomStateData = await sqlServerConn.QueryAsync<(object roomID, string roomState)>(sql.ToString());
+        //    var roomStateData =  sqlServerConn.Query<(object roomID, string roomState)>(sql.ToString());
 
         //    #endregion
 
@@ -1087,7 +1087,7 @@ namespace TwSynchro.ResourceModule
 
         //    sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_base_masterdata_resource");
 
-        //    var times_tamp = (await mySqlConn.QueryAsync<string>(sql.ToString())).ToList();
+        //    var times_tamp = ( mySqlConn.Query<string>(sql.ToString())).ToList();
 
         //    #endregion
 
@@ -1437,31 +1437,31 @@ namespace TwSynchro.ResourceModule
 
         //    #region 保存数据
 
-        //    resultMessage = await SynchroRegion(sqlRegionDel.ToString(), dtTb_HSPR_Region);
+        //    resultMessage =  SynchroRegion(sqlRegionDel.ToString(), dtTb_HSPR_Region);
 
         //    _logger.LogInformation($"插入区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
         //    stopwatch.Restart();
 
-        //    resultMessage = await SynchroBuilding(sqlBuildingDel.ToString(), dtTb_HSPR_Building);
+        //    resultMessage =  SynchroBuilding(sqlBuildingDel.ToString(), dtTb_HSPR_Building);
 
         //    _logger.LogInformation($"插入楼栋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
         //    stopwatch.Restart();
 
-        //    resultMessage = await SynchroRoom(sqlRoomDel.ToString(), dtTb_HSPR_Room, dtTb_HSPR_RoomStateHis);
+        //    resultMessage =  SynchroRoom(sqlRoomDel.ToString(), dtTb_HSPR_Room, dtTb_HSPR_RoomStateHis);
 
         //    _logger.LogInformation($"插入房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
         //    stopwatch.Restart();
 
-        //    resultMessage = await SynchroCarpark(sqlCarparkDel.ToString(), dtTb_HSPR_Carpark);
+        //    resultMessage =  SynchroCarpark(sqlCarparkDel.ToString(), dtTb_HSPR_Carpark);
 
         //    _logger.LogInformation($"插入车位区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
         //    stopwatch.Restart();
 
-        //    resultMessage = await SynchroParking(sqlParkingDel.ToString(), dtTb_HSPR_Parking);
+        //    resultMessage =  SynchroParking(sqlParkingDel.ToString(), dtTb_HSPR_Parking);
 
         //    _logger.LogInformation($"插入车位数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
@@ -1470,7 +1470,7 @@ namespace TwSynchro.ResourceModule
         //    #endregion
 
         //    //保存时间戳
-        //    TimestampHelp.SetTimestampAsync("Resource", times_tamp[0], 180);
+        //    UtilsSynchroTimestamp.SetTimestamp("Resource", times_tamp[0], 180);
 
         //    _logger.LogInformation($"------同步资源数据结束------");
 

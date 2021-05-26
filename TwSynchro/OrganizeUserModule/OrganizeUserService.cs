@@ -13,13 +13,13 @@ using System.Threading.Tasks;
 using TwSynchro.Utils;
 using Utils;
 
-namespace TwSynchro.MenuModule
+namespace TwSynchro.OrganizeUserModule
 {
-    public class MenuService
+    public class OrganizeUserService
     {
         public  static void Synchro(ILogger<Worker> _logger)
         {
-            _logger.LogInformation($"------同步菜单数据开始------");
+            _logger.LogInformation($"------同步人员绑定岗位数据开始------");
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -39,7 +39,7 @@ namespace TwSynchro.MenuModule
 
             var result = ( mySqlConn.Query<Menu>(sql.ToString())).ToList();
 
-            _logger.LogInformation($"读取菜单数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            _logger.LogInformation($"读取人员绑定岗位数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -74,7 +74,7 @@ namespace TwSynchro.MenuModule
                 sql.AppendLine($@"DELETE Tb_Sys_PowerNode WHERE PNodeCode='{itemMenu.Id}';");
             }
 
-            _logger.LogInformation($"生成菜单数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            _logger.LogInformation($"生成人员绑定岗位数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -83,7 +83,7 @@ namespace TwSynchro.MenuModule
             {
                 int rowsAffected =  sqlServerConn.Execute(sql.ToString(), transaction: trans);
 
-                _logger.LogInformation($"删除菜单数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
+                _logger.LogInformation($"删除人员绑定岗位数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
                 stopwatch.Restart();
 
@@ -91,7 +91,7 @@ namespace TwSynchro.MenuModule
 
                 stopwatch.Stop();
 
-                _logger.LogInformation($"插入菜单数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                _logger.LogInformation($"插入人员绑定岗位数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 trans.Commit();
             }
@@ -99,10 +99,10 @@ namespace TwSynchro.MenuModule
             {
                 trans.Rollback();
 
-                _logger.LogInformation($"插入菜单数据失败:{ex.Message}{ex.StackTrace}");
+                _logger.LogInformation($"插入人员绑定岗位数据失败:{ex.Message}{ex.StackTrace}");
 
             }
-            _logger.LogInformation($"------同步菜单数据结束------");
+            _logger.LogInformation($"------同步人员绑定岗位数据结束------");
 
         }
     }

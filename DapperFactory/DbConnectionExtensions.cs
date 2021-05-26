@@ -36,7 +36,7 @@ namespace DapperFactory
         /// <param name="pageIndex">页码。</param>
         /// <param name="trans">数据库事务。</param>
         /// <returns></returns>
-        public static async Task<ResultPager<T>> QueryPagerAsync<T>(this IDbConnection conn, DBType dbType, string sql, string orderBy,
+        public static ResultPager<T> QueryPager<T>(this IDbConnection conn, DBType dbType, string sql, string orderBy,
             int pageSize, int pageIndex, IDbTransaction? trans = null) where T : notnull
         {
             sql = sql.Trim(';');
@@ -59,10 +59,10 @@ namespace DapperFactory
                 _ => throw new NotImplementedException($"暂不支持{dbType}数据库")
             };
 
-            var reader = await conn.QueryMultipleAsync(strSql, null, trans);
+            var reader = conn.QueryMultiple(strSql, null, trans);
 
-            var total = await reader.ReadFirstOrDefaultAsync<Int64>();
-            var data = await reader.ReadAsync<T>();
+            var total = reader.ReadFirstOrDefault<Int64>();
+            var data = reader.Read<T>();
 
             var result = new ResultPager<T> { PageSize = pageSize, PageIndex = pageIndex, TotalCount = total, Data = data };
 
