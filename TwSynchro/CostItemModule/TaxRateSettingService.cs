@@ -17,18 +17,22 @@ namespace TwSynchro.CostItemModule
 {
     public class TaxRateSettingService
     {
+        static string _ts_Key = "TaxRateSetting";
+
         /// <summary>
         /// 增值税率同步
         /// </summary>
         /// <param name="_logger"></param>
         public  static void Synchro(ILogger<Worker> _logger)
         {
-            _logger.LogInformation($"------同步增值税数据开始------");
+            StringBuilder logMsg = new StringBuilder();
+            
+            logMsg.Append($"------同步增值税数据开始------\r\n");
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            string timesTamp =   UtilsSynchroTimestamp.GetTimestamp("TaxRateSetting");
+            string timesTamp =   UtilsSynchroTimestamp.GetTimestamp(_ts_Key);
 
             StringBuilder Strsql = new($@"SELECT id AS TaxRateSettingID,comm_id AS CommID,cost_id AS CorpCostID,tax_rate AS TaxRate,
            tax_latefee_rate AS ContractPenaltyRate,begin_time AS StartDate,end_time AS EndDate,
@@ -39,7 +43,7 @@ namespace TwSynchro.CostItemModule
 
             using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
-            _logger.LogInformation($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            logMsg.Append($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!\r\n");
 
             stopwatch.Restart();
 
@@ -59,7 +63,7 @@ namespace TwSynchro.CostItemModule
             {
                 var result =  mySqlConn.QueryPager<TaxRateSetting>(DBType.MySql, Strsql.ToString(), "sort", 10, PageIndex);
 
-                _logger.LogInformation($"读取增值税数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                logMsg.Append($"读取增值税数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!\r\n");
 
                 stopwatch.Restart();
 
@@ -114,7 +118,8 @@ namespace TwSynchro.CostItemModule
 
                     sql.AppendLine($@"DELETE Tb_HSPR_TaxRateSetting WHERE TaxRateSettingID='{item.TaxRateSettingID}';");
                 }
-                _logger.LogInformation($"生成增值税数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+
+                logMsg.Append($"生成增值税数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!\r\n");
 
                 stopwatch.Restart();
 
@@ -128,19 +133,19 @@ namespace TwSynchro.CostItemModule
                     if (!string.IsNullOrEmpty(sql.ToString()))
                         rowsAffected =  sqlServerConn.Execute(sql.ToString(), transaction: trans);
 
-                    _logger.LogInformation($"删除增值税数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
+                    logMsg.Append($"删除增值税数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条\r\n");
 
                     stopwatch.Restart();
 
                      DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_TaxRateSetting",  trans);
 
-                    _logger.LogInformation($"插入增值税数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                    logMsg.Append($"插入增值税数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!\r\n");
 
                     stopwatch.Restart();
 
                     trans.Commit();
 
-                    _logger.LogInformation($"第{PageIndex}次提交增值税数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                    logMsg.Append($"第{PageIndex}次提交增值税数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!\r\n");
 
                     stopwatch.Restart();
                 }
@@ -148,7 +153,9 @@ namespace TwSynchro.CostItemModule
                 {
                     trans.Rollback();
 
-                    _logger.LogInformation($"第{PageIndex}次提交增值税发生错误；错误信息：{e.Message}");
+                    logMsg.Append($"第{PageIndex}次提交增值税发生错误；错误信息：{e.Message}\r\n");
+
+                    _logger.LogInformation(logMsg.ToString());
 
                     return;
                 }
@@ -161,9 +168,10 @@ namespace TwSynchro.CostItemModule
             }
 
             //保存时间戳
-            UtilsSynchroTimestamp.SetTimestamp("TaxRateSetting", time_stamp[0], 180);
+            UtilsSynchroTimestamp.SetTimestamp(_ts_Key, time_stamp[0], 180);
 
-            _logger.LogInformation($"------同步增值税数据结束------");
+            logMsg.Append($"------同步增值税数据结束------\r\n");
+            _logger.LogInformation(logMsg.ToString());
         }
     }
 }

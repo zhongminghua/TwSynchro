@@ -42,7 +42,9 @@ namespace TwSynchro.ResourceModule
         {
             ResultMessage rm = new();
 
-            _logger.LogInformation($"------同步区域数据开始------");
+            StringBuilder logMsg = new StringBuilder();
+
+            logMsg.Append($"\r\n------同步区域数据开始------");
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -55,7 +57,7 @@ namespace TwSynchro.ResourceModule
 
             using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
-            _logger.LogInformation($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            logMsg.Append($"\r\n创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -64,7 +66,7 @@ namespace TwSynchro.ResourceModule
 
             var ResourceData = readerMultiple.Read<Resource>().ToList();
 
-            _logger.LogInformation($"获取区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            logMsg.Append($"\r\n获取区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -118,7 +120,7 @@ namespace TwSynchro.ResourceModule
                 sqlRegionDel.AppendLine($"DELETE FROM Tb_HSPR_Region WHERE RegionID='{Resource.id}'");
             }
 
-            _logger.LogInformation($"生成区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            logMsg.Append($"\r\n生成区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -131,13 +133,13 @@ namespace TwSynchro.ResourceModule
                 if (!string.IsNullOrEmpty(sqlRegionDel.ToString()))
                     rowsAffected = sqlServerConn.Execute(sqlRegionDel.ToString(), transaction: trans);
 
-                _logger.LogInformation($"删除区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
+                logMsg.Append($"\r\n删除区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
                 stopwatch.Restart();
 
                 DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Region, "Tb_HSPR_Region", trans);
 
-                _logger.LogInformation($"插入区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                logMsg.Append($"\r\n插入区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 stopwatch.Restart();
 
@@ -154,14 +156,18 @@ namespace TwSynchro.ResourceModule
 
                 trans.Rollback();
 
-                _logger.LogInformation($"提交区域发生错误；错误信息：{ex.Message}");
+                logMsg.Append($"\r\n提交区域发生错误；错误信息：{ex.Message}");
+
+                _logger.LogInformation(logMsg.ToString());
 
                 return rm;
             }
 
             UtilsSynchroTimestamp.SetTimestamp("ResourceRegion", newTimes_tamp[0], 180);
 
-            _logger.LogInformation($"------同步区域数据结束------");
+            logMsg.Append($"\r\n------同步区域数据结束------");
+
+            _logger.LogInformation(logMsg.ToString());
 
             return rm;
         }
@@ -177,7 +183,9 @@ namespace TwSynchro.ResourceModule
 
             ResultMessage rm = new();
 
-            _logger.LogInformation($"------同步楼栋数据开始------");
+            StringBuilder logMsg = new StringBuilder();
+
+            logMsg.Append($"\r\n------同步楼栋数据开始------");
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -190,7 +198,7 @@ namespace TwSynchro.ResourceModule
 
             using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
-            _logger.LogInformation($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            logMsg.Append($"\r\n创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -206,7 +214,7 @@ namespace TwSynchro.ResourceModule
 
             var reader = sqlServerConn.ExecuteReader(sql.ToString());
 
-            _logger.LogInformation($"读取楼栋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            logMsg.Append($"\r\n读取楼栋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -258,7 +266,7 @@ namespace TwSynchro.ResourceModule
                 sqlBuildingDel.AppendLine($"DELETE FROM Tb_HSPR_Building WHERE BuildID='{Resource.id}'");
             }
 
-            _logger.LogInformation($"生成楼栋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            logMsg.Append($"\r\n生成楼栋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -271,13 +279,13 @@ namespace TwSynchro.ResourceModule
                 if (!string.IsNullOrEmpty(sqlBuildingDel.ToString()))
                     rowsAffected = sqlServerConn.Execute(sqlBuildingDel.ToString(), transaction: trans);
 
-                _logger.LogInformation($"删除楼栋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
+                logMsg.Append($"\r\n删除楼栋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
                 stopwatch.Restart();
 
                 DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Building, "Tb_HSPR_Building",  trans);
 
-                _logger.LogInformation($"插入楼栋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                logMsg.Append($"\r\n插入楼栋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 stopwatch.Restart();
 
@@ -294,7 +302,9 @@ namespace TwSynchro.ResourceModule
 
                 rm.Result = false;
 
-                _logger.LogInformation($"提交楼栋发生错误；错误信息：{ex.Message}");
+                logMsg.Append($"\r\n提交楼栋发生错误；错误信息：{ex.Message}");
+
+                _logger.LogInformation(logMsg.ToString());
 
                 return rm;
             }
@@ -302,7 +312,9 @@ namespace TwSynchro.ResourceModule
             //保存时间戳
             UtilsSynchroTimestamp.SetTimestamp("ResourceBuilding", newTimes_Tamp[0], 180);
 
-            _logger.LogInformation($"------同步楼栋数据结束------");
+            logMsg.Append($"\r\n------同步楼栋数据结束------");
+
+            _logger.LogInformation(logMsg.ToString());
 
             return rm;
         }
@@ -318,7 +330,9 @@ namespace TwSynchro.ResourceModule
 
             ResultMessage rm = new();
 
-            _logger.LogInformation($"------同步房屋数据开始------");
+            StringBuilder logMsg = new StringBuilder();
+
+            logMsg.Append($"\r\n------同步房屋数据开始------");
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -327,7 +341,7 @@ namespace TwSynchro.ResourceModule
 
             using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
-            _logger.LogInformation($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            logMsg.Append($"\r\n创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -360,7 +374,7 @@ namespace TwSynchro.ResourceModule
 
             var customerLiveData = customerLiveMultiple.Read<(Guid comm_id, Guid customer_id, Guid resource_id)>().ToList();
 
-            _logger.LogInformation($"读取房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            logMsg.Append($"\r\n读取房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -404,7 +418,7 @@ namespace TwSynchro.ResourceModule
 
             #endregion
 
-            _logger.LogInformation($"读取sqlserver房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            logMsg.Append($"\r\n读取sqlserver房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -503,7 +517,8 @@ namespace TwSynchro.ResourceModule
 
                 dr["IsDelete"] = Resource.is_delete;//是否删除
 
-                dr["IsSplitUnite"] = 0;//
+                dr["IsSplitUnite"] = !string.IsNullOrEmpty(Resource.is_split_merge)? Resource.is_split_merge:"0";
+                //拆分合并状态 (0未处理，1被拆分，2已拆分，3被合并，4已合并)
 
                 UtilsDataTable.DataRowIsNull(dr, "GardenArea", Resource.garden_area);//花园面积
 
@@ -564,7 +579,7 @@ namespace TwSynchro.ResourceModule
                 sqlRoomDel.AppendLine($"DELETE FROM Tb_HSPR_Room WHERE RoomID='{Resource.id}'");
             }
 
-            _logger.LogInformation($"生成房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            logMsg.Append($"\r\n生成房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -577,19 +592,19 @@ namespace TwSynchro.ResourceModule
                 if (!string.IsNullOrEmpty(sqlRoomDel.ToString()))
                     rowsAffected = sqlServerConn.Execute(sqlRoomDel.ToString(), transaction: trans);
 
-                _logger.LogInformation($"删除房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
+                logMsg.Append($"\r\n删除房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
                 stopwatch.Restart();
 
                 DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Room, "Tb_HSPR_Room",  trans);
 
-                _logger.LogInformation($"插入房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                logMsg.Append($"\r\n插入房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 stopwatch.Restart();
 
                 DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_RoomStateHis, "Tb_HSPR_RoomStateHis",  trans);
 
-                _logger.LogInformation($"插入历史房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                logMsg.Append($"\r\n插入历史房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 stopwatch.Restart();
 
@@ -606,7 +621,9 @@ namespace TwSynchro.ResourceModule
 
                 trans.Rollback();
 
-                _logger.LogInformation($"提交房屋发生错误；错误信息：{ex.Message}");
+                logMsg.Append($"\r\n提交房屋发生错误；错误信息：{ex.Message}");
+
+                _logger.LogInformation(logMsg.ToString());
 
                 return rm;
             }
@@ -614,7 +631,9 @@ namespace TwSynchro.ResourceModule
             //保存时间戳
             UtilsSynchroTimestamp.SetTimestamp("ResourceRoom", newTimes_Tamp[0], 180);
 
-            _logger.LogInformation($"------同步房屋数据结束------");
+            logMsg.Append($"\r\n------同步房屋数据结束------");
+
+            _logger.LogInformation(logMsg.ToString());
 
             return rm;
         }
@@ -630,7 +649,9 @@ namespace TwSynchro.ResourceModule
 
             ResultMessage rm = new();
 
-            _logger.LogInformation($"------同步车位区域数据开始------");
+            StringBuilder logMsg = new StringBuilder();
+
+            logMsg.Append($"\r\n------同步车位区域数据开始------");
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -639,7 +660,7 @@ namespace TwSynchro.ResourceModule
 
             using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
-            _logger.LogInformation($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            logMsg.Append($"\r\n创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -654,7 +675,7 @@ namespace TwSynchro.ResourceModule
 
             sql.Clear();
 
-            _logger.LogInformation($"读取车位区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            logMsg.Append($"\r\n读取车位区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -706,7 +727,7 @@ namespace TwSynchro.ResourceModule
                 sqlCarparkDel.AppendLine($"DELETE FROM Tb_HSPR_Carpark WHERE CarparkID='{Resource.id}'");
             }
 
-            _logger.LogInformation($"生成车位区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            logMsg.Append($"\r\n生成车位区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             using var trans = sqlServerConn.OpenTransaction();
 
@@ -717,13 +738,13 @@ namespace TwSynchro.ResourceModule
                 if (!string.IsNullOrEmpty(sqlCarparkDel.ToString()))
                     rowsAffected = sqlServerConn.Execute(sqlCarparkDel.ToString(), transaction: trans);
 
-                _logger.LogInformation($"删除车位区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
+                logMsg.Append($"\r\n删除车位区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
                 stopwatch.Restart();
 
                 DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Carpark, "Tb_HSPR_Carpark",  trans);
 
-                _logger.LogInformation($"插入车位区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                logMsg.Append($"\r\n插入车位区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 stopwatch.Restart();
 
@@ -740,7 +761,9 @@ namespace TwSynchro.ResourceModule
 
                 trans.Rollback();
 
-                _logger.LogInformation($"提交车位区域发生错误；错误信息：{ex.Message}");
+                logMsg.Append($"\r\n提交车位区域发生错误；错误信息：{ex.Message}");
+
+                _logger.LogInformation(logMsg.ToString());
 
                 return rm;
             }
@@ -748,7 +771,9 @@ namespace TwSynchro.ResourceModule
             //保存时间戳
             UtilsSynchroTimestamp.SetTimestamp("ResourceCarpark", newTimes_Tamp[0], 180);
 
-            _logger.LogInformation($"------同步车位区域数据结束------");
+            logMsg.Append($"\r\n------同步车位区域数据结束------");
+
+            _logger.LogInformation(logMsg.ToString());
 
             return rm;
         }
@@ -764,7 +789,9 @@ namespace TwSynchro.ResourceModule
 
             ResultMessage rm = new();
 
-            _logger.LogInformation($"------同步车位数据开始------");
+            StringBuilder logMsg = new StringBuilder();
+
+            logMsg.Append($"\r\n------同步车位数据开始------");
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -773,7 +800,7 @@ namespace TwSynchro.ResourceModule
 
             using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
-            _logger.LogInformation($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            logMsg.Append($"\r\n创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -797,7 +824,7 @@ namespace TwSynchro.ResourceModule
 
             var customerLiveData = customerLiveMultiple.Read<(Guid comm_id, Guid customer_id, Guid resource_id)>().ToList();
 
-            _logger.LogInformation($"读取车位数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            logMsg.Append($"\r\n读取车位数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -879,7 +906,7 @@ namespace TwSynchro.ResourceModule
                 sqlParkingDel.AppendLine($"DELETE FROM Tb_HSPR_Parking WHERE ParkID='{Resource.id}'");
             }
 
-            _logger.LogInformation($"生成车位数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            logMsg.Append($"\r\n生成车位数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -892,13 +919,13 @@ namespace TwSynchro.ResourceModule
                 if (!string.IsNullOrEmpty(sqlParkingDel.ToString()))
                     rowsAffected = sqlServerConn.Execute(sqlParkingDel.ToString(), transaction: trans);
 
-                _logger.LogInformation($"删除车位数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
+                logMsg.Append($"\r\n删除车位数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
                 stopwatch.Restart();
 
                 DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Parking, "Tb_HSPR_Parking",  trans);
 
-                _logger.LogInformation($"插入车位数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                logMsg.Append($"\r\n插入车位数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 stopwatch.Restart();
 
@@ -915,7 +942,9 @@ namespace TwSynchro.ResourceModule
 
                 trans.Rollback();
 
-                _logger.LogInformation($"提交车位发生错误；错误信息：{ex.Message}");
+                logMsg.Append($"\r\n提交车位发生错误；错误信息：{ex.Message}");
+
+                _logger.LogInformation(logMsg.ToString());
 
                 return rm;
             }
@@ -923,7 +952,9 @@ namespace TwSynchro.ResourceModule
             //保存时间戳
             UtilsSynchroTimestamp.SetTimestamp("ResourceParking", newTimes_Tamp[0], 180);
 
-            _logger.LogInformation($"------同步车位数据结束------");
+            logMsg.Append($"\r\n------同步车位数据结束------");
+
+            _logger.LogInformation(logMsg.ToString());
 
             return rm;
         }
@@ -957,7 +988,7 @@ namespace TwSynchro.ResourceModule
         //public  static void Synchro(ILogger<Worker> _logger)
         //{
 
-        //    _logger.LogInformation($"------同步资源数据开始------");
+        //    logMsg.Append($"\r\n------同步资源数据开始------");
 
         //    Stopwatch stopwatch = new Stopwatch();
         //    stopwatch.Start();
@@ -970,7 +1001,7 @@ namespace TwSynchro.ResourceModule
 
         //    using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
-        //    _logger.LogInformation($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+        //    logMsg.Append($"\r\n创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
         //    stopwatch.Restart();
 
@@ -989,7 +1020,7 @@ namespace TwSynchro.ResourceModule
 
         //    var customerLiveData = customerLiveMultiple.Read<(Guid comm_id, Guid customer_id, Guid resource_id)>().ToList();
 
-        //    _logger.LogInformation($"读取数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+        //    logMsg.Append($"\r\n读取数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
         //    stopwatch.Restart();
 
@@ -1071,7 +1102,7 @@ namespace TwSynchro.ResourceModule
 
         //    #endregion
 
-        //    _logger.LogInformation($"读取sqlserver房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+        //    logMsg.Append($"\r\n读取sqlserver房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
         //    stopwatch.Restart();
 
@@ -1429,7 +1460,7 @@ namespace TwSynchro.ResourceModule
 
         //    }
 
-        //    _logger.LogInformation($"生成资源数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+        //    logMsg.Append($"\r\n生成资源数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
         //    stopwatch.Restart();
 
@@ -1439,31 +1470,31 @@ namespace TwSynchro.ResourceModule
 
         //    resultMessage =  SynchroRegion(sqlRegionDel.ToString(), dtTb_HSPR_Region);
 
-        //    _logger.LogInformation($"插入区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
+        //    logMsg.Append($"\r\n插入区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
         //    stopwatch.Restart();
 
         //    resultMessage =  SynchroBuilding(sqlBuildingDel.ToString(), dtTb_HSPR_Building);
 
-        //    _logger.LogInformation($"插入楼栋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
+        //    logMsg.Append($"\r\n插入楼栋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
         //    stopwatch.Restart();
 
         //    resultMessage =  SynchroRoom(sqlRoomDel.ToString(), dtTb_HSPR_Room, dtTb_HSPR_RoomStateHis);
 
-        //    _logger.LogInformation($"插入房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
+        //    logMsg.Append($"\r\n插入房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
         //    stopwatch.Restart();
 
         //    resultMessage =  SynchroCarpark(sqlCarparkDel.ToString(), dtTb_HSPR_Carpark);
 
-        //    _logger.LogInformation($"插入车位区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
+        //    logMsg.Append($"\r\n插入车位区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
         //    stopwatch.Restart();
 
         //    resultMessage =  SynchroParking(sqlParkingDel.ToString(), dtTb_HSPR_Parking);
 
-        //    _logger.LogInformation($"插入车位数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
+        //    logMsg.Append($"\r\n插入车位数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
         //    stopwatch.Restart();
 
@@ -1472,7 +1503,7 @@ namespace TwSynchro.ResourceModule
         //    //保存时间戳
         //    UtilsSynchroTimestamp.SetTimestamp("Resource", time_stamp[0], 180);
 
-        //    _logger.LogInformation($"------同步资源数据结束------");
+        //    logMsg.Append($"\r\n------同步资源数据结束------");
 
         //}
     }
