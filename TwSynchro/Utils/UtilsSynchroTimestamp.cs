@@ -26,7 +26,7 @@ namespace TwSynchro.Utils
             if (timestamp is null)
             {
 
-                var sql = $"SELECT TOP 1 Ts_Value FROM Tb_Sys_SynchroTimestamp_MySql WHERE Ts_Key='{key}'";
+                var sql = $"SELECT TOP 1 Ts_Value FROM Tb_Synchro_TimeStamp WHERE Ts_Key='{key}'";
 
                 var timestampValue = sqlServerConn.QueryFirstOrDefault<string>(sql);
 
@@ -52,14 +52,14 @@ namespace TwSynchro.Utils
 
             CacheHelper.CacheInsertAddMinutes(key, value, minute);
 
-            string sql = $"SELECT COUNT(1) FROM Tb_Sys_SynchroTimestamp_MySql WHERE Ts_Key='{key}'";
+            string sql = $"SELECT COUNT(1) FROM Tb_Synchro_TimeStamp WHERE Ts_Key='{key}'";
 
             int count = sqlServerConn.QuerySingle<int>(sql.ToString());
 
             if (count > 0)
-                sql = $"UPDATE Tb_Sys_SynchroTimestamp_MySql SET Ts_Value='{value}' WHERE Ts_Key='{key}'";
+                sql = $"UPDATE Tb_Synchro_TimeStamp SET Ts_Value='{value}' WHERE Ts_Key='{key}'";
             else
-                sql = $"INSERT INTO Tb_Sys_SynchroTimestamp_MySql(TimestampKey,Ts_Value) VALUES ('{key}','{value}')";
+                sql = $"INSERT INTO Tb_Synchro_TimeStamp(Ts_Key,Ts_Value) VALUES ('{key}','{value}')";
 
             sqlServerConn.Execute(sql.ToString());
 
