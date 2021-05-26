@@ -17,7 +17,7 @@ namespace TwSynchro.MenuModule
 
     public class MenuService
     {
-        static readonly string TS_KEY = "Key_OrganizeUserService";
+        static readonly string TS_KEY = "Key_MenuService";
 
         public static void Synchro(ILogger<Worker> _logger)
         {

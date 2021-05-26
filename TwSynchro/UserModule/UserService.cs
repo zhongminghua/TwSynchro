@@ -10,30 +10,47 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TwSynchro.Utils;
 using Utils;
 
 namespace TwSynchro.UserModule
 {
     public class UserService
     {
-        public  static void Synchro(ILogger<Worker> _logger)
+        static readonly string TS_KEY = "Key_UserService";
+
+        public static void Synchro(ILogger<Worker> _logger)
         {
-            _logger.LogInformation($"------同步用户数据开始------");
+
+
+            StringBuilder log = new("\r\n------同步用户数据开始------");
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            StringBuilder sql = new("SELECT ID,Name,Account,Password,(CASE Sex WHEN 0 THEN '女' ELSE '男' END) as Sex,Email,Mobile FROM rf_user;");
+            var timestamp = UtilsSynchroTimestamp.GetTimestamp(TS_KEY);
+
+            StringBuilder sql = new($@"SELECT ID,Name,Account,Password,(CASE Sex WHEN 0 THEN '女' ELSE '男' END) as Sex,Email,Mobile,time_stamp FROM rf_user 
+                                       WHERE time_stamp > '{timestamp}'");
 
             using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
-            _logger.LogInformation($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            log.Append($"\r\n创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
-            var result = ( mySqlConn.Query<User>(sql.ToString())).ToList();
+            var data = (mySqlConn.Query<User>(sql.ToString())).ToList();
 
-            _logger.LogInformation($"读取用户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            if (data.Count == 0)
+            {
+                log.Append($"\r\n数据为空SQL语句:\r\n{sql}");
+
+                _logger.LogInformation(log.ToString());
+
+                return;
+            }
+
+            log.Append($"\r\n读取用户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -41,9 +58,9 @@ namespace TwSynchro.UserModule
 
             sql.Clear();
 
-            sql.AppendLine("SELECT UserCode,UserName,LoginCode,PassWord,Sex,MobileTel,Email,IsFirstLogin,IsUse FROM Tb_Sys_User WITH(NOLOCK) WHERE 1<>1;");
+            sql.AppendLine("SELECT UserCode,UserName,LoginCode,PassWord,Sex,MobileTel,Email,IsFirstLogin,IsUse,IsDelete FROM Tb_Sys_User WITH(NOLOCK) WHERE 1<>1;");
 
-            var reader =  sqlServerConn.ExecuteReader(sql.ToString());
+            var reader = sqlServerConn.ExecuteReader(sql.ToString());
 
             DataTable dt = new DataTable("Tb_Sys_User");
 
@@ -53,7 +70,7 @@ namespace TwSynchro.UserModule
 
             sql.Clear();
 
-            foreach (var itemUser in result)
+            foreach (var itemUser in data)
             {
                 dr = dt.NewRow();
 
@@ -66,42 +83,45 @@ namespace TwSynchro.UserModule
                 dr["Email"] = itemUser.Email;
                 dr["IsFirstLogin"] = 1;
                 dr["IsUse"] = 1;
+                dr["IsDelete"] = itemUser.Is_Delete;
 
                 dt.Rows.Add(dr);
 
                 sql.AppendLine($@"DELETE Tb_Sys_User WHERE UserCode='{itemUser.ID}';");
             }
 
-            _logger.LogInformation($"生成用户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            log.Append($"\r\n生成用户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
             using var trans = sqlServerConn.OpenTransaction();
             try
             {
-                int rowsAffected =  sqlServerConn.Execute(sql.ToString(), transaction: trans);
+                int rowsAffected = sqlServerConn.Execute(sql.ToString(), transaction: trans);
 
-                _logger.LogInformation($"删除用户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
+                log.Append($"\r\n删除用户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
                 stopwatch.Restart();
 
-                 DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_Sys_User",  trans);
+                DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_Sys_User", trans);
 
                 stopwatch.Stop();
 
-                _logger.LogInformation($"插入用户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                log.Append($"\r\n插入用户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 trans.Commit();
+
+                UtilsSynchroTimestamp.SetTimestamp(TS_KEY, data.Max(c => c.time_stamp));
             }
             catch (Exception ex)
             {
                 trans.Rollback();
 
-                _logger.LogInformation($"插入用户数据失败:{ex.Message}{ex.StackTrace}");
+                log.Append($"\r\n插入用户数据失败:{ex.Message}{ex.StackTrace}");
 
             }
-            _logger.LogInformation($"------同步用户数据结束------");
-
+            log.Append($"\r\n------同步用户数据结束------");
+            _logger.LogInformation(log.ToString());
         }
     }
 }
