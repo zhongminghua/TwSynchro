@@ -503,7 +503,7 @@ namespace TwSynchro.ResourceModule
 
                 dr["IsDelete"] = Resource.is_delete;//是否删除
 
-                dr["IsSplitUnite"] = 0;//
+                dr["IsSplitUnite"] = Resource.is_split_merge;//拆分合并状态 (0未处理，1被拆分，2已拆分，3被合并，4已合并)
 
                 UtilsDataTable.DataRowIsNull(dr, "GardenArea", Resource.garden_area);//花园面积
 
