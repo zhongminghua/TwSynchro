@@ -7,6 +7,7 @@ using System;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,16 +24,16 @@ namespace TwSynchro.CostItemModule
         /// 增值税率同步
         /// </summary>
         /// <param name="_logger"></param>
-        public  static void Synchro(ILogger<Worker> _logger)
+        public static async Task Synchro(ILogger<Worker> _logger, CancellationToken stoppingToken)
         {
             StringBuilder logMsg = new StringBuilder();
-            
+
             logMsg.Append($"------同步增值税数据开始------\r\n");
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            string timesTamp =   UtilsSynchroTimestamp.GetTimestamp(_ts_Key);
+            string timesTamp = await UtilsSynchroTimestamp.GetTimestampAsync(_ts_Key);
 
             StringBuilder Strsql = new($@"SELECT id AS TaxRateSettingID,comm_id AS CommID,cost_id AS CorpCostID,tax_rate AS TaxRate,
            tax_latefee_rate AS ContractPenaltyRate,begin_time AS StartDate,end_time AS EndDate,
@@ -55,13 +56,13 @@ namespace TwSynchro.CostItemModule
 
             sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_base_charge_set_tax");
 
-            var time_stamp = ( mySqlConn.Query<string>(sql.ToString())).ToList();
+            var time_stamp = (await mySqlConn.QueryAsync<string>(sql.ToString())).ToList();
 
             #endregion
 
             while (true)
             {
-                var result =  mySqlConn.QueryPager<TaxRateSetting>(DBType.MySql, Strsql.ToString(), "sort", 10, PageIndex);
+                var result = await mySqlConn.QueryPagerAsync<TaxRateSetting>(DBType.MySql, Strsql.ToString(), "sort", 10, PageIndex);
 
                 logMsg.Append($"读取增值税数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!\r\n");
 
@@ -76,7 +77,7 @@ namespace TwSynchro.CostItemModule
                                 [IsContractPenalty], [OperationUserCode], [OperationDate], 
                                 [IsDelete] from Tb_HSPR_TaxRateSetting WHERE 1=0");
 
-                var reader =  sqlServerConn.ExecuteReader(sql.ToString());
+                var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
 
                 DataTable dt = new DataTable("Tb_HSPR_TaxRateSetting");
 
@@ -131,13 +132,13 @@ namespace TwSynchro.CostItemModule
                     int rowsAffected = 0;
 
                     if (!string.IsNullOrEmpty(sql.ToString()))
-                        rowsAffected =  sqlServerConn.Execute(sql.ToString(), transaction: trans);
+                        rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
                     logMsg.Append($"删除增值税数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条\r\n");
 
                     stopwatch.Restart();
 
-                     DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_HSPR_TaxRateSetting",  trans);
+                    await DbBatch.InsertSingleTableAsync(sqlServerConn, dt, "Tb_HSPR_TaxRateSetting", stoppingToken, trans);
 
                     logMsg.Append($"插入增值税数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!\r\n");
 
@@ -168,7 +169,7 @@ namespace TwSynchro.CostItemModule
             }
 
             //保存时间戳
-            UtilsSynchroTimestamp.SetTimestamp(_ts_Key, time_stamp[0], 180);
+            await UtilsSynchroTimestamp.SetTimestampAsync(_ts_Key, time_stamp[0], 180);
 
             logMsg.Append($"------同步增值税数据结束------\r\n");
             _logger.LogInformation(logMsg.ToString());

@@ -13,26 +13,23 @@ using System.Threading.Tasks;
 using TwSynchro.Utils;
 using Utils;
 
-namespace TwSynchro.MenuModule
+namespace TwSynchro.MenuUserModule
 {
-
-
-    public class MenuService
+    public class MenuUserService
     {
-        static readonly string TS_KEY = "Key_MenuService";
+        static readonly string TS_KEY = "Key_MenuUserService";
 
         public static async Task Synchro(ILogger<Worker> _logger, CancellationToken stoppingToken)
         {
-            StringBuilder log = new("\r\n------同步菜单数据开始------");
+            StringBuilder log = new("\r\n------同步岗位授权菜单数据开始------");
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            var timestamp = UtilsSynchroTimestamp.GetTimestampAsync(TS_KEY);
+            var timestamp = await UtilsSynchroTimestamp.GetTimestampAsync(TS_KEY);
 
-            StringBuilder sql = new($@"SELECT b.Address,a.Id,a.Title,a.ParentId,a.Is_Delete,b.time_stamp FROM rf_menu a
-                                           LEFT JOIN rf_applibrary b ON a.AppLibraryId = b.Id
-                                       WHERE b.time_stamp > '{timestamp}'");
+            StringBuilder sql = new($@"SELECT Id,MenuId,Organizes,Is_Delete,time_stamp FROM rf_menuuser 
+                                       WHERE time_stamp > '{timestamp}'");
 
             using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
@@ -40,7 +37,7 @@ namespace TwSynchro.MenuModule
 
             stopwatch.Restart();
 
-            var data = (await mySqlConn.QueryAsync<Menu>(sql.ToString())).ToList();
+            var data = (await mySqlConn.QueryAsync<MenuUser>(sql.ToString())).ToList();
 
             if (data.Count == 0)
             {
@@ -51,7 +48,7 @@ namespace TwSynchro.MenuModule
                 return;
             }
 
-            log.Append($"\r\n读取菜单数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            log.Append($"\r\n读取岗位授权菜单数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -59,11 +56,11 @@ namespace TwSynchro.MenuModule
 
             sql.Clear();
 
-            sql.AppendLine("SELECT PNodeCode,PNodeName,ParentId,URLPage,IsDelete FROM Tb_Sys_PowerNode WHERE 1<>1;");
+            sql.AppendLine("SELECT IID,RoleCode,PNodeCode FROM Tb_Sys_RolePope WHERE 1<>1;");
 
             var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
 
-            DataTable dt = new DataTable("Tb_Sys_PowerNode");
+            DataTable dt = new DataTable("Tb_Sys_RolePope");
 
             dt.Load(reader);
 
@@ -71,22 +68,19 @@ namespace TwSynchro.MenuModule
 
             sql.Clear();
 
-            foreach (var itemMenu in data)
+            foreach (var itemMenuUser in data)
             {
+                sql.AppendLine($@"DELETE Tb_Sys_RolePope WHERE IID='{itemMenuUser.Id}';");
+                if (itemMenuUser.Is_Delete == 1) continue;
                 dr = dt.NewRow();
-
-                dr["PNodeCode"] = itemMenu.Id;
-                dr["PNodeName"] = itemMenu.Title;
-                dr["ParentId"] = itemMenu.ParentId;
-                dr["URLPage"] = itemMenu.Address;
-                dr["IsDelete"] = itemMenu.Is_Delete;
-
+                dr["IID"] = itemMenuUser.Id;
+                dr["RoleCode"] = itemMenuUser.Organizes;
+                dr["PNodeCode"] = itemMenuUser.MenuId;
                 dt.Rows.Add(dr);
 
-                sql.AppendLine($@"DELETE Tb_Sys_PowerNode WHERE PNodeCode='{itemMenu.Id}';");
             }
 
-            log.Append($"\r\n生成菜单数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            log.Append($"\r\n生成岗位授权菜单数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -95,31 +89,34 @@ namespace TwSynchro.MenuModule
             {
                 int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
-                log.Append($"\r\n删除菜单数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
+                log.Append($"\r\n删除岗位授权菜单数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
                 stopwatch.Restart();
 
-                await DbBatch.InsertSingleTableAsync(sqlServerConn, dt, "Tb_Sys_PowerNode", stoppingToken, trans);
+                await DbBatch.InsertSingleTableAsync(sqlServerConn, dt, "Tb_Sys_RolePope", stoppingToken, trans);
 
                 stopwatch.Stop();
 
-                log.Append($"\r\n插入菜单数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                log.Append($"\r\n插入岗位授权菜单数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 trans.Commit();
 
                 await UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY, data.Max(c => c.time_stamp));
+
             }
             catch (Exception ex)
             {
                 trans.Rollback();
 
-                log.Append($"\r\n插入菜单数据失败:{ex.Message}{ex.StackTrace}");
+                log.Append($"\r\n插入岗位授权菜单数据失败:{ex.Message}{ex.StackTrace}");
 
             }
 
-            log.Append($"\r\n------同步菜单数据结束------");
+            log.Append($"\r\n------同步岗位授权菜单数据结束------");
 
             _logger.LogInformation(log.ToString());
+
+
 
         }
     }

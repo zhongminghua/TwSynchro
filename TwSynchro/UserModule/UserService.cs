@@ -7,6 +7,7 @@ using System;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,7 +20,7 @@ namespace TwSynchro.UserModule
     {
         static readonly string TS_KEY = "Key_UserService";
 
-        public static void Synchro(ILogger<Worker> _logger)
+        public static async Task Synchro(ILogger<Worker> _logger, CancellationToken stoppingToken)
         {
 
 
@@ -28,7 +29,7 @@ namespace TwSynchro.UserModule
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            var timestamp = UtilsSynchroTimestamp.GetTimestamp(TS_KEY);
+            var timestamp = UtilsSynchroTimestamp.GetTimestampAsync(TS_KEY);
 
             StringBuilder sql = new($@"SELECT ID,Name,Account,Password,(CASE Sex WHEN 0 THEN '女' ELSE '男' END) as Sex,Email,Mobile,time_stamp FROM rf_user 
                                        WHERE time_stamp > '{timestamp}'");
@@ -39,7 +40,7 @@ namespace TwSynchro.UserModule
 
             stopwatch.Restart();
 
-            var data = (mySqlConn.Query<User>(sql.ToString())).ToList();
+            var data = (await mySqlConn.QueryAsync<User>(sql.ToString())).ToList();
 
             if (data.Count == 0)
             {
@@ -60,7 +61,7 @@ namespace TwSynchro.UserModule
 
             sql.AppendLine("SELECT UserCode,UserName,LoginCode,PassWord,Sex,MobileTel,Email,IsFirstLogin,IsUse,IsDelete FROM Tb_Sys_User WITH(NOLOCK) WHERE 1<>1;");
 
-            var reader = sqlServerConn.ExecuteReader(sql.ToString());
+            var reader =await sqlServerConn.ExecuteReaderAsync(sql.ToString());
 
             DataTable dt = new DataTable("Tb_Sys_User");
 
@@ -97,13 +98,13 @@ namespace TwSynchro.UserModule
             using var trans = sqlServerConn.OpenTransaction();
             try
             {
-                int rowsAffected = sqlServerConn.Execute(sql.ToString(), transaction: trans);
+                int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
                 log.Append($"\r\n删除用户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
                 stopwatch.Restart();
 
-                DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_Sys_User", trans);
+                await DbBatch.InsertSingleTableAsync(sqlServerConn, dt, "Tb_Sys_User",stoppingToken, trans);
 
                 stopwatch.Stop();
 
@@ -111,7 +112,7 @@ namespace TwSynchro.UserModule
 
                 trans.Commit();
 
-                UtilsSynchroTimestamp.SetTimestamp(TS_KEY, data.Max(c => c.time_stamp));
+                await UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY, data.Max(c => c.time_stamp));
             }
             catch (Exception ex)
             {

@@ -8,6 +8,8 @@ using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using TwSynchro.Utils;
 using Utils;
 
@@ -17,14 +19,14 @@ namespace TwSynchro.OrganizeUserModule
     {
         static readonly string TS_KEY = "Key_OrganizeUserService";
 
-        public static void Synchro(ILogger<Worker> _logger)
+        public static async Task Synchro(ILogger<Worker> _logger, CancellationToken stoppingToken)
         {
             StringBuilder log = new("\r\n------同步人员绑定岗位数据开始------");
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            var timestamp = UtilsSynchroTimestamp.GetTimestamp(TS_KEY);
+            var timestamp = UtilsSynchroTimestamp.GetTimestampAsync(TS_KEY);
 
             StringBuilder sql = new($@"SELECT Id,OrganizeId,UserId,time_stamp FROM rf_organizeuser 
                                        WHERE time_stamp > '{timestamp}'");
@@ -35,7 +37,7 @@ namespace TwSynchro.OrganizeUserModule
 
             stopwatch.Restart();
 
-            var data = (mySqlConn.Query<OrganizeUser>(sql.ToString())).ToList();
+            var data = (await mySqlConn.QueryAsync<OrganizeUser>(sql.ToString())).ToList();
 
             if (data.Count == 0)
             {
@@ -56,7 +58,7 @@ namespace TwSynchro.OrganizeUserModule
 
             sql.AppendLine("SELECT UserRoleCode,UserCode,RoleCode FROM Tb_Sys_UserRole WHERE 1<>1;");
 
-            var reader = sqlServerConn.ExecuteReader(sql.ToString());
+            var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
 
             DataTable dt = new DataTable("Tb_Sys_UserRole");
 
@@ -85,13 +87,13 @@ namespace TwSynchro.OrganizeUserModule
             using var trans = sqlServerConn.OpenTransaction();
             try
             {
-                int rowsAffected = sqlServerConn.Execute(sql.ToString(), transaction: trans);
+                int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
                 log.Append($"\r\n删除人员绑定岗位数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
                 stopwatch.Restart();
 
-                DbBatch.InsertSingleTable(sqlServerConn, dt, "Tb_Sys_UserRole", trans);
+                await DbBatch.InsertSingleTableAsync(sqlServerConn, dt, "Tb_Sys_UserRole",stoppingToken, trans);
 
                 stopwatch.Stop();
 
@@ -99,7 +101,7 @@ namespace TwSynchro.OrganizeUserModule
 
                 trans.Commit();
 
-                UtilsSynchroTimestamp.SetTimestamp(TS_KEY, data.Max(c => c.time_stamp));
+                await UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY, data.Max(c => c.time_stamp));
 
             }
             catch (Exception ex)

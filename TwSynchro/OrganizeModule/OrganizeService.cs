@@ -3,7 +3,6 @@ using DapperFactory;
 using DapperFactory.Enum;
 using Entity;
 using Microsoft.Extensions.Logging;
-using Swifter.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -12,7 +11,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.XPath;
 using Utils;
 
 namespace TwSynchro.OrganizeModule
@@ -20,7 +18,7 @@ namespace TwSynchro.OrganizeModule
     public class OrganizeService
     {
 
-        public static void Synchro(ILogger<Worker> _logger)
+        public static async Task Synchro(ILogger<Worker> _logger, CancellationToken stoppingToken)
         {
 
             _logger.LogInformation($"------同步项目机构岗位数据开始------");
@@ -54,15 +52,15 @@ namespace TwSynchro.OrganizeModule
             stopwatch.Restart();
 
 
-            //var result =  mySqlConn.QueryPager<Organize>(DBType.MySql, sql.ToString(), "ID", 10, pageIndex);
+            //var result =  mySqlConn.QueryPagerAsync<Organize>(DBType.MySql, sql.ToString(), "ID", 10, pageIndex);
 
-            var readerMultiple = mySqlConn.QueryMultiple(sql.ToString());
+            var readerMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
 
             sql.Clear();
 
-            var organizeData = readerMultiple.Read<Organize>().ToList();
+            var organizeData = (await readerMultiple.ReadAsync<Organize>()).ToList();
 
-            var dictionaryData = readerMultiple.Read<Dictionary>();
+            var dictionaryData = await readerMultiple.ReadAsync<Dictionary>();
 
             //isHasNext = result.HasNext;
 
@@ -96,7 +94,7 @@ namespace TwSynchro.OrganizeModule
 
             StringBuilder sqlOrgan = new(), sqlCommunity = new(), sqlDepartment = new(), sqlRole = new();
 
-            var reader = sqlServerConn.ExecuteReader(sql.ToString());
+            var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
 
             DataTable dtTb_Sys_Organ = new DataTable("Tb_Sys_Organ");
 
@@ -337,25 +335,25 @@ namespace TwSynchro.OrganizeModule
 
             ResultMessage resultMessage = new();
 
-            resultMessage = SynchroOrgan(sqlOrgan.ToString(), dtTb_Sys_Organ, dtTb_Sys_OrganPartial);
+            resultMessage = await SynchroOrgan(sqlOrgan.ToString(), dtTb_Sys_Organ, dtTb_Sys_OrganPartial, stoppingToken);
 
             _logger.LogInformation($"插入区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
             stopwatch.Restart();
 
-            resultMessage = SynchroCommunity(sqlCommunity.ToString(), dtTb_HSPR_Community, dtTb_HSPR_CommunityChargesMode);
+            resultMessage = await SynchroCommunity(sqlCommunity.ToString(), dtTb_HSPR_Community, dtTb_HSPR_CommunityChargesMode, stoppingToken);
 
             _logger.LogInformation($"插入项目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
             stopwatch.Restart();
 
-            resultMessage = SynchroDepartment(sqlDepartment.ToString(), dtTb_Sys_Department);
+            resultMessage = await SynchroDepartment(sqlDepartment.ToString(), dtTb_Sys_Department, stoppingToken);
 
             _logger.LogInformation($"插入机构数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
             stopwatch.Restart();
 
-            resultMessage = SynchroRole(sqlRole.ToString(), dtTb_Sys_Role);
+            resultMessage = await SynchroRole(sqlRole.ToString(), dtTb_Sys_Role, stoppingToken);
 
             stopwatch.Stop();
 
@@ -365,7 +363,7 @@ namespace TwSynchro.OrganizeModule
 
         }
 
-        public static ResultMessage SynchroOrgan(string sql, DataTable dtTb_Sys_Organ, DataTable dtTb_Sys_OrganPartial)
+        public static async Task<ResultMessage> SynchroOrgan(string sql, DataTable dtTb_Sys_Organ, DataTable dtTb_Sys_OrganPartial, CancellationToken stoppingToken)
         {
 
             ResultMessage resultMessage = new();
@@ -376,11 +374,11 @@ namespace TwSynchro.OrganizeModule
 
             try
             {
-                int rowsAffected = sqlServerConn.Execute(sql.ToString(), transaction: trans);
+                int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), trans);
 
-                DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Organ, "Tb_Sys_Organ", trans);
+                await DbBatch.InsertSingleTableAsync(sqlServerConn, dtTb_Sys_Organ, "Tb_Sys_Organ", stoppingToken, trans);
 
-                DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_OrganPartial, "Tb_Sys_OrganPartial", trans);
+                await DbBatch.InsertSingleTableAsync(sqlServerConn, dtTb_Sys_OrganPartial, "Tb_Sys_OrganPartial", stoppingToken, trans);
 
                 trans.Commit();
 
@@ -397,7 +395,7 @@ namespace TwSynchro.OrganizeModule
             return resultMessage;
         }
 
-        public static ResultMessage SynchroCommunity(string sql, DataTable dtTb_HSPR_Community, DataTable dtTb_HSPR_CommunityChargesMode)
+        public static async Task<ResultMessage> SynchroCommunity(string sql, DataTable dtTb_HSPR_Community, DataTable dtTb_HSPR_CommunityChargesMode, CancellationToken stoppingToken)
         {
 
             ResultMessage resultMessage = new();
@@ -408,11 +406,11 @@ namespace TwSynchro.OrganizeModule
 
             try
             {
-                int rowsAffected = sqlServerConn.Execute(sql.ToString(), transaction: trans);
+                int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(),trans);
 
-                DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Community, "Tb_HSPR_Community", trans);
+                await DbBatch.InsertSingleTableAsync(sqlServerConn, dtTb_HSPR_Community, "Tb_HSPR_Community", stoppingToken, trans);
 
-                DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_CommunityChargesMode, "Tb_HSPR_CommunityChargesMode", trans);
+                await DbBatch.InsertSingleTableAsync(sqlServerConn, dtTb_HSPR_CommunityChargesMode, "Tb_HSPR_CommunityChargesMode", stoppingToken, trans);
 
                 trans.Commit();
 
@@ -429,7 +427,7 @@ namespace TwSynchro.OrganizeModule
             return resultMessage;
         }
 
-        public static ResultMessage SynchroDepartment(string sql, DataTable dtTb_Sys_Department)
+        public static async Task<ResultMessage> SynchroDepartment(string sql, DataTable dtTb_Sys_Department, CancellationToken stoppingToken)
         {
 
             ResultMessage resultMessage = new();
@@ -440,9 +438,9 @@ namespace TwSynchro.OrganizeModule
 
             try
             {
-                int rowsAffected = sqlServerConn.Execute(sql.ToString(), transaction: trans);
+                int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(),  trans);
 
-                DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Department, "Tb_Sys_Department", trans);
+                await DbBatch.InsertSingleTableAsync(sqlServerConn, dtTb_Sys_Department, "Tb_Sys_Department", stoppingToken, trans);
 
                 trans.Commit();
 
@@ -458,7 +456,7 @@ namespace TwSynchro.OrganizeModule
             return resultMessage;
         }
 
-        public static ResultMessage SynchroRole(string sql, DataTable dtTb_Sys_Role)
+        public static async Task<ResultMessage> SynchroRole(string sql, DataTable dtTb_Sys_Role, CancellationToken stoppingToken)
         {
 
             ResultMessage resultMessage = new();
@@ -469,9 +467,9 @@ namespace TwSynchro.OrganizeModule
 
             try
             {
-                int rowsAffected = sqlServerConn.Execute(sql.ToString(), transaction: trans);
+                int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), trans);
 
-                DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Role, "Tb_Sys_Role", trans);
+                await DbBatch.InsertSingleTableAsync(sqlServerConn, dtTb_Sys_Role, "Tb_Sys_Role", stoppingToken, trans);
 
                 trans.Commit();
 

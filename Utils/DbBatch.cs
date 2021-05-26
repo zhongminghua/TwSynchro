@@ -9,14 +9,13 @@ namespace Utils
 {
     public class DbBatch
     {
-
         /// <summary>
         /// (单表)批量添加
         /// </summary>
         /// <param name="connectionString"></param>
         /// <param name="dt"></param>
         /// <param name="tableName"></param>
-        public static  void InsertSingleTable(IDbConnection connection, DataTable dt, string tableName, IDbTransaction transaction = null)
+        public static async Task InsertSingleTableAsync(IDbConnection connection, DataTable dt, string tableName, CancellationToken stoppingToken, IDbTransaction transaction = null)
         {
             //使用示例:
             //string strSql = $"SELECT * FROM Tb_TaProject WHERE 1<>1";
@@ -34,7 +33,7 @@ namespace Utils
 
             if (dt.Rows.Count == 0) { return; }
 
-            using SqlBulkCopy bulkCopy = new SqlBulkCopy((SqlConnection)connection,SqlBulkCopyOptions.KeepIdentity | SqlBulkCopyOptions.KeepNulls, (SqlTransaction)transaction);
+            using SqlBulkCopy bulkCopy = new SqlBulkCopy((SqlConnection)connection, SqlBulkCopyOptions.KeepIdentity | SqlBulkCopyOptions.KeepNulls, (SqlTransaction)transaction);
             bulkCopy.BulkCopyTimeout = 30;
             bulkCopy.BatchSize = dt.Rows.Count;
             bulkCopy.DestinationTableName = tableName;
@@ -44,7 +43,7 @@ namespace Utils
                 bulkCopy.ColumnMappings.Add(dt.Columns[j].ColumnName, dt.Columns[j].ColumnName);
             }
 
-             bulkCopy.WriteToServer(dt);
+            await bulkCopy.WriteToServerAsync(dt, stoppingToken);
 
         }
 

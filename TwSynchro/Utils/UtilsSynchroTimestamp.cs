@@ -17,7 +17,7 @@ namespace TwSynchro.Utils
         /// <param name="sqlServerConn"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        public static string GetTimestamp(string key)
+        public static async Task<string> GetTimestampAsync(string key)
         {
             object timestamp = CacheHelper.CacheValue(key);
 
@@ -28,7 +28,7 @@ namespace TwSynchro.Utils
 
                 var sql = $"SELECT TOP 1 Ts_Value FROM Tb_Synchro_TimeStamp WHERE Ts_Key='{key}'";
 
-                var timestampValue = sqlServerConn.QueryFirstOrDefault<string>(sql);
+                var timestampValue = await sqlServerConn.QueryFirstOrDefaultAsync<string>(sql);
 
                 if (!string.IsNullOrEmpty(timestampValue))
                     timestamp = timestampValue;
@@ -46,7 +46,7 @@ namespace TwSynchro.Utils
         /// <param name="key"></param>
         /// <param name="value">时间戳值</param>
         /// <param name="minute">绝对过期时间（分钟）</param>
-        public static void SetTimestamp(string key, object value, int minute = 5)
+        public static async Task SetTimestampAsync(string key, object value, int minute = 5)
         {
             using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
 
@@ -56,14 +56,14 @@ namespace TwSynchro.Utils
 
             string sql = $"SELECT COUNT(1) FROM Tb_Synchro_TimeStamp WHERE Ts_Key='{key}'";
 
-            int count = sqlServerConn.QuerySingle<int>(sql.ToString());
+            int count = await sqlServerConn.QuerySingleAsync<int>(sql.ToString());
 
             if (count > 0)
                 sql = $"UPDATE Tb_Synchro_TimeStamp SET Ts_Value='{value}' WHERE Ts_Key='{key}'";
             else
                 sql = $"INSERT INTO Tb_Synchro_TimeStamp(Ts_Key,Ts_Value) VALUES ('{key}','{value}')";
 
-            sqlServerConn.Execute(sql.ToString());
+            await sqlServerConn.ExecuteAsync(sql.ToString());
 
         }
 
