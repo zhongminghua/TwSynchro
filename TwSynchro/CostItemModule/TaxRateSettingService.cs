@@ -33,7 +33,7 @@ namespace TwSynchro.CostItemModule
             StringBuilder Strsql = new($@"SELECT id AS TaxRateSettingID,comm_id AS CommID,cost_id AS CorpCostID,tax_rate AS TaxRate,
            tax_latefee_rate AS ContractPenaltyRate,begin_time AS StartDate,end_time AS EndDate,
            tax_latefee_rate AS IsContractPenalty,modify_user AS OperationUserCode,modify_date AS OperationDate,
-           is_delete AS IsDelete FROM tb_base_charge_set_tax WHERE times_tamp>'{timesTamp}'");
+           is_delete AS IsDelete FROM tb_base_charge_set_tax WHERE time_stamp>'{timesTamp}'");
 
             StringBuilder sql = new();
 
@@ -49,9 +49,9 @@ namespace TwSynchro.CostItemModule
 
             sql.Clear();
 
-            sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_base_charge_set_tax");
+            sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_base_charge_set_tax");
 
-            var times_tamp = ( mySqlConn.Query<string>(sql.ToString())).ToList();
+            var time_stamp = ( mySqlConn.Query<string>(sql.ToString())).ToList();
 
             #endregion
 
@@ -161,7 +161,7 @@ namespace TwSynchro.CostItemModule
             }
 
             //保存时间戳
-            UtilsSynchroTimestamp.SetTimestamp("TaxRateSetting", times_tamp[0], 180);
+            UtilsSynchroTimestamp.SetTimestamp("TaxRateSetting", time_stamp[0], 180);
 
             _logger.LogInformation($"------同步增值税数据结束------");
         }

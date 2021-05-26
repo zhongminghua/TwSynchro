@@ -52,7 +52,7 @@ namespace TwSynchro.CostItemModule
             string timesTamp =  UtilsSynchroTimestamp.GetTimestamp("CorpCostItem");
 
             StringBuilder Strsql = new($@"SELECT id AS CorpCostID,parent_id AS Parent_Id,sort AS CostSNum,cost_name AS CostName,min_unit AS RoundingNum,
-            is_use AS IsSealed,product_name AS BillType,product_code AS BillCode,is_delete AS IsDelete FROM tb_base_charge_cost WHERE times_tamp>'{timesTamp}'");
+            is_use AS IsSealed,product_name AS BillType,product_code AS BillCode,is_delete AS IsDelete FROM tb_base_charge_cost WHERE time_stamp>'{timesTamp}'");
 
             StringBuilder sql = new();
 
@@ -66,9 +66,9 @@ namespace TwSynchro.CostItemModule
 
             #region 读取当前最大时间戳
 
-            sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_base_charge_cost");
+            sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_base_charge_cost");
 
-            var times_tamp = ( mySqlConn.Query<string>(sql.ToString())).ToList();
+            var time_stamp = ( mySqlConn.Query<string>(sql.ToString())).ToList();
 
             #endregion
 
@@ -206,7 +206,7 @@ namespace TwSynchro.CostItemModule
             }
 
             //保存时间戳
-            UtilsSynchroTimestamp.SetTimestamp("CorpCostItem", times_tamp[0], 180);
+            UtilsSynchroTimestamp.SetTimestamp("CorpCostItem", time_stamp[0], 180);
 
             _logger.LogInformation($"------同步公司科目数据结束------");
 
@@ -237,7 +237,7 @@ namespace TwSynchro.CostItemModule
        calc_type AS StanFormula,stan_price AS StanAmount,stop_use_date AS StanEndDate,is_condition_calc AS IsCondition,
        condition_content,calc_condition AS　ConditionField,latefee_rate AS DelinRates ,latefee_calc_date,is_delete AS IsDelete,
        calc_condition_type AS IsStanRange,min_unit AS AmountRounded,stan_ratio AS Modulus,allow_comm_modify AS IsCanUpdate FROM  tb_base_charge_stan 
-            WHERE times_tamp>'{timesTamp}'");
+            WHERE time_stamp>'{timesTamp}'");
 
             StringBuilder sql = new();
             StringBuilder sqltwo = new();
@@ -254,7 +254,7 @@ namespace TwSynchro.CostItemModule
 
             sql.Clear();
 
-            sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_base_charge_stan");
+            sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_base_charge_stan");
 
             var newTimes_Tamp = ( mySqlConn.Query<string>(sql.ToString())).ToList();
 
@@ -504,7 +504,7 @@ namespace TwSynchro.CostItemModule
 
                 StringBuilder Strsql = new($@"select id AS CostID,comm_id AS CommID,parent_id AS Parent_Id,sort AS CostSNum,cost_name AS CostName,
                     min_unit AS RoundingNum,corp_cost_id AS CorpCostID,is_delete AS IsDelete from tb_charge_cost  
-                        WHERE comm_id='{Comm.CommID}' AND times_tamp>'{timesTamp}'");//WHERE comm_id='{Comm.CommID}'
+                        WHERE comm_id='{Comm.CommID}' AND time_stamp>'{timesTamp}'");//WHERE comm_id='{Comm.CommID}'
 
                 //using var mySqlConn = DbService.GetDbConnection(DBType.MySql, "Erp_Develop");
                 using var mySqlConn = DbService.GetSqlBurstDbConnection(DBType.MySql, DbBurstType.Charge, Comm.IntID);
@@ -525,9 +525,9 @@ namespace TwSynchro.CostItemModule
 
                 sql.Clear();
 
-                sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_charge_cost WHERE comm_id='{Comm.CommID}'");
+                sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_charge_cost WHERE comm_id='{Comm.CommID}'");
 
-                var times_tamp = ( mySqlConn.Query<string>(sql.ToString())).ToList();
+                var time_stamp = ( mySqlConn.Query<string>(sql.ToString())).ToList();
 
                 #endregion
 
@@ -655,7 +655,7 @@ namespace TwSynchro.CostItemModule
                 }
 
                 //保存时间戳
-                UtilsSynchroTimestamp.SetTimestamp("CostItem-" + Comm.CommID, times_tamp[0], 180);
+                UtilsSynchroTimestamp.SetTimestamp("CostItem-" + Comm.CommID, time_stamp[0], 180);
 
                 _logger.LogInformation($"({Comm.CommName})项目同步结束");
 
@@ -691,7 +691,7 @@ namespace TwSynchro.CostItemModule
                        condition_content,calc_condition AS ConditionField,latefee_rate AS DelinRates,latefee_calc_date ,is_delete AS IsDelete,
                        calc_condition_type AS IsStanRange,corp_stan_id AS CorpStanID,corp_cost_id AS CorpCostID,
                        min_unit AS AmountRounded,stan_ratio AS Modulus,allow_comm_modify AS IsCanUpdate FROM  tb_base_charge_comm_stan 
-                        WHERE times_tamp>'{timesTamp}'");
+                        WHERE time_stamp>'{timesTamp}'");
 
             StringBuilder sql = new();
 
@@ -709,9 +709,9 @@ namespace TwSynchro.CostItemModule
 
             sql.Clear();
 
-            sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_base_charge_comm_stan");
+            sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_base_charge_comm_stan");
 
-            var times_tamp = ( mySqlConn.Query<string>(sql.ToString())).ToList();
+            var time_stamp = ( mySqlConn.Query<string>(sql.ToString())).ToList();
 
             #endregion
 
@@ -921,7 +921,7 @@ namespace TwSynchro.CostItemModule
             }
 
             //保存时间戳
-            UtilsSynchroTimestamp.SetTimestamp("CostStandard", times_tamp[0], 180);
+            UtilsSynchroTimestamp.SetTimestamp("CostStandard", time_stamp[0], 180);
 
             _logger.LogInformation($"------同步项目标准数据结束------");
 
@@ -976,7 +976,7 @@ namespace TwSynchro.CostItemModule
                 StringBuilder Strsql = new($@"select id AS IID,comm_id AS CommID,customer_id AS CustID,resource_id AS RoomID,cost_id AS CostID,
        meter_name AS MeterSign,calc_area AS CalcArea,calc_cycle AS ChargeCycle,is_delete AS IsDelete,
        calc_method AS PayType,calc_amount AS StanSingleAmount,delete_user AS DelUserName,calc_number AS RoomBuildArea from tb_charge_fee_stan_setting
-                WHERE comm_id='{Comm.CommID}' AND times_tamp>'{timesTamp}'");
+                WHERE comm_id='{Comm.CommID}' AND time_stamp>'{timesTamp}'");
 
                 _logger.LogInformation($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -988,9 +988,9 @@ namespace TwSynchro.CostItemModule
 
                 sql.Clear();
 
-                sql.Append("SELECT MAX(times_tamp) times_tamp  FROM tb_charge_fee_stan_setting");
+                sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_charge_fee_stan_setting");
 
-                var times_tamp = ( mySqlConn.Query<string>(sql.ToString())).ToList();
+                var time_stamp = ( mySqlConn.Query<string>(sql.ToString())).ToList();
 
                 #endregion
 
@@ -1117,7 +1117,7 @@ namespace TwSynchro.CostItemModule
                 }
 
                 //保存时间戳
-                UtilsSynchroTimestamp.SetTimestamp("CostStanSetting-" + Comm.CommID, times_tamp[0], 180);
+                UtilsSynchroTimestamp.SetTimestamp("CostStanSetting-" + Comm.CommID, time_stamp[0], 180);
 
                 _logger.LogInformation($"({Comm.CommName})项目同步结束");
             }
