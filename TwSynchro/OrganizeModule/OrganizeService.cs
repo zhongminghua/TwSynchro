@@ -20,7 +20,7 @@ namespace TwSynchro.OrganizeModule
     public class OrganizeService
     {
 
-        public  static void Synchro(ILogger<Worker> _logger)
+        public static void Synchro(ILogger<Worker> _logger)
         {
 
             _logger.LogInformation($"------同步项目机构岗位数据开始------");
@@ -56,7 +56,7 @@ namespace TwSynchro.OrganizeModule
 
             //var result =  mySqlConn.QueryPager<Organize>(DBType.MySql, sql.ToString(), "ID", 10, pageIndex);
 
-            var readerMultiple =  mySqlConn.QueryMultiple(sql.ToString());
+            var readerMultiple = mySqlConn.QueryMultiple(sql.ToString());
 
             sql.Clear();
 
@@ -96,7 +96,7 @@ namespace TwSynchro.OrganizeModule
 
             StringBuilder sqlOrgan = new(), sqlCommunity = new(), sqlDepartment = new(), sqlRole = new();
 
-            var reader =  sqlServerConn.ExecuteReader(sql.ToString());
+            var reader = sqlServerConn.ExecuteReader(sql.ToString());
 
             DataTable dtTb_Sys_Organ = new DataTable("Tb_Sys_Organ");
 
@@ -273,11 +273,8 @@ namespace TwSynchro.OrganizeModule
                     dr = dtTb_Sys_Role.NewRow();
 
                     dr["RoleCode"] = itemOrganize.Id;
-
                     dr["RoleName"] = itemOrganize.Name;
-
                     dr["ParentId"] = itemOrganize.ParentId;
-
                     dr["Sort"] = itemOrganize.Sort;
 
                     UtilsDataTable.DataRowIsNull(dr, "UpLevelName", itemOrganize.LevelName);
@@ -303,13 +300,9 @@ namespace TwSynchro.OrganizeModule
                         dr = dtTb_Sys_Department.NewRow();
 
                         dr["DepCode"] = modelOrganize.Id;
-
                         dr["SortDepCode"] = modelOrganize.Id;
-
                         dr["DepName"] = modelOrganize.Name;
-
                         dr["ParentId"] = modelOrganize.ParentId;
-
                         dr["Sort"] = modelOrganize.Sort;
 
                         dtTb_Sys_Department.Rows.Add(dr);
@@ -328,11 +321,8 @@ namespace TwSynchro.OrganizeModule
                 dr = dtTb_Sys_Role.NewRow();
 
                 dr["RoleCode"] = itemDictionary.Id;
-
                 dr["RoleName"] = itemDictionary.Title;
-
                 dr["Sort"] = itemDictionary.Sort;
-
                 dr["IsSysRole"] = 1;
 
                 dtTb_Sys_Role.Rows.Add(dr);
@@ -347,25 +337,25 @@ namespace TwSynchro.OrganizeModule
 
             ResultMessage resultMessage = new();
 
-            resultMessage =  SynchroOrgan(sqlOrgan.ToString(), dtTb_Sys_Organ, dtTb_Sys_OrganPartial);
+            resultMessage = SynchroOrgan(sqlOrgan.ToString(), dtTb_Sys_Organ, dtTb_Sys_OrganPartial);
 
             _logger.LogInformation($"插入区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
             stopwatch.Restart();
 
-            resultMessage =  SynchroCommunity(sqlCommunity.ToString(), dtTb_HSPR_Community, dtTb_HSPR_CommunityChargesMode);
+            resultMessage = SynchroCommunity(sqlCommunity.ToString(), dtTb_HSPR_Community, dtTb_HSPR_CommunityChargesMode);
 
             _logger.LogInformation($"插入项目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
             stopwatch.Restart();
 
-            resultMessage =  SynchroDepartment( sqlDepartment.ToString(), dtTb_Sys_Department);
+            resultMessage = SynchroDepartment(sqlDepartment.ToString(), dtTb_Sys_Department);
 
             _logger.LogInformation($"插入机构数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
             stopwatch.Restart();
 
-            resultMessage =  SynchroRole(sqlRole.ToString(), dtTb_Sys_Role);
+            resultMessage = SynchroRole(sqlRole.ToString(), dtTb_Sys_Role);
 
             stopwatch.Stop();
 
@@ -375,7 +365,7 @@ namespace TwSynchro.OrganizeModule
 
         }
 
-        public static  ResultMessage SynchroOrgan( string sql, DataTable dtTb_Sys_Organ, DataTable dtTb_Sys_OrganPartial)
+        public static ResultMessage SynchroOrgan(string sql, DataTable dtTb_Sys_Organ, DataTable dtTb_Sys_OrganPartial)
         {
 
             ResultMessage resultMessage = new();
@@ -386,11 +376,11 @@ namespace TwSynchro.OrganizeModule
 
             try
             {
-                int rowsAffected =  sqlServerConn.Execute(sql.ToString(), transaction: trans);
+                int rowsAffected = sqlServerConn.Execute(sql.ToString(), transaction: trans);
 
-                 DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Organ, "Tb_Sys_Organ",  trans);
+                DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Organ, "Tb_Sys_Organ", trans);
 
-                 DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_OrganPartial, "Tb_Sys_OrganPartial",  trans);
+                DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_OrganPartial, "Tb_Sys_OrganPartial", trans);
 
                 trans.Commit();
 
@@ -407,7 +397,7 @@ namespace TwSynchro.OrganizeModule
             return resultMessage;
         }
 
-        public static  ResultMessage SynchroCommunity( string sql, DataTable dtTb_HSPR_Community, DataTable dtTb_HSPR_CommunityChargesMode)
+        public static ResultMessage SynchroCommunity(string sql, DataTable dtTb_HSPR_Community, DataTable dtTb_HSPR_CommunityChargesMode)
         {
 
             ResultMessage resultMessage = new();
@@ -418,11 +408,11 @@ namespace TwSynchro.OrganizeModule
 
             try
             {
-                int rowsAffected =  sqlServerConn.Execute(sql.ToString(), transaction: trans);
+                int rowsAffected = sqlServerConn.Execute(sql.ToString(), transaction: trans);
 
-                 DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Community, "Tb_HSPR_Community",  trans);
+                DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_Community, "Tb_HSPR_Community", trans);
 
-                 DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_CommunityChargesMode, "Tb_HSPR_CommunityChargesMode",  trans);
+                DbBatch.InsertSingleTable(sqlServerConn, dtTb_HSPR_CommunityChargesMode, "Tb_HSPR_CommunityChargesMode", trans);
 
                 trans.Commit();
 
@@ -439,7 +429,7 @@ namespace TwSynchro.OrganizeModule
             return resultMessage;
         }
 
-        public static  ResultMessage SynchroDepartment(string sql, DataTable dtTb_Sys_Department)
+        public static ResultMessage SynchroDepartment(string sql, DataTable dtTb_Sys_Department)
         {
 
             ResultMessage resultMessage = new();
@@ -450,9 +440,9 @@ namespace TwSynchro.OrganizeModule
 
             try
             {
-                int rowsAffected =  sqlServerConn.Execute(sql.ToString(), transaction: trans);
+                int rowsAffected = sqlServerConn.Execute(sql.ToString(), transaction: trans);
 
-                 DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Department, "Tb_Sys_Department",  trans);
+                DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Department, "Tb_Sys_Department", trans);
 
                 trans.Commit();
 
@@ -468,7 +458,7 @@ namespace TwSynchro.OrganizeModule
             return resultMessage;
         }
 
-        public static  ResultMessage SynchroRole( string sql, DataTable dtTb_Sys_Role)
+        public static ResultMessage SynchroRole(string sql, DataTable dtTb_Sys_Role)
         {
 
             ResultMessage resultMessage = new();
@@ -479,9 +469,9 @@ namespace TwSynchro.OrganizeModule
 
             try
             {
-                int rowsAffected =  sqlServerConn.Execute(sql.ToString(), transaction: trans);
+                int rowsAffected = sqlServerConn.Execute(sql.ToString(), transaction: trans);
 
-                 DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Role, "Tb_Sys_Role",  trans);
+                DbBatch.InsertSingleTable(sqlServerConn, dtTb_Sys_Role, "Tb_Sys_Role", trans);
 
                 trans.Commit();
 
