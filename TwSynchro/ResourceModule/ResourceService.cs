@@ -66,6 +66,15 @@ namespace TwSynchro.ResourceModule
 
             var ResourceData = (await readerMultiple.ReadAsync<Resource>()).ToList();
 
+            if (ResourceData.Count() == 0)
+            {
+                logMsg.Append($"\r\n获取区域数据 数据为空！\r\n");
+
+                _logger.LogInformation(logMsg.ToString());
+
+                return;
+            }
+
             logMsg.Append($"\r\n获取区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
@@ -204,6 +213,15 @@ namespace TwSynchro.ResourceModule
             var readerMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
 
             var ResourceData = (await readerMultiple.ReadAsync<Resource>()).ToList();
+
+            if (ResourceData.Count() == 0)
+            {
+                logMsg.Append($"\r\n读取楼栋数据 数据为空！\r\n");
+
+                _logger.LogInformation(logMsg.ToString());
+
+                return;
+            }
 
             sql.Clear();
 
@@ -350,6 +368,15 @@ namespace TwSynchro.ResourceModule
             var readerMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
 
             var ResourceData = (await readerMultiple.ReadAsync<Resource>()).ToList();
+
+            if (ResourceData.Count() == 0)
+            {
+                logMsg.Append($"\r\n读取房屋数据 数据为空！\r\n");
+
+                _logger.LogInformation(logMsg.ToString());
+
+                return;
+            }
 
             sql.Clear();
 
@@ -587,7 +614,7 @@ namespace TwSynchro.ResourceModule
                 int rowsAffected = 0;
 
                 if (!string.IsNullOrEmpty(sqlRoomDel.ToString()))
-                    rowsAffected = await sqlServerConn.ExecuteAsync(sqlRoomDel.ToString(), trans);
+                    rowsAffected = await sqlServerConn.ExecuteAsync(sqlRoomDel.ToString(), transaction: trans);
 
                 logMsg.Append($"\r\n删除房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
@@ -668,6 +695,15 @@ namespace TwSynchro.ResourceModule
             var readerMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
 
             var ResourceData = (await readerMultiple.ReadAsync<Resource>()).ToList();
+
+            if (ResourceData.Count() == 0)
+            {
+                logMsg.Append($"\r\n读取车位区域数据 数据为空！\r\n");
+
+                _logger.LogInformation(logMsg.ToString());
+
+                return;
+            }
 
             sql.Clear();
 
@@ -803,6 +839,15 @@ namespace TwSynchro.ResourceModule
             var readerMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
 
             var ResourceData = (await readerMultiple.ReadAsync<Resource>()).ToList();
+
+            if (ResourceData.Count() == 0)
+            {
+                logMsg.Append($"\r\n读取车位数据 数据为空！\r\n");
+
+                _logger.LogInformation(logMsg.ToString());
+
+                return;
+            }
 
             sql.Clear();
 

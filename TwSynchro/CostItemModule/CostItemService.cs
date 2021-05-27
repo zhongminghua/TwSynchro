@@ -78,6 +78,15 @@ namespace TwSynchro.CostItemModule
             {
                 var result = await mySqlConn.QueryPagerAsync<CorpCostItem>(DBType.MySql, Strsql.ToString(), "sort", pageSize, PageIndex);
 
+                if (result.Data.Count() == 0)
+                {
+                    logMsg.Append($"\r\n读取公司科目数据 数据为空！\r\n");
+
+                    _logger.LogInformation(logMsg.ToString());
+
+                    return;
+                }
+
                 logMsg.Append($"\r\n读取公司科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 stopwatch.Restart();
@@ -270,6 +279,15 @@ namespace TwSynchro.CostItemModule
             while (true)
             {
                 var result = await mySqlConn.QueryPagerAsync<CorpCostStandard>(DBType.MySql, Strsql.ToString(), "sort", pageSize, PageIndex);
+
+                if (result.Data.Count() == 0)
+                {
+                    logMsg.Append($"\r\n读取公司标准数据 数据为空！\r\n");
+
+                    _logger.LogInformation(logMsg.ToString());
+
+                    return;
+                }
 
                 logMsg.Append($"\r\n读取公司标准数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -537,7 +555,7 @@ namespace TwSynchro.CostItemModule
 
                 sql.Clear();
 
-                sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_charge_cost WHERE comm_id='{Comm.CommID}'");
+                sql.Append($"SELECT MAX(time_stamp) time_stamp  FROM tb_charge_cost WHERE comm_id='{Comm.CommID}'");
 
                 var time_stamp = (await mySqlConn.QueryAsync<string>(sql.ToString())).ToList();
 
@@ -546,6 +564,15 @@ namespace TwSynchro.CostItemModule
                 while (true)
                 {
                     var result = await mySqlConn.QueryPagerAsync<CostItem>(DBType.MySql, Strsql.ToString(), "sort", pageSize, PageIndex);
+
+                    if (result.Data.Count() == 0)
+                    {
+                        logMsg.Append($"\r\n读取项目科目数据 数据为空！\r\n");
+
+                        _logger.LogInformation(logMsg.ToString());
+
+                        break;
+                    }
 
                     logMsg.Append($"\r\n读取项目科目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -669,7 +696,8 @@ namespace TwSynchro.CostItemModule
                 }
 
                 //保存时间戳
-                await UtilsSynchroTimestamp.SetTimestampAsync("CostItem-" + Comm.CommID, time_stamp[0], 180);
+                if(time_stamp[0] is not null)
+                    await UtilsSynchroTimestamp.SetTimestampAsync("CostItem-" + Comm.CommID, time_stamp[0], 180);
 
                 logMsg.Append($"\r\n({Comm.CommName})项目同步结束");
 
@@ -735,6 +763,15 @@ namespace TwSynchro.CostItemModule
             while (true)
             {
                 var result = await mySqlConn.QueryPagerAsync<CostStandard>(DBType.MySql, Strsql.ToString(), "sort", pageSize, PageIndex);
+
+                if (result.Data.Count() == 0)
+                {
+                    logMsg.Append($"\r\n读取项目标准数据 数据为空！\r\n");
+
+                    _logger.LogInformation(logMsg.ToString());
+
+                    return;
+                }
 
                 logMsg.Append($"\r\n读取项目标准数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -1020,6 +1057,15 @@ namespace TwSynchro.CostItemModule
                 {
                     var result = await mySqlConn.QueryPagerAsync<CostStanSetting>(DBType.MySql, Strsql.ToString(), "sort", pageSize, PageIndex);
 
+                    if (result.Data.Count() == 0)
+                    {
+                        logMsg.Append($"\r\n读取项目标准数据 数据为空！\r\n");
+
+                        _logger.LogInformation(logMsg.ToString());
+
+                        break;
+                    }
+
                     logMsg.Append($"\r\n读取客户标准绑定数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                     stopwatch.Restart();
@@ -1141,7 +1187,8 @@ namespace TwSynchro.CostItemModule
                 }
 
                 //保存时间戳
-                await UtilsSynchroTimestamp.SetTimestampAsync("CostStanSetting-" + Comm.CommID, time_stamp[0], 180);
+                if(time_stamp[0] is not null)
+                    await UtilsSynchroTimestamp.SetTimestampAsync("CostStanSetting-" + Comm.CommID, time_stamp[0], 180);
 
                 logMsg.Append($"\r\n({Comm.CommName})项目同步结束");
             }
