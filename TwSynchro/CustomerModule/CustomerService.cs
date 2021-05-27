@@ -4,83 +4,97 @@ using DapperFactory.Enum;
 using Entity;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TwSynchro.Utils;
 using Utils;
 
 namespace TwSynchro.CustomerModule
 {
     public class CustomerService
     {
+
+        static readonly string TS_KEY_CUSTOMER = "KEY_Customer";
+
+        static readonly string TS_KEY_CUSTOMER_LIVE = "KEY_Customer_Live";
+
+
         public static async Task Synchro(ILogger<Worker> _logger, CancellationToken stoppingToken)
         {
-            _logger.LogInformation($"------同步客户数据开始------");
+
+            StringBuilder log = new("\r\n------同步客户数据开始------");
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            //StringBuilder sql = new($@"
-            //SELECT * FROM tb_base_masterdata_customer;
-            //SELECT * FROM tb_base_masterdata_customer_comm;
-            //SELECT * FROM tb_base_masterdata_customer_live; ");
+            var timestampCustomer = await UtilsSynchroTimestamp.GetTimestampAsync(TS_KEY_CUSTOMER);
+
+            var timestampCustomerLive = await UtilsSynchroTimestamp.GetTimestampAsync(TS_KEY_CUSTOMER_LIVE);
 
             StringBuilder sql = new($@"
-            SELECT id,comm_id,name,idcard_type,idcard_num,post_code,mobile,e_mail,
-                   fax,sex,birthday,link_man,nationality,work_unit,industry,category,
-                   legal_representative,legal_representative_tel,is_trade,is_delete
-            FROM tb_base_masterdata_customer_comm;
+                SELECT id,comm_id,name,idcard_type,idcard_num,post_code,mobile,e_mail,
+                       fax,sex,birthday,link_man,nationality,work_unit,industry,category,
+                       legal_representative,legal_representative_tel,is_trade,is_delete,time_stamp
+                FROM tb_base_masterdata_customer_comm
+                WHERE time_stamp > '{timestampCustomer}';
 
-            SELECT a.id,a.customer_id,a.comm_id,a.resource_id,a.first_contact,a.is_delete,a.relation,a.owner_relation,
-                b.name,b.idcard_type,b.idcard_num,b.post_code,b.mobile,b.e_mail,b.fax,b.sex,b.birthday,
-                b.link_man,b.nationality,b.work_unit,b.industry,b.category,b.legal_representative,
-                b.legal_representative_tel,b.is_trade
-            FROM tb_base_masterdata_customer_live a
-                LEFT JOIN tb_base_masterdata_customer_comm b ON a.customer_id = b.id;
+                SELECT a.id,a.customer_id,a.comm_id,a.resource_id,a.first_contact,a.is_delete,a.relation,a.owner_relation,
+                    b.name,b.idcard_type,b.idcard_num,b.post_code,b.mobile,b.e_mail,b.fax,b.sex,b.birthday,
+                    b.link_man,b.nationality,b.work_unit,b.industry,b.category,b.legal_representative,
+                    b.legal_representative_tel,b.is_trade,a.time_stamp
+                FROM tb_base_masterdata_customer_live a
+                    LEFT JOIN tb_base_masterdata_customer_comm b ON a.customer_id = b.id
+                WHERE a.time_stamp > '{timestampCustomerLive}';
 
             ");
-            List<string> errorlist = new List<string>() { "123123" };
-            var successJobNo = $"'{string.Join("','", errorlist)}'";
-
 
             using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
-            _logger.LogInformation($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            log.Append($"\r\n创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
             var readerMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
 
-            var dataCustomerComm = await readerMultiple.ReadAsync<CustomerComm>();
+            var dataCustomerComm = (await readerMultiple.ReadAsync<CustomerComm>()).ToList();
 
-            var dataCustomerLive = await readerMultiple.ReadAsync<CustomerLive>();
+            var dataCustomerLive = (await readerMultiple.ReadAsync<CustomerLive>()).ToList();
 
-            _logger.LogInformation($"读取客户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            if (!dataCustomerComm.Any() && !dataCustomerLive.Any())
+            {
+                log.Append($"\r\n数据为空SQL语句:\r\n{sql}");
+
+                _logger.LogInformation(log.ToString());
+
+                return;
+            }
+
+            log.Append($"\r\n读取客户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
             sql.Clear();
 
             sql.AppendLine($@"
-            SELECT CustID,CommID,CustName,PaperName,PaperCode,PostCode,MobilePhone,EMail,FaxTel,Sex,Birthday,Linkman,Nationality,
-                   WorkUnit,Job,IsUnit,LegalRepr,LegalReprTel,IsSupplier,IsDelete
-            FROM Tb_HSPR_Customer WHERE 1<>1;
+                SELECT CustID,CommID,CustName,PaperName,PaperCode,PostCode,MobilePhone,EMail,FaxTel,Sex,Birthday,Linkman,Nationality,
+                        WorkUnit,Job,IsUnit,LegalRepr,LegalReprTel,IsSupplier,IsDelete
+                FROM Tb_HSPR_Customer WITH(NOLOCK) WHERE 1<>1;
 
-            SELECT LiveID,CommID,RoomID,CustID,IsActive,IsDelLive,LiveType FROM Tb_HSPR_CustomerLive WHERE 1<>1;
+                SELECT LiveID,CommID,RoomID,CustID,IsActive,IsDelLive,LiveType FROM Tb_HSPR_CustomerLive WITH(NOLOCK) WHERE 1<>1;
 
-            SELECT HoldID,CustID,CommID,RoomID,Name,PaperName,PaperCode,MobilePhone,Sex,Birthday,Linkman,Nationality,
-				   WorkUnit,Job,IsDelete,Relationship
-			FROM Tb_HSPR_Household WHERE 1<>1;");
+                SELECT HoldID,CustID,CommID,RoomID,Name,PaperName,PaperCode,MobilePhone,Sex,Birthday,Linkman,Nationality,
+				        WorkUnit,Job,IsDelete,Relationship
+		        FROM Tb_HSPR_Household WITH(NOLOCK) WHERE 1<>1;");
 
             using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
 
-            var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
+            using var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
 
-            _logger.LogInformation($"创建SqlServer连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            log.Append($"\r\n创建SqlServer连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -192,28 +206,29 @@ namespace TwSynchro.CustomerModule
 
             }
 
-            _logger.LogInformation($"生成客户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            log.Append($"\r\n生成客户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
             using var trans = sqlServerConn.OpenTransaction();
+
             try
             {
                 int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
-                _logger.LogInformation($"删除客户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
+                log.Append($"\r\n删除客户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
 
                 stopwatch.Restart();
 
                 await DbBatch.InsertSingleTableAsync(sqlServerConn, dtTb_HSPR_Customer, "Tb_HSPR_Customer", stoppingToken, trans);
 
-                _logger.LogInformation($"插入客户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                log.Append($"\r\n插入客户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 stopwatch.Restart();
 
                 await DbBatch.InsertSingleTableAsync(sqlServerConn, dtTb_HSPR_CustomerLive, "Tb_HSPR_CustomerLive", stoppingToken, trans);
 
-                _logger.LogInformation($"插入Tb_HSPR_CustomerLive数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                log.Append($"\r\n插入Tb_HSPR_CustomerLive数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 stopwatch.Restart();
 
@@ -221,18 +236,27 @@ namespace TwSynchro.CustomerModule
 
                 stopwatch.Stop();
 
-                _logger.LogInformation($"插入家庭成员数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+                log.Append($"\r\n插入家庭成员数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 trans.Commit();
+
+                if (dataCustomerComm.Any())
+                    await UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY_CUSTOMER, dataCustomerComm.Max(c => c.time_stamp));
+
+                if (dataCustomerLive.Any())
+                    await UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY_CUSTOMER_LIVE, dataCustomerLive.Max(c => c.time_stamp));
+
             }
             catch (Exception ex)
             {
                 trans.Rollback();
 
-                _logger.LogInformation($"插入客户数据失败:{ex.Message}{ex.StackTrace}");
+                log.Append($"\r\n插入客户数据失败:{ex.Message}{ex.StackTrace}");
 
             }
-            _logger.LogInformation($"------同步客户数据结束------");
+            log.Append($"\r\n------同步客户数据结束------");
+
+            _logger.LogInformation(log.ToString());
         }
     }
 }

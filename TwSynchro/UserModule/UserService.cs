@@ -29,9 +29,9 @@ namespace TwSynchro.UserModule
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            var timestamp = UtilsSynchroTimestamp.GetTimestampAsync(TS_KEY);
+            var timestamp = await UtilsSynchroTimestamp.GetTimestampAsync(TS_KEY);
 
-            StringBuilder sql = new($@"SELECT ID,Name,Account,Password,(CASE Sex WHEN 0 THEN '女' ELSE '男' END) as Sex,Email,Mobile,time_stamp FROM rf_user 
+            StringBuilder sql = new($@"SELECT ID,Name,Account,Password,Sex,Email,Mobile,time_stamp FROM rf_user 
                                        WHERE time_stamp > '{timestamp}'");
 
             using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
@@ -42,7 +42,7 @@ namespace TwSynchro.UserModule
 
             var data = (await mySqlConn.QueryAsync<User>(sql.ToString())).ToList();
 
-            if (data.Count == 0)
+            if (!data.Any())
             {
                 log.Append($"\r\n数据为空SQL语句:\r\n{sql}");
 
@@ -79,7 +79,7 @@ namespace TwSynchro.UserModule
                 dr["UserName"] = itemUser.Name;
                 dr["LoginCode"] = itemUser.Account;
                 dr["PassWord"] = itemUser.Password;
-                dr["Sex"] = itemUser.Sex;
+                dr["Sex"] = itemUser.SexName;
                 dr["MobileTel"] = itemUser.Mobile;
                 dr["Email"] = itemUser.Email;
                 dr["IsFirstLogin"] = 1;
@@ -121,7 +121,9 @@ namespace TwSynchro.UserModule
                 log.Append($"\r\n插入用户数据失败:{ex.Message}{ex.StackTrace}");
 
             }
+
             log.Append($"\r\n------同步用户数据结束------");
+
             _logger.LogInformation(log.ToString());
         }
     }

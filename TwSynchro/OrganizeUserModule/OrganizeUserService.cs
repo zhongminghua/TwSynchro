@@ -26,7 +26,7 @@ namespace TwSynchro.OrganizeUserModule
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            var timestamp = UtilsSynchroTimestamp.GetTimestampAsync(TS_KEY);
+            var timestamp = await UtilsSynchroTimestamp.GetTimestampAsync(TS_KEY);
 
             StringBuilder sql = new($@"SELECT Id,OrganizeId,UserId,time_stamp FROM rf_organizeuser 
                                        WHERE time_stamp > '{timestamp}'");
@@ -39,7 +39,7 @@ namespace TwSynchro.OrganizeUserModule
 
             var data = (await mySqlConn.QueryAsync<OrganizeUser>(sql.ToString())).ToList();
 
-            if (data.Count == 0)
+            if (!data.Any())
             {
                 log.Append($"\r\n数据为空SQL语句:\r\n{sql}");
                 _logger.LogInformation(log.ToString());
@@ -54,8 +54,10 @@ namespace TwSynchro.OrganizeUserModule
 
             sql.Clear();
 
-            sql.AppendLine("SELECT UserRoleCode,UserCode,RoleCode FROM Tb_Sys_UserRole WHERE 1<>1;");
+            sql.AppendLine("SELECT UserRoleCode,UserCode,RoleCode FROM Tb_Sys_UserRole WITH(NOLOCK) WHERE 1<>1;");
+
             var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
+
             DataTable dt = new DataTable("Tb_Sys_UserRole");
             dt.Load(reader);
             DataRow dr;
@@ -65,7 +67,9 @@ namespace TwSynchro.OrganizeUserModule
             foreach (var itemMenu in data)
             {
                 sql.AppendLine($@"DELETE Tb_Sys_UserRole WHERE UserRoleCode='{itemMenu.Id}';");
+
                 if (itemMenu.Is_Delete == 1) continue;
+
                 dr = dt.NewRow();
                 dr["UserRoleCode"] = itemMenu.Id;
                 dr["UserCode"] = itemMenu.UserId;

@@ -74,7 +74,7 @@ namespace TwSynchro
         {
             try
             {
-                await Task.WhenAll(new[] { RunTaskMenuUser(stoppingToken) });
+                await Task.WhenAll(new[] { RunTaskUser(stoppingToken) });
 
                 //await Task.WhenAll(new[] { RunTaskUser(stoppingToken), RunTaskOrganize(stoppingToken), RunTaskCustomer(stoppingToken) });
             }
@@ -167,7 +167,7 @@ namespace TwSynchro
                         _logger.LogError($"菜单:\r\n{ex.Message}{ex.StackTrace}");
                     }
 
-                    Thread.Sleep(_appSettings.UserStopMsec);
+                    Thread.Sleep(_appSettings.MenuStopMsec);
                 }
             }, stoppingToken);
         }
@@ -188,7 +188,7 @@ namespace TwSynchro
                         _logger.LogError($"人员绑定岗位:\r\n{ex.Message}{ex.StackTrace}");
                     }
 
-                    Thread.Sleep(_appSettings.UserStopMsec);
+                    Thread.Sleep(_appSettings.OrganizeUserStopMsec);
                 }
             }, stoppingToken);
         }
@@ -209,7 +209,7 @@ namespace TwSynchro
                         _logger.LogError($"岗位授权菜单:\r\n{ex.Message}{ex.StackTrace}");
                     }
 
-                    Thread.Sleep(_appSettings.UserStopMsec);
+                    Thread.Sleep(_appSettings.MenuUserStopMsec);
                 }
             }, stoppingToken);
         }
@@ -231,7 +231,7 @@ namespace TwSynchro
                         _logger.LogError($"岗位授权机构授权项目:\r\n{ex.Message}{ex.StackTrace}");
                     }
 
-                    Thread.Sleep(_appSettings.UserStopMsec);
+                    Thread.Sleep(_appSettings.PermissionStopMsec);
                 }
             }, stoppingToken);
         }

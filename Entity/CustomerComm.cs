@@ -211,7 +211,11 @@ namespace Entity
         /// 客户自定义字段，根据客户类型自动判别
         /// </summary>
         public string customer_field { get; set; }
-   
+
+        /// <summary>
+        /// 时间戳
+        /// </summary>
+        public DateTime time_stamp { get; set; }
 
     }
 }

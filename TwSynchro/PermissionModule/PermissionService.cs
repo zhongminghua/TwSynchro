@@ -43,7 +43,7 @@ namespace TwSynchro.PermissionModule
 
             var data = (await mySqlConn.QueryAsync<Permission>(sql.ToString())).ToList();
 
-            if (data.Count == 0)
+            if (!data.Any())
             {
                 log.Append($"\r\n数据为空SQL语句:\r\n{sql}");
                 _logger.LogInformation(log.ToString());
@@ -58,8 +58,8 @@ namespace TwSynchro.PermissionModule
 
             sql.Clear();
 
-            sql.AppendLine(@"SELECT IID,RoleCode,OrganCode,CommID FROM Tb_Sys_RoleData WHERE 1<>1;
-                             SELECT Id,RoleCode,DepCode FROM Tb_Sys_DepartmentRolePermissions WHERE 1<>1;");
+            sql.AppendLine(@"SELECT IID,RoleCode,OrganCode,CommID FROM Tb_Sys_RoleData WITH(NOLOCK) WHERE 1<>1;
+                             SELECT Id,RoleCode,DepCode FROM Tb_Sys_DepartmentRolePermissions WITH(NOLOCK)  WHERE 1<>1;");
 
             var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
 

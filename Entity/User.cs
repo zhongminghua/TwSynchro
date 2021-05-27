@@ -28,10 +28,22 @@ namespace Entity
         /// <summary>
         /// 性别
         /// </summary>
-        public string Sex { get; set; }
+        public int Sex { get; set; }
+
         /// <summary>
-        /// 邮箱
+        /// 性别
         /// </summary>
+        public string SexName => Sex switch
+        {
+            0 => "女",
+            1 => "男",
+            _ => ""
+        };
+
+
+    /// <summary>
+    /// 邮箱
+    /// </summary>
         public string Email { get; set; }
         /// <summary>
         /// 手机号

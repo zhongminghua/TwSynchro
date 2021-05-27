@@ -48,7 +48,7 @@ namespace TwSynchro.MenuUserModule
 
             data.AddRange(data2);
 
-            if (data.Count == 0)
+            if (!data.Any())
             {
                 log.Append($"\r\n数据为空SQL语句:\r\n{sql}");
 
@@ -65,7 +65,7 @@ namespace TwSynchro.MenuUserModule
 
             sql.Clear();
 
-            sql.AppendLine("SELECT IID,RoleCode,PNodeCode FROM Tb_Sys_RolePope WHERE 1<>1;");
+            sql.AppendLine("SELECT IID,RoleCode,PNodeCode FROM Tb_Sys_RolePope WITH(NOLOCK) WHERE 1<>1;");
 
             var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
 
@@ -111,7 +111,7 @@ namespace TwSynchro.MenuUserModule
 
                 trans.Commit();
 
-                //await UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY, data.Max(c => c.time_stamp));
+                await UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY, data.Max(c => c.time_stamp));
 
             }
             catch (Exception ex)

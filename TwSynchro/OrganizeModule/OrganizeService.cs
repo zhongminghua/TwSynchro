@@ -21,7 +21,8 @@ namespace TwSynchro.OrganizeModule
         public static async Task Synchro(ILogger<Worker> _logger, CancellationToken stoppingToken)
         {
 
-            _logger.LogInformation($"------同步项目机构岗位数据开始------");
+
+            StringBuilder log = new("\r\n------同步项目机构岗位数据开始------");
 
             Stopwatch stopwatch = new Stopwatch();
 
@@ -33,7 +34,7 @@ namespace TwSynchro.OrganizeModule
 
             //while (isHasNext)
             //{
-            //_logger.LogInformation($"第 {pageIndex} 页 数据");
+            //log.Append($"\r\n第 {pageIndex} 页 数据");
 
             StringBuilder sql = new(@"
                                     SELECT * FROM rf_organize;
@@ -47,7 +48,7 @@ namespace TwSynchro.OrganizeModule
 
             using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
-            _logger.LogInformation($"创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            log.Append($"\r\n创建MySql连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -66,31 +67,30 @@ namespace TwSynchro.OrganizeModule
 
             //pageIndex++;
 
-            _logger.LogInformation($"读取数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            log.Append($"\r\n读取数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
             using var sqlServerConn = DbService.GetDbConnection(DBType.SqlServer, DBLibraryName.PMS_Base);
 
-            _logger.LogInformation($"创建SqlServer连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            log.Append($"\r\n创建SqlServer连接 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
             sql.Clear();
 
-            sql.AppendLine("SELECT * FROM Tb_Sys_Organ WHERE 1<>1;");
+            sql.AppendLine("SELECT OrganCode,OrganName,ParentId,IsComp,Sort FROM Tb_Sys_Organ WITH(NOLOCK) WHERE 1<>1;");
 
-            sql.AppendLine("SELECT * FROM Tb_Sys_OrganPartial WHERE 1<>1;");
+            sql.AppendLine("SELECT OrganCode,IsDaQu,IsOrganComp,IsArea FROM Tb_Sys_OrganPartial WITH(NOLOCK) WHERE 1<>1;");
 
-            sql.AppendLine("SELECT CommID,OrganCode,CommName,CommKind,ManageTime,ManageKind,CommAddress,Province,City,Borough,Street,CommunityName,GateSign,Num,Sort,IntId FROM Tb_HSPR_Community WHERE 1<>1;");
+            sql.AppendLine(@"SELECT CommID,OrganCode,CommName,CommKind,ManageTime,ManageKind,CommAddress,Province,City,Borough,Street,CommunityName,
+                                    GateSign,Num,Sort,IntId FROM Tb_HSPR_Community WITH(NOLOCK) WHERE 1<>1;");
 
-            sql.AppendLine("SELECT * FROM Tb_HSPR_CommunityChargesMode WHERE 1<>1;");
+            sql.AppendLine("SELECT IID,CommID,ChargesMode FROM Tb_HSPR_CommunityChargesMode WITH(NOLOCK) WHERE 1<>1;");
 
-            sql.AppendLine("SELECT * FROM Tb_Sys_Department WHERE 1<>1;");
+            sql.AppendLine("SELECT DepCode,SortDepCode,DepName,ParentId,Sort FROM Tb_Sys_Department WITH(NOLOCK) WHERE 1<>1;");
 
-            sql.AppendLine("SELECT RoleCode,RoleName,ParentId,UpLevelName,SysRoleCode,IsSysRole,Sort FROM Tb_Sys_Role WHERE 1<>1;");
-
-            sql.AppendLine("SELECT * FROM Tb_Sys_Department");
+            sql.AppendLine("SELECT RoleCode,RoleName,ParentId,UpLevelName,SysRoleCode,IsSysRole,Sort FROM Tb_Sys_Role WITH(NOLOCK) WHERE 1<>1;");
 
             StringBuilder sqlOrgan = new(), sqlCommunity = new(), sqlDepartment = new(), sqlRole = new();
 
@@ -119,10 +119,6 @@ namespace TwSynchro.OrganizeModule
             DataTable dtTb_Sys_Role = new DataTable("Tb_Sys_Role");
 
             dtTb_Sys_Role.Load(reader);
-
-            DataTable dtTb_Sys_DepartmentData = new DataTable("Tb_Sys_Department");
-
-            dtTb_Sys_DepartmentData.Load(reader);
 
             DataRow dr;
 
@@ -293,7 +289,7 @@ namespace TwSynchro.OrganizeModule
 
                 if (modelOrganize is not null)
                 {
-                    if (dtTb_Sys_DepartmentData.Select($"DepCode='{id}'").Length == 0 && dtTb_Sys_Department.Select($"DepCode='{id}'").Length == 0)
+                    if (dtTb_Sys_Department.Select($"DepCode='{id}'").Length == 0)
                     {
                         dr = dtTb_Sys_Department.NewRow();
 
@@ -329,7 +325,7 @@ namespace TwSynchro.OrganizeModule
 
             }
 
-            _logger.LogInformation($"生成数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+            log.Append($"\r\n生成数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
             stopwatch.Restart();
 
@@ -337,19 +333,19 @@ namespace TwSynchro.OrganizeModule
 
             resultMessage = await SynchroOrgan(sqlOrgan.ToString(), dtTb_Sys_Organ, dtTb_Sys_OrganPartial, stoppingToken);
 
-            _logger.LogInformation($"插入区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
+            log.Append($"\r\n插入区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
             stopwatch.Restart();
 
             resultMessage = await SynchroCommunity(sqlCommunity.ToString(), dtTb_HSPR_Community, dtTb_HSPR_CommunityChargesMode, stoppingToken);
 
-            _logger.LogInformation($"插入项目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
+            log.Append($"\r\n插入项目数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
             stopwatch.Restart();
 
             resultMessage = await SynchroDepartment(sqlDepartment.ToString(), dtTb_Sys_Department, stoppingToken);
 
-            _logger.LogInformation($"插入机构数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
+            log.Append($"\r\n插入机构数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
             stopwatch.Restart();
 
@@ -357,10 +353,11 @@ namespace TwSynchro.OrganizeModule
 
             stopwatch.Stop();
 
-            _logger.LogInformation($"插入岗位数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
+            log.Append($"\r\n插入岗位数据 耗时{stopwatch.ElapsedMilliseconds}毫秒! {resultMessage.Message}");
 
-            _logger.LogInformation($"------同步项目机构岗位结束------");
+            log.Append($"\r\n------同步项目机构岗位结束------");
 
+            _logger.LogInformation(log.ToString());
         }
 
         public static async Task<ResultMessage> SynchroOrgan(string sql, DataTable dtTb_Sys_Organ, DataTable dtTb_Sys_OrganPartial, CancellationToken stoppingToken)
@@ -374,7 +371,7 @@ namespace TwSynchro.OrganizeModule
 
             try
             {
-                int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), trans);
+                int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
                 await DbBatch.InsertSingleTableAsync(sqlServerConn, dtTb_Sys_Organ, "Tb_Sys_Organ", stoppingToken, trans);
 
@@ -406,7 +403,7 @@ namespace TwSynchro.OrganizeModule
 
             try
             {
-                int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(),trans);
+                int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
                 await DbBatch.InsertSingleTableAsync(sqlServerConn, dtTb_HSPR_Community, "Tb_HSPR_Community", stoppingToken, trans);
 
@@ -438,7 +435,7 @@ namespace TwSynchro.OrganizeModule
 
             try
             {
-                int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(),  trans);
+                int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
                 await DbBatch.InsertSingleTableAsync(sqlServerConn, dtTb_Sys_Department, "Tb_Sys_Department", stoppingToken, trans);
 
@@ -467,7 +464,7 @@ namespace TwSynchro.OrganizeModule
 
             try
             {
-                int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), trans);
+                int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
                 await DbBatch.InsertSingleTableAsync(sqlServerConn, dtTb_Sys_Role, "Tb_Sys_Role", stoppingToken, trans);
 

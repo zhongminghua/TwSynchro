@@ -31,13 +31,15 @@ namespace TwSynchro.MenuModule
 
             var timestamp = await UtilsSynchroTimestamp.GetTimestampAsync(TS_KEY);
 
-            StringBuilder sql = new($@"SELECT b.Address,a.Id,a.Ico,a.Sort,a.Title,a.ParentId,a.Is_Delete,a.time_stamp FROM rf_menu a
-                                           LEFT JOIN rf_applibrary b ON a.AppLibraryId = b.Id
-                                       WHERE a.time_stamp > '{timestamp}';
+            StringBuilder sql = new($@"
+                SELECT b.Address,a.Id,a.Ico,a.Sort,a.Title,a.ParentId,a.Is_Delete,a.time_stamp FROM rf_menu a
+                    LEFT JOIN rf_applibrary b ON a.AppLibraryId = b.Id
+                WHERE a.time_stamp > '{timestamp}';
 
-                                       SELECT b.Address,a.Id,a.Ico,a.Sort,a.Title,a.ParentId,a.Is_Delete,b.time_stamp FROM rf_menu a
-                                           LEFT JOIN rf_applibrary b ON a.AppLibraryId = b.Id
-                                       WHERE b.time_stamp > '{timestamp}';");
+                SELECT b.Address,a.Id,a.Ico,a.Sort,a.Title,a.ParentId,a.Is_Delete,b.time_stamp FROM rf_menu a
+                    LEFT JOIN rf_applibrary b ON a.AppLibraryId = b.Id
+                WHERE b.time_stamp > '{timestamp}';
+            ");
 
             using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
@@ -46,23 +48,30 @@ namespace TwSynchro.MenuModule
             stopwatch.Restart();
 
             var readerMultiple = (await mySqlConn.QueryMultipleAsync(sql.ToString()));
+
             var data1 = (await readerMultiple.ReadAsync<Menu>()).ToList();
+
             var data2 = (await readerMultiple.ReadAsync<Menu>()).ToList();
 
             List<Menu> data = new();
+
             Menu modelMenuSearch;
 
             foreach (var item in data1)
             {
                 modelMenuSearch = data2.Where(c => c.Id.ToString() == item.Id.ToString()).FirstOrDefault();
+
                 if (modelMenuSearch is not null) { item.Address = modelMenuSearch.Address; }
+
                 data.Add(item);
             }
 
-            if (data.Count == 0)
+            if (!data.Any())
             {
                 log.Append($"\r\n数据为空SQL语句:\r\n{sql}");
+
                 _logger.LogInformation(log.ToString());
+
                 return;
             }
 
@@ -74,10 +83,14 @@ namespace TwSynchro.MenuModule
 
             sql.Clear();
 
-            sql.AppendLine("SELECT PNodeCode,PNodeName,ParentId,URLPage,IsDelete,BackTitleImg,PNodeSort FROM Tb_Sys_PowerNode WHERE 1<>1;");
+            sql.AppendLine("SELECT PNodeCode,PNodeName,ParentId,URLPage,IsDelete,BackTitleImg,PNodeSort FROM Tb_Sys_PowerNode WITH(NOLOCK) WHERE 1<>1;");
+
             var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
+
             DataTable dt = new DataTable("Tb_Sys_PowerNode");
+
             dt.Load(reader);
+
             DataRow dr;
 
             sql.Clear();
@@ -121,7 +134,7 @@ namespace TwSynchro.MenuModule
 
                 trans.Commit();
 
-                //await UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY, data.Max(c => c.time_stamp));
+                await UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY, data.Max(c => c.time_stamp));
             }
             catch (Exception ex)
             {
