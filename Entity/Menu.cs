@@ -13,6 +13,16 @@ namespace Entity
         public object ParentId { get; set; }
 
         /// <summary>
+        /// 图标
+        /// </summary>
+        public string Ico { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Sort { get; set; }
+
+        /// <summary>
         /// 菜单名字
         /// </summary>
         public string Title { get; set; }

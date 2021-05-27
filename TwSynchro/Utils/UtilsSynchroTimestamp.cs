@@ -28,10 +28,10 @@ namespace TwSynchro.Utils
 
                 var sql = $"SELECT TOP 1 Ts_Value FROM Tb_Synchro_TimeStamp WHERE Ts_Key='{key}'";
 
-                var timestampValue = await sqlServerConn.QueryFirstOrDefaultAsync<string>(sql);
+                var tsValue = await sqlServerConn.QuerySingleOrDefaultAsync<string>(sql);
 
-                if (!string.IsNullOrEmpty(timestampValue))
-                    timestamp = timestampValue;
+                if (tsValue is not null)
+                    timestamp = tsValue;
                 else
                     timestamp = DateTime.Now.AddYears(-10);
             }

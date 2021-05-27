@@ -68,7 +68,7 @@ namespace TwSynchro
         {
             try
             {
-                await Task.WhenAll(new[] { RunTaskMenuUser(stoppingToken) });
+                await Task.WhenAll(new[] { RunTaskMenu(stoppingToken) });
 
                 //await Task.WhenAll(new[] { RunTaskUser(stoppingToken), RunTaskOrganize(stoppingToken), RunTaskCustomer(stoppingToken) });
             }
