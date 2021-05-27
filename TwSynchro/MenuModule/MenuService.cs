@@ -28,9 +28,9 @@ namespace TwSynchro.MenuModule
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            var timestamp = UtilsSynchroTimestamp.GetTimestampAsync(TS_KEY);
+            var timestamp = await UtilsSynchroTimestamp.GetTimestampAsync(TS_KEY);
 
-            StringBuilder sql = new($@"SELECT b.Address,a.Id,a.Title,a.ParentId,a.Is_Delete,b.time_stamp FROM rf_menu a
+            StringBuilder sql = new($@"SELECT b.Address,a.Id,a.Ico,a.Sort,a.Title,a.ParentId,a.Is_Delete,b.time_stamp FROM rf_menu a
                                            LEFT JOIN rf_applibrary b ON a.AppLibraryId = b.Id
                                        WHERE b.time_stamp > '{timestamp}'");
 
@@ -59,7 +59,7 @@ namespace TwSynchro.MenuModule
 
             sql.Clear();
 
-            sql.AppendLine("SELECT PNodeCode,PNodeName,ParentId,URLPage,IsDelete FROM Tb_Sys_PowerNode WHERE 1<>1;");
+            sql.AppendLine("SELECT PNodeCode,PNodeName,ParentId,URLPage,IsDelete,BackTitleImg,PNodeSort FROM Tb_Sys_PowerNode WHERE 1<>1;");
 
             var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
 
@@ -80,6 +80,8 @@ namespace TwSynchro.MenuModule
                 dr["ParentId"] = itemMenu.ParentId;
                 dr["URLPage"] = itemMenu.Address;
                 dr["IsDelete"] = itemMenu.Is_Delete;
+                dr["BackTitleImg"] = itemMenu.Ico;
+                dr["PNodeSort"] = itemMenu.Sort;
 
                 dt.Rows.Add(dr);
 
