@@ -11,6 +11,7 @@ using TwSynchro.MenuModule;
 using TwSynchro.MenuUserModule;
 using TwSynchro.OrganizeModule;
 using TwSynchro.OrganizeUserModule;
+using TwSynchro.PermissionModule;
 using TwSynchro.ResourceModule;
 using TwSynchro.UserModule;
 
@@ -64,11 +65,16 @@ namespace TwSynchro
             base.Dispose();
         }
 
+        /// <summary>
+        /// 服务启动
+        /// </summary>
+        /// <param name="stoppingToken"></param>
+        /// <returns></returns>
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             try
             {
-                await Task.WhenAll(new[] { RunTaskMenu(stoppingToken) });
+                await Task.WhenAll(new[] { RunTaskMenuUser(stoppingToken) });
 
                 //await Task.WhenAll(new[] { RunTaskUser(stoppingToken), RunTaskOrganize(stoppingToken), RunTaskCustomer(stoppingToken) });
             }
@@ -179,7 +185,7 @@ namespace TwSynchro
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError($"菜单:\r\n{ex.Message}{ex.StackTrace}");
+                        _logger.LogError($"人员绑定岗位:\r\n{ex.Message}{ex.StackTrace}");
                     }
 
                     Thread.Sleep(_appSettings.UserStopMsec);
@@ -200,7 +206,7 @@ namespace TwSynchro
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError($"菜单:\r\n{ex.Message}{ex.StackTrace}");
+                        _logger.LogError($"岗位授权菜单:\r\n{ex.Message}{ex.StackTrace}");
                     }
 
                     Thread.Sleep(_appSettings.UserStopMsec);
@@ -208,6 +214,27 @@ namespace TwSynchro
             }, stoppingToken);
         }
 
+        protected Task RunTaskPermission(CancellationToken stoppingToken)
+        {
+            return Task.Run(async () =>
+            {
+
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        await PermissionService.Synchro(_logger, stoppingToken);
+
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"岗位授权机构授权项目:\r\n{ex.Message}{ex.StackTrace}");
+                    }
+
+                    Thread.Sleep(_appSettings.UserStopMsec);
+                }
+            }, stoppingToken);
+        }
 
         protected Task RunTaskCostItem(CancellationToken stoppingToken)
         {
@@ -255,7 +282,6 @@ namespace TwSynchro
                }
            }, stoppingToken);
         }
-
 
         protected Task RunTaskResource(CancellationToken stoppingToken)
         {

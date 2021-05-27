@@ -42,9 +42,7 @@ namespace TwSynchro.OrganizeUserModule
             if (data.Count == 0)
             {
                 log.Append($"\r\n数据为空SQL语句:\r\n{sql}");
-
                 _logger.LogInformation(log.ToString());
-
                 return;
             }
 
@@ -57,13 +55,9 @@ namespace TwSynchro.OrganizeUserModule
             sql.Clear();
 
             sql.AppendLine("SELECT UserRoleCode,UserCode,RoleCode FROM Tb_Sys_UserRole WHERE 1<>1;");
-
             var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
-
             DataTable dt = new DataTable("Tb_Sys_UserRole");
-
             dt.Load(reader);
-
             DataRow dr;
 
             sql.Clear();

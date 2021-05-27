@@ -29,7 +29,10 @@ namespace TwSynchro.MenuUserModule
             var timestamp = await UtilsSynchroTimestamp.GetTimestampAsync(TS_KEY);
 
             StringBuilder sql = new($@"SELECT Id,MenuId,Organizes,Is_Delete,time_stamp FROM rf_menuuser 
-                                       WHERE time_stamp > '{timestamp}'");
+                                       WHERE time_stamp > '{timestamp}';
+
+                                       SELECT Id,menu_id MenuId,universal_role_id Organizes,Is_Delete,time_stamp FROM rf_universalrole_permission
+                                       WHERE time_stamp > '{timestamp}';");
 
             using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
@@ -37,7 +40,13 @@ namespace TwSynchro.MenuUserModule
 
             stopwatch.Restart();
 
-            var data = (await mySqlConn.QueryAsync<MenuUser>(sql.ToString())).ToList();
+            var readerMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
+
+            var data = (await readerMultiple.ReadAsync<MenuUser>()).ToList();
+
+            var data2 = (await readerMultiple.ReadAsync<MenuUser>()).ToList();
+
+            data.AddRange(data2);
 
             if (data.Count == 0)
             {
@@ -72,6 +81,7 @@ namespace TwSynchro.MenuUserModule
             {
                 sql.AppendLine($@"DELETE Tb_Sys_RolePope WHERE IID='{itemMenuUser.Id}';");
                 if (itemMenuUser.Is_Delete == 1) continue;
+
                 dr = dt.NewRow();
                 dr["IID"] = itemMenuUser.Id;
                 dr["RoleCode"] = itemMenuUser.Organizes;
@@ -101,7 +111,7 @@ namespace TwSynchro.MenuUserModule
 
                 trans.Commit();
 
-                await UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY, data.Max(c => c.time_stamp));
+                //await UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY, data.Max(c => c.time_stamp));
 
             }
             catch (Exception ex)
