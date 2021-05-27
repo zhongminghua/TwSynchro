@@ -61,7 +61,7 @@ namespace TwSynchro.UserModule
 
             sql.AppendLine("SELECT UserCode,UserName,LoginCode,PassWord,Sex,MobileTel,Email,IsFirstLogin,IsUse,IsDelete FROM Tb_Sys_User WITH(NOLOCK) WHERE 1<>1;");
 
-            var reader =await sqlServerConn.ExecuteReaderAsync(sql.ToString());
+            var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
 
             DataTable dt = new DataTable("Tb_Sys_User");
 
@@ -104,7 +104,7 @@ namespace TwSynchro.UserModule
 
                 stopwatch.Restart();
 
-                await DbBatch.InsertSingleTableAsync(sqlServerConn, dt, "Tb_Sys_User",stoppingToken, trans);
+                await DbBatch.InsertSingleTableAsync(sqlServerConn, dt, "Tb_Sys_User", stoppingToken, trans);
 
                 stopwatch.Stop();
 
@@ -112,7 +112,7 @@ namespace TwSynchro.UserModule
 
                 trans.Commit();
 
-                await UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY, data.Max(c => c.time_stamp));
+                _ = UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY, data.Max(c => c.time_stamp));
             }
             catch (Exception ex)
             {

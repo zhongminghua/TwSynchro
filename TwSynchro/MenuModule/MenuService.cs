@@ -134,7 +134,7 @@ namespace TwSynchro.MenuModule
 
                 trans.Commit();
 
-                await UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY, data.Max(c => c.time_stamp));
+                _ = UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY, data.Max(c => c.time_stamp));
             }
             catch (Exception ex)
             {

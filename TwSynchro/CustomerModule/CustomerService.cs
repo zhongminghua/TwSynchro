@@ -241,10 +241,10 @@ namespace TwSynchro.CustomerModule
                 trans.Commit();
 
                 if (dataCustomerComm.Any())
-                    await UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY_CUSTOMER, dataCustomerComm.Max(c => c.time_stamp));
+                    _ = UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY_CUSTOMER, dataCustomerComm.Max(c => c.time_stamp));
 
                 if (dataCustomerLive.Any())
-                    await UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY_CUSTOMER_LIVE, dataCustomerLive.Max(c => c.time_stamp));
+                    _ = UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY_CUSTOMER_LIVE, dataCustomerLive.Max(c => c.time_stamp));
 
             }
             catch (Exception ex)
