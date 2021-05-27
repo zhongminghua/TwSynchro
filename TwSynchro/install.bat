@@ -1,9 +1,12 @@
-set serviceName=ServiceName
-set serviceFilePath=E:\Work\Code\WindowsServiceDemo\WorkerService\bin\Debug\netcoreapp3.0\WorkerService.exe
-set serviceDescription=鏈嶅姟鎻忚堪
+@echo off
+
+set serviceName=TwSynchroService
+set serviceFilePath=D:\git\TwSynchro\TwSynchro\TwSynchro\bin\Release\net5.0\publish\TwSynchro.exe
+set serviceDescription=天问基础数据同步服务
 
 sc create %serviceName%  BinPath=%serviceFilePath%
-sc config %serviceName%    start=auto  
+sc config %serviceName%  start=auto  
 sc description %serviceName%  %serviceDescription%
-sc start  %serviceName%
+sc start %serviceName%
+
 pause
