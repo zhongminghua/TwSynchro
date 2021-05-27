@@ -64,6 +64,15 @@ namespace TwSynchro.CostItemModule
             {
                 var result = await mySqlConn.QueryPagerAsync<TaxRateSetting>(DBType.MySql, Strsql.ToString(), "sort", 10, PageIndex);
 
+                if (result.Data.Count() == 0)
+                {
+                    logMsg.Append($"读取增值税数据 数据为空！\r\n");
+
+                    _logger.LogInformation(logMsg.ToString());
+
+                    return;
+                }
+
                 logMsg.Append($"读取增值税数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!\r\n");
 
                 stopwatch.Restart();
