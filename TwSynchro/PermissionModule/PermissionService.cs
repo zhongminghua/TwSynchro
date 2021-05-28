@@ -32,8 +32,11 @@ namespace TwSynchro.PermissionModule
 
             var timestamp = await UtilsSynchroTimestamp.GetTimestampAsync(TS_KEY);
 
-            StringBuilder sql = new($@"SELECT id,roleid,unitid,Is_Delete,time_stamp FROM rf_organize_permission
-                                       WHERE time_stamp > '{timestamp}';");
+            StringBuilder sql = new($@"
+                SELECT a.id,a.roleid,a.unitid,a.Is_Delete,a.time_stamp,b.ParentId FROM rf_organize_permission a
+                    LEFT JOIN rf_organize b ON a.unitid = b.Id
+                WHERE a.time_stamp > '{timestamp}';"
+            );
 
             using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
@@ -86,7 +89,7 @@ namespace TwSynchro.PermissionModule
                 dr = dtTb_Sys_RoleData.NewRow();
                 dr["IID"] = itemPermission.Id;
                 dr["RoleCode"] = itemPermission.roleid;
-                dr["OrganCode"] = itemPermission.unitid;
+                dr["OrganCode"] = itemPermission.ParentId;
                 dr["CommID"] = itemPermission.unitid;
                 dtTb_Sys_RoleData.Rows.Add(dr);
 

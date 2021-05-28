@@ -61,6 +61,7 @@ namespace TwSynchro.OrganizeModule
 
             var organizeData = (await readerMultiple.ReadAsync<Organize>()).ToList();
 
+            //通用岗位
             var dictionaryData = await readerMultiple.ReadAsync<Dictionary>();
 
             //isHasNext = result.HasNext;
@@ -79,7 +80,7 @@ namespace TwSynchro.OrganizeModule
 
             sql.Clear();
 
-            sql.AppendLine("SELECT OrganCode,OrganName,ParentId,IsComp,Sort FROM Tb_Sys_Organ WITH(NOLOCK) WHERE 1<>1;");
+            sql.AppendLine("SELECT OrganCode,OrganName,ParentId,IsComp,Sort,OrganType FROM Tb_Sys_Organ WITH(NOLOCK) WHERE 1<>1;");
 
             sql.AppendLine("SELECT OrganCode,IsDaQu,IsOrganComp,IsArea FROM Tb_Sys_OrganPartial WITH(NOLOCK) WHERE 1<>1;");
 
@@ -164,43 +165,51 @@ namespace TwSynchro.OrganizeModule
 
                 if (itemOrganize.Type == 1)
                 {
-                    dr = dtTb_Sys_Organ.NewRow();
-
-                    dr["OrganCode"] = itemOrganize.Id;
-                    dr["OrganName"] = itemOrganize.Name;
-                    dr["ParentId"] = itemOrganize.ParentId;
-                    dr["Sort"] = itemOrganize.Sort;
-
-                    if (itemOrganize.OrganType == 3) dr["IsComp"] = 1;
-
-                    dtTb_Sys_Organ.Rows.Add(dr);
 
                     sqlOrgan.AppendLine($"DELETE Tb_Sys_Organ WHERE OrganCode='{itemOrganize.Id}';");
 
-                    if (itemOrganize.OrganType == 3 || itemOrganize.OrganType == 4 || itemOrganize.OrganType == 5)
+                    sqlCommunity.AppendLine($"DELETE Tb_HSPR_Community WHERE CommID='{itemOrganize.Id}';");
+
+
+                    if (itemOrganize.OrganType < 6)
                     {
-                        dr = dtTb_Sys_OrganPartial.NewRow();
+                        dr = dtTb_Sys_Organ.NewRow();
 
                         dr["OrganCode"] = itemOrganize.Id;
+                        dr["OrganName"] = itemOrganize.Name;
+                        dr["ParentId"] = itemOrganize.ParentId;
+                        dr["Sort"] = itemOrganize.Sort;
+                        dr["OrganType"] = itemOrganize.OrganType;
+                        
 
-                        switch (itemOrganize.OrganType)
+                        if (itemOrganize.OrganType == 3) dr["IsComp"] = 1;
+
+                        dtTb_Sys_Organ.Rows.Add(dr);
+
+                        if (itemOrganize.OrganType == 3 || itemOrganize.OrganType == 4 || itemOrganize.OrganType == 5)
                         {
-                            case 3:
-                                dr["IsDaQu"] = 1;
-                                break;
-                            case 4:
-                                dr["IsOrganComp"] = 1;
-                                break;
-                            case 5:
-                                dr["IsArea"] = 1;
-                                break;
-                        };
+                            dr = dtTb_Sys_OrganPartial.NewRow();
 
-                        dtTb_Sys_OrganPartial.Rows.Add(dr);
+                            dr["OrganCode"] = itemOrganize.Id;
 
-                        sqlOrgan.AppendLine($"DELETE Tb_Sys_OrganPartial WHERE OrganCode='{itemOrganize.Id}';");
+                            switch (itemOrganize.OrganType)
+                            {
+                                case 3:
+                                    dr["IsDaQu"] = 1;
+                                    break;
+                                case 4:
+                                    dr["IsOrganComp"] = 1;
+                                    break;
+                                case 5:
+                                    dr["IsArea"] = 1;
+                                    break;
+                            };
+
+                            dtTb_Sys_OrganPartial.Rows.Add(dr);
+
+                            sqlOrgan.AppendLine($"DELETE Tb_Sys_OrganPartial WHERE OrganCode='{itemOrganize.Id}';");
+                        }
                     }
-
                     if (itemOrganize.OrganType == 6)
                     {
                         dr = dtTb_HSPR_Community.NewRow();
@@ -224,7 +233,7 @@ namespace TwSynchro.OrganizeModule
 
                         dtTb_HSPR_Community.Rows.Add(dr);
 
-                        sqlCommunity.AppendLine($"DELETE Tb_HSPR_Community WHERE CommID='{itemOrganize.Id}';");
+                        //sqlCommunity.AppendLine($"DELETE Tb_HSPR_Community WHERE CommID='{itemOrganize.Id}';");
 
                         if (itemOrganize.ChargingModel is not null)
                         {

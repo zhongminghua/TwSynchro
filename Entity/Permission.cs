@@ -16,7 +16,12 @@ namespace Entity
         public object roleid { get; set; }
 
         /// <summary>
-        /// 用户ID
+        /// 
+        /// </summary>
+        public object ParentId { get; set; }
+
+        /// <summary>
+        /// 单位ID
         /// </summary>
         public object unitid { get; set; }
 
