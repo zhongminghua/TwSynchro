@@ -4,6 +4,7 @@ using DapperFactory.Enum;
 using Entity;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
@@ -100,9 +101,12 @@ namespace TwSynchro.MenuUserModule
 
             sql.Clear();
 
-            sql.AppendLine($"SELECT ButtonId,Name FROM RF_AppLibraryButton where ButtonId IN({strBtnID.Trim(',')});");
-
-            var dataAppLibraryButton = await mySqlConn.QueryAsync<(object ButtonId, string Name)>(sql.ToString());
+            List<AppLibraryButton> dataAppLibraryButton = new();
+            AppLibraryButton modelAppLibraryButton = new();
+            if (!string.IsNullOrEmpty(strBtnID)) {
+                sql.AppendLine($"SELECT Id,Name FROM RF_AppLibraryButton where Id IN({strBtnID.Trim(',')});");
+                dataAppLibraryButton = (await mySqlConn.QueryAsync<AppLibraryButton>(sql.ToString())).ToList();
+            }
 
             sql.Clear();
 
@@ -117,7 +121,7 @@ namespace TwSynchro.MenuUserModule
                 dr["PNodeCode"] = itemMenuUser.MenuId;
                 dtTb_Sys_RolePope.Rows.Add(dr);
 
-                if (!string.IsNullOrEmpty(itemMenuUser.Buttons))
+                if (!string.IsNullOrEmpty(itemMenuUser.Buttons) && !string.IsNullOrEmpty(strBtnID))
                 {
 
                     arrBtnID = itemMenuUser.Buttons.Split(',');
@@ -126,13 +130,13 @@ namespace TwSynchro.MenuUserModule
                     {
                         sql.AppendLine($@"DELETE Tb_Sys_FunctionPope WHERE RoleCode='{itemMenuUser.Organizes}' AND FunCode='{id}';");
 
-                        (object ButtonId, string Name) = dataAppLibraryButton.Where(c => c.ButtonId.ToString() == id).FirstOrDefault();
+                        modelAppLibraryButton = dataAppLibraryButton.Where(c => c.Id.ToString() == id).FirstOrDefault();
 
                         dr = dtTb_Sys_FunctionPope.NewRow();
                         dr["ID"] = Guid.NewGuid().ToString();
                         dr["RoleCode"] = itemMenuUser.Organizes;
                         dr["FunCode"] = id;
-                        dr["BtnName"] = Name;
+                        dr["BtnName"] = modelAppLibraryButton?.Name;
                         dtTb_Sys_FunctionPope.Rows.Add(dr);
                     }
 
@@ -163,7 +167,7 @@ namespace TwSynchro.MenuUserModule
 
                 trans.Commit();
 
-               // _ = UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY, data.Max(c => c.time_stamp));
+                _ = UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY, data.Max(c => c.time_stamp));
 
             }
             catch (Exception ex)
