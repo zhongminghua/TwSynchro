@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Entity
+﻿namespace Entity
 {
 
     /// <summary>
@@ -8,15 +6,15 @@ namespace Entity
     /// </summary>
     public record AppLibraryButton
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public object Id { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
         public string Name { get; set; }
-
-
-
 
     }
 }
