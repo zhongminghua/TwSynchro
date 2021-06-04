@@ -65,6 +65,11 @@ namespace Entity
         public int CommKind { get; set; }
 
         /// <summary>
+        /// 项目来源：1-集团项目，2-外拓项目
+        /// </summary>
+        public int? CommSource { get; set; } = 1;
+
+        /// <summary>
         /// 管理面积
         /// </summary>
         public decimal TakeoverArea { get; set; }

@@ -21,6 +21,11 @@ namespace Entity
         public object Organizes { get; set; }
 
         /// <summary>
+        /// 授权按钮
+        /// </summary>
+        public string Buttons { get; set; }
+        
+        /// <summary>
         /// 是否删除
         /// </summary>
         public int Is_Delete { get; set; }

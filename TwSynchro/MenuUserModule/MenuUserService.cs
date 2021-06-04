@@ -28,7 +28,7 @@ namespace TwSynchro.MenuUserModule
 
             var timestamp = await UtilsSynchroTimestamp.GetTimestampAsync(TS_KEY);
 
-            StringBuilder sql = new($@"SELECT Id,MenuId,Organizes,Is_Delete,time_stamp FROM rf_menuuser 
+            StringBuilder sql = new($@"SELECT Id,MenuId,Organizes,Is_Delete,Buttons,time_stamp FROM rf_menuuser 
                                        WHERE time_stamp > '{timestamp}';
 
                                        SELECT Id,menu_id MenuId,universal_role_id Organizes,Is_Delete,time_stamp FROM rf_universalrole_permission
@@ -67,13 +67,42 @@ namespace TwSynchro.MenuUserModule
 
             sql.AppendLine("SELECT IID,RoleCode,PNodeCode FROM Tb_Sys_RolePope WITH(NOLOCK) WHERE 1<>1;");
 
+            sql.AppendLine("SELECT Id,RoleCode,FunCode,BtnName FROM Tb_Sys_FunctionPope WITH(NOLOCK) WHERE 1<>1;");
+
             var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
 
-            DataTable dt = new DataTable("Tb_Sys_RolePope");
+            DataTable dtTb_Sys_RolePope = new DataTable("Tb_Sys_RolePope");
 
-            dt.Load(reader);
+            dtTb_Sys_RolePope.Load(reader);
+
+            DataTable dtTb_Sys_FunctionPope = new DataTable("Tb_Sys_FunctionPope");
+
+            dtTb_Sys_FunctionPope.Load(reader);
 
             DataRow dr;
+
+            sql.Clear();
+
+            string[] arrBtnID;
+            var strBtnID = string.Empty;
+
+            foreach (var itemMenuUser in data)
+            {
+                if (!string.IsNullOrEmpty(itemMenuUser.Buttons))
+                {
+                    arrBtnID = itemMenuUser.Buttons.Split(',');
+                    foreach (var id in arrBtnID)
+                    {
+                        strBtnID += $"'{id}',";
+                    }
+                }
+            }
+
+            sql.Clear();
+
+            sql.AppendLine($"SELECT ButtonId,Name FROM RF_AppLibraryButton where ButtonId IN({strBtnID.Trim(',')});");
+
+            var dataAppLibraryButton = await mySqlConn.QueryAsync<(object ButtonId, string Name)>(sql.ToString());
 
             sql.Clear();
 
@@ -82,12 +111,33 @@ namespace TwSynchro.MenuUserModule
                 sql.AppendLine($@"DELETE Tb_Sys_RolePope WHERE IID='{itemMenuUser.Id}';");
                 if (itemMenuUser.Is_Delete == 1) continue;
 
-                dr = dt.NewRow();
+                dr = dtTb_Sys_RolePope.NewRow();
                 dr["IID"] = itemMenuUser.Id;
                 dr["RoleCode"] = itemMenuUser.Organizes;
                 dr["PNodeCode"] = itemMenuUser.MenuId;
-                dt.Rows.Add(dr);
+                dtTb_Sys_RolePope.Rows.Add(dr);
 
+                if (!string.IsNullOrEmpty(itemMenuUser.Buttons))
+                {
+
+                    arrBtnID = itemMenuUser.Buttons.Split(',');
+
+                    foreach (var id in arrBtnID)
+                    {
+                        sql.AppendLine($@"DELETE Tb_Sys_FunctionPope WHERE RoleCode='{itemMenuUser.Organizes}' AND FunCode='{id}';");
+
+                        (object ButtonId, string Name) = dataAppLibraryButton.Where(c => c.ButtonId.ToString() == id).FirstOrDefault();
+
+                        dr = dtTb_Sys_FunctionPope.NewRow();
+                        dr["ID"] = Guid.NewGuid().ToString();
+                        dr["RoleCode"] = itemMenuUser.Organizes;
+                        dr["FunCode"] = id;
+                        dr["BtnName"] = Name;
+                        dtTb_Sys_FunctionPope.Rows.Add(dr);
+                    }
+
+
+                }
             }
 
             log.Append($"\r\n生成岗位授权菜单数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
@@ -103,7 +153,9 @@ namespace TwSynchro.MenuUserModule
 
                 stopwatch.Restart();
 
-                await DbBatch.InsertSingleTableAsync(sqlServerConn, dt, "Tb_Sys_RolePope", stoppingToken, trans);
+                await DbBatch.InsertSingleTableAsync(sqlServerConn, dtTb_Sys_RolePope, "Tb_Sys_RolePope", stoppingToken, trans);
+
+                await DbBatch.InsertSingleTableAsync(sqlServerConn, dtTb_Sys_FunctionPope, "Tb_Sys_FunctionPope", stoppingToken, trans);
 
                 stopwatch.Stop();
 
@@ -111,7 +163,7 @@ namespace TwSynchro.MenuUserModule
 
                 trans.Commit();
 
-                _ = UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY, data.Max(c => c.time_stamp));
+               // _ = UtilsSynchroTimestamp.SetTimestampAsync(TS_KEY, data.Max(c => c.time_stamp));
 
             }
             catch (Exception ex)

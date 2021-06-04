@@ -85,13 +85,13 @@ namespace TwSynchro.OrganizeModule
             sql.AppendLine("SELECT OrganCode,IsDaQu,IsOrganComp,IsArea FROM Tb_Sys_OrganPartial WITH(NOLOCK) WHERE 1<>1;");
 
             sql.AppendLine(@"SELECT CommID,OrganCode,CommName,CommKind,ManageTime,ManageKind,CommAddress,Province,City,Borough,Street,CommunityName,
-                                    GateSign,Num,Sort,IntId FROM Tb_HSPR_Community WITH(NOLOCK) WHERE 1<>1;");
+                                    GateSign,Num,Sort,IntId,CommSource FROM Tb_HSPR_Community WITH(NOLOCK) WHERE 1<>1;");
 
             sql.AppendLine("SELECT IID,CommID,ChargesMode FROM Tb_HSPR_CommunityChargesMode WITH(NOLOCK) WHERE 1<>1;");
 
             sql.AppendLine("SELECT DepCode,SortDepCode,DepName,ParentId,Sort FROM Tb_Sys_Department WITH(NOLOCK) WHERE 1<>1;");
 
-            sql.AppendLine("SELECT RoleCode,RoleName,ParentId,UpLevelName,SysRoleCode,IsSysRole,Sort FROM Tb_Sys_Role WITH(NOLOCK) WHERE 1<>1;");
+            sql.AppendLine("SELECT RoleCode,RoleName,ParentId,UpLevelName,SysRoleCode,IsSysRole,Sort,DepCode FROM Tb_Sys_Role WITH(NOLOCK) WHERE 1<>1;");
 
             StringBuilder sqlOrgan = new(), sqlCommunity = new(), sqlDepartment = new(), sqlRole = new();
 
@@ -230,7 +230,8 @@ namespace TwSynchro.OrganizeModule
                         dr["Num"] = itemOrganize.SortNum;
                         dr["Sort"] = itemOrganize.Sort;
                         dr["IntId"] = itemOrganize.IntId;
-
+                        dr["CommSource"] = itemOrganize.CommSource;
+                        
                         dtTb_HSPR_Community.Rows.Add(dr);
 
                         //sqlCommunity.AppendLine($"DELETE Tb_HSPR_Community WHERE CommID='{itemOrganize.Id}';");
@@ -278,6 +279,7 @@ namespace TwSynchro.OrganizeModule
                     dr["RoleCode"] = itemOrganize.Id;
                     dr["RoleName"] = itemOrganize.Name;
                     dr["ParentId"] = itemOrganize.ParentId;
+                    dr["DepCode"] = itemOrganize.ParentId;
                     dr["Sort"] = itemOrganize.Sort;
 
                     UtilsDataTable.DataRowIsNull(dr, "UpLevelName", itemOrganize.LevelName);
