@@ -218,7 +218,7 @@ namespace TwSynchro.OrganizeModule
                         dr["OrganCode"] = itemOrganize.ParentId;
                         dr["CommName"] = itemOrganize.Name;
                         dr["CommKind"] = itemOrganize.CommKind; //项目业态
-                        dr["ManageTime"] = itemOrganize.TakeoverDate;
+                        UtilsDataTable.DataRowIsNull(dr, "ManageTime", itemOrganize.TakeoverDate);
                         dr["ManageKind"] = itemOrganize.TakeoverKind;
                         dr["CommAddress"] = itemOrganize.Address;
                         dr["Province"] = itemOrganize.Province;
