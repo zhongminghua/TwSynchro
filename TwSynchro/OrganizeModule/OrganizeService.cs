@@ -80,18 +80,18 @@ namespace TwSynchro.OrganizeModule
 
             sql.Clear();
 
-            sql.AppendLine("SELECT OrganCode,OrganName,ParentId,IsComp,Sort,OrganType FROM Tb_Sys_Organ WITH(NOLOCK) WHERE 1<>1;");
+            sql.AppendLine("SELECT OrganCode,OrganName,ParentId,IsComp,Sort,OrganType,SortCode,SortParentCode FROM Tb_Sys_Organ WITH(NOLOCK) WHERE 1<>1;");
 
             sql.AppendLine("SELECT OrganCode,IsDaQu,IsOrganComp,IsArea FROM Tb_Sys_OrganPartial WITH(NOLOCK) WHERE 1<>1;");
 
             sql.AppendLine(@"SELECT CommID,OrganCode,CommName,CommKind,ManageTime,ManageKind,CommAddress,Province,City,Borough,Street,CommunityName,
-                                    GateSign,Num,Sort,IntId,CommSource FROM Tb_HSPR_Community WITH(NOLOCK) WHERE 1<>1;");
+                                    GateSign,Num,Sort,IntId,CommSource,SortCode,SortParentCode FROM Tb_HSPR_Community WITH(NOLOCK) WHERE 1<>1;");
 
             sql.AppendLine("SELECT IID,CommID,ChargesMode FROM Tb_HSPR_CommunityChargesMode WITH(NOLOCK) WHERE 1<>1;");
 
-            sql.AppendLine("SELECT DepCode,SortDepCode,DepName,ParentId,Sort FROM Tb_Sys_Department WITH(NOLOCK) WHERE 1<>1;");
+            sql.AppendLine("SELECT DepCode,SortDepCode,DepName,ParentId,Sort,SortCode,SortParentCode FROM Tb_Sys_Department WITH(NOLOCK) WHERE 1<>1;");
 
-            sql.AppendLine("SELECT RoleCode,RoleName,ParentId,UpLevelName,SysRoleCode,IsSysRole,Sort,DepCode FROM Tb_Sys_Role WITH(NOLOCK) WHERE 1<>1;");
+            sql.AppendLine("SELECT RoleCode,RoleName,ParentId,UpLevelName,SysRoleCode,IsSysRole,Sort,DepCode,SortCode,SortParentCode FROM Tb_Sys_Role WITH(NOLOCK) WHERE 1<>1;");
 
             StringBuilder sqlOrgan = new(), sqlCommunity = new(), sqlDepartment = new(), sqlRole = new();
 
@@ -130,16 +130,27 @@ namespace TwSynchro.OrganizeModule
             void CleanData(string id)
             {
 
-                var listChildNode = organizeData.Where(c => c.ParentId.ToString() == id.ToString()).ToList();
+                id = id.ToUpper();
+
+                var listChildNode = organizeData.Where(c => c.ParentId.ToString().ToUpper().Equals(id)).ToList();
 
                 //清洗数据
                 foreach (var modelOrganize in listChildNode)
                 {
-                    if (listCleanData.Where(c => c.Id.ToString() == modelOrganize.Id.ToString()).FirstOrDefault() is null)
+                    if (listCleanData.Where(c => c.Id.ToString().ToUpper() == modelOrganize.Id.ToString().ToUpper()).FirstOrDefault() is null)
                     {
-                        var modelParentChildNode = listCleanData.Where(c => c.Id.ToString() == modelOrganize.ParentId.ToString()).FirstOrDefault();
+
+                        var modelParentChildNode = listCleanData.Where(c => c.Id.ToString().ToUpper().Equals(modelOrganize.ParentId.ToString().ToUpper())).FirstOrDefault();
 
                         modelOrganize.LevelName = $"{modelParentChildNode.LevelName}_{modelOrganize.Name}";
+
+                        int index = listChildNode.FindIndex(item => item.Id.ToString().ToUpper().Equals(modelOrganize.Id.ToString().ToUpper()));
+
+                        modelOrganize.SortCodeNum = index + 1;
+
+                        modelOrganize.SortCode = modelParentChildNode.SortCode + modelOrganize.SortCodeNum.ToString().PadLeft(4, '0');
+
+                        modelOrganize.SortParentCode = modelParentChildNode.SortCode;
 
                         listCleanData.Add(modelOrganize with { });
 
@@ -155,21 +166,29 @@ namespace TwSynchro.OrganizeModule
 
             firstModel.LevelName = firstModel.Name;
 
+            firstModel.SortCode = "0001";
+
+            firstModel.SortCodeNum = 1;
+
             listCleanData.Add(firstModel with { });
 
             //清洗数据
             CleanData(firstModel.Id.ToString());
 
+
+            sqlOrgan.AppendLine($"TRUNCATE TABLE Tb_Sys_Organ;");
+            sqlOrgan.AppendLine($"TRUNCATE TABLE Tb_Sys_OrganPartial ;");
+            sqlCommunity.AppendLine($"TRUNCATE TABLE Tb_HSPR_Community ;");
+            sqlCommunity.AppendLine($"TRUNCATE TABLE Tb_HSPR_CommunityChargesMode ;");
+            sqlDepartment.AppendLine($"TRUNCATE TABLE Tb_Sys_Department;");
+            sqlRole.AppendLine($"TRUNCATE TABLE Tb_Sys_Role;");
             foreach (var itemOrganize in listCleanData)
             {
 
                 if (itemOrganize.Type == 1)
                 {
 
-                    sqlOrgan.AppendLine($"DELETE Tb_Sys_Organ WHERE OrganCode='{itemOrganize.Id}';");
-
-                    sqlCommunity.AppendLine($"DELETE Tb_HSPR_Community WHERE CommID='{itemOrganize.Id}';");
-
+                    //sqlOrgan.AppendLine($"DELETE Tb_Sys_Organ WHERE OrganCode='{itemOrganize.Id}';");
 
                     if (itemOrganize.OrganType < 6)
                     {
@@ -180,7 +199,10 @@ namespace TwSynchro.OrganizeModule
                         dr["ParentId"] = itemOrganize.ParentId;
                         dr["Sort"] = itemOrganize.Sort;
                         dr["OrganType"] = itemOrganize.OrganType;
+                        dr["SortCode"] = itemOrganize.SortCode;
+                        dr["SortParentCode"] = itemOrganize.SortParentCode;
                         
+
 
                         if (itemOrganize.OrganType == 3) dr["IsComp"] = 1;
 
@@ -207,7 +229,7 @@ namespace TwSynchro.OrganizeModule
 
                             dtTb_Sys_OrganPartial.Rows.Add(dr);
 
-                            sqlOrgan.AppendLine($"DELETE Tb_Sys_OrganPartial WHERE OrganCode='{itemOrganize.Id}';");
+                            //sqlOrgan.AppendLine($"DELETE Tb_Sys_OrganPartial WHERE OrganCode='{itemOrganize.Id}';");
                         }
                     }
                     if (itemOrganize.OrganType == 6)
@@ -231,7 +253,9 @@ namespace TwSynchro.OrganizeModule
                         dr["Sort"] = itemOrganize.Sort;
                         dr["IntId"] = itemOrganize.IntId;
                         dr["CommSource"] = itemOrganize.CommSource;
-                        
+                        dr["SortCode"] = itemOrganize.SortCode;
+                        dr["SortParentCode"] = itemOrganize.SortParentCode;
+
                         dtTb_HSPR_Community.Rows.Add(dr);
 
                         //sqlCommunity.AppendLine($"DELETE Tb_HSPR_Community WHERE CommID='{itemOrganize.Id}';");
@@ -247,7 +271,7 @@ namespace TwSynchro.OrganizeModule
 
                             dtTb_HSPR_CommunityChargesMode.Rows.Add(dr);
 
-                            sqlCommunity.AppendLine($"DELETE Tb_HSPR_CommunityChargesMode WHERE CommID='{itemOrganize.Id}';");
+                            //sqlCommunity.AppendLine($"DELETE Tb_HSPR_CommunityChargesMode WHERE CommID='{itemOrganize.Id}';");
                         }
                     }
                 }
@@ -258,14 +282,16 @@ namespace TwSynchro.OrganizeModule
                     dr = dtTb_Sys_Department.NewRow();
 
                     dr["DepCode"] = itemOrganize.Id;
-                    dr["SortDepCode"] = itemOrganize.Id;
+                    //dr["SortDepCode"] = itemOrganize.Id;
                     dr["DepName"] = itemOrganize.Name;
                     dr["ParentId"] = itemOrganize.ParentId;
                     dr["Sort"] = itemOrganize.Sort;
+                    dr["SortCode"] = itemOrganize.SortCode;
+                    dr["SortParentCode"] = itemOrganize.SortParentCode;
 
                     dtTb_Sys_Department.Rows.Add(dr);
 
-                    sqlDepartment.AppendLine($"DELETE Tb_Sys_Department WHERE DepCode='{itemOrganize.Id}';");
+                    //sqlDepartment.AppendLine($"DELETE Tb_Sys_Department WHERE DepCode='{itemOrganize.Id}';");
 
                     AddDepartmentOrgan(itemOrganize.ParentId);
 
@@ -281,6 +307,8 @@ namespace TwSynchro.OrganizeModule
                     dr["ParentId"] = itemOrganize.ParentId;
                     dr["DepCode"] = itemOrganize.ParentId;
                     dr["Sort"] = itemOrganize.Sort;
+                    dr["SortCode"] = itemOrganize.SortCode;
+                    dr["SortParentCode"] = itemOrganize.SortParentCode;
 
                     UtilsDataTable.DataRowIsNull(dr, "UpLevelName", itemOrganize.LevelName);
 
@@ -288,7 +316,7 @@ namespace TwSynchro.OrganizeModule
 
                     dtTb_Sys_Role.Rows.Add(dr);
 
-                    sqlRole.AppendLine($"DELETE Tb_Sys_Role WHERE RoleCode='{itemOrganize.Id}';");
+                    //sqlRole.AppendLine($"DELETE Tb_Sys_Role WHERE RoleCode='{itemOrganize.Id}';");
 
                 }
 
@@ -305,14 +333,16 @@ namespace TwSynchro.OrganizeModule
                         dr = dtTb_Sys_Department.NewRow();
 
                         dr["DepCode"] = modelOrganize.Id;
-                        dr["SortDepCode"] = modelOrganize.Id;
+                        //dr["SortDepCode"] = modelOrganize.Id;
                         dr["DepName"] = modelOrganize.Name;
                         dr["ParentId"] = modelOrganize.ParentId;
                         dr["Sort"] = modelOrganize.Sort;
+                        dr["SortCode"] = modelOrganize.SortCode;
+                        dr["SortParentCode"] = modelOrganize.SortParentCode;
 
                         dtTb_Sys_Department.Rows.Add(dr);
 
-                        sqlDepartment.AppendLine($"DELETE Tb_Sys_Department WHERE DepCode='{modelOrganize.Id}';");
+                        //sqlDepartment.AppendLine($"DELETE Tb_Sys_Department WHERE DepCode='{modelOrganize.Id}';");
 
                         AddDepartmentOrgan(modelOrganize.ParentId);
                     }
@@ -329,10 +359,12 @@ namespace TwSynchro.OrganizeModule
                 dr["RoleName"] = itemDictionary.Title;
                 dr["Sort"] = itemDictionary.Sort;
                 dr["IsSysRole"] = 1;
+                dr["SortCode"] = "";
+                dr["SortParentCode"] = "";
 
                 dtTb_Sys_Role.Rows.Add(dr);
 
-                sqlRole.AppendLine($"DELETE Tb_Sys_Role WHERE RoleCode='{itemDictionary.Id}';");
+                //sqlRole.AppendLine($"DELETE Tb_Sys_Role WHERE RoleCode='{itemDictionary.Id}';");
 
             }
 

@@ -153,5 +153,19 @@ namespace Entity
         /// 时间戳
         /// </summary>
         public DateTime time_stamp { get; set; }
+
+        /// <summary>
+        /// 排序编码
+        /// </summary>
+        public string SortCode { get; set; } = "0001";
+
+
+        /// <summary>
+        /// 排序序号
+        /// </summary>
+        public int SortCodeNum { get; set; } = 1;
+
+        public string SortParentCode = "0000";
+
     }
 }
