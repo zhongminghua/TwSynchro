@@ -18,9 +18,9 @@ namespace TwSynchro.CustomerModule
     public class CustomerService
     {
 
-        static readonly string TS_KEY_CUSTOMER = "KEY_Customer";
+        static readonly string TS_KEY_CUSTOMER = "Key_Customer";
 
-        static readonly string TS_KEY_CUSTOMER_LIVE = "KEY_Customer_Live";
+        static readonly string TS_KEY_CUSTOMER_LIVE = "Key_Customer_Live";
 
 
         public static async Task Synchro(ILogger<Worker> _logger, CancellationToken stoppingToken)
