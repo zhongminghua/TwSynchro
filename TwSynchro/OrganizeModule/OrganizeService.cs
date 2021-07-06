@@ -282,7 +282,7 @@ namespace TwSynchro.OrganizeModule
                     dr = dtTb_Sys_Department.NewRow();
 
                     dr["DepCode"] = itemOrganize.Id;
-                    //dr["SortDepCode"] = itemOrganize.Id;
+                    dr["SortDepCode"] = itemOrganize.Id;
                     dr["DepName"] = itemOrganize.Name;
                     dr["ParentId"] = itemOrganize.ParentId;
                     dr["Sort"] = itemOrganize.Sort;
@@ -333,7 +333,7 @@ namespace TwSynchro.OrganizeModule
                         dr = dtTb_Sys_Department.NewRow();
 
                         dr["DepCode"] = modelOrganize.Id;
-                        //dr["SortDepCode"] = modelOrganize.Id;
+                        dr["SortDepCode"] = modelOrganize.Id;
                         dr["DepName"] = modelOrganize.Name;
                         dr["ParentId"] = modelOrganize.ParentId;
                         dr["Sort"] = modelOrganize.Sort;
