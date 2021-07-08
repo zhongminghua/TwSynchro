@@ -53,7 +53,7 @@ namespace TwSynchro.ResourceModule
 
             string timesTamp = await UtilsSynchroTimestamp.GetTimestampAsync("ResourceRegion");
 
-            StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=0 AND time_stamp>'{timesTamp}'");
+            StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_type=0 AND time_stamp>'{timesTamp}'");
 
             using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
@@ -98,7 +98,7 @@ namespace TwSynchro.ResourceModule
 
             sql.Clear();
 
-            sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=0");
+            sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_base_masterdata_resource WHERE resource_type=0");
 
             var newTimes_tamp = (await mySqlConn.QueryAsync<string>(sql.ToString())).ToList();
 
@@ -201,7 +201,7 @@ namespace TwSynchro.ResourceModule
 
             string timesTamp = await UtilsSynchroTimestamp.GetTimestampAsync("ResourceBuilding");
 
-            StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=1 AND time_stamp>'{timesTamp}'");
+            StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_type=1 AND time_stamp>'{timesTamp}'");
 
             using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
@@ -249,7 +249,7 @@ namespace TwSynchro.ResourceModule
 
             sql.Clear();
 
-            sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=1");
+            sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_base_masterdata_resource WHERE resource_type=1");
 
             var newTimes_Tamp = (await mySqlConn.QueryAsync<string>(sql.ToString())).ToList();
 
@@ -362,7 +362,7 @@ namespace TwSynchro.ResourceModule
 
             string timesTamp = await UtilsSynchroTimestamp.GetTimestampAsync("ResourceRoom");
 
-            StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=3 AND time_stamp>'{timesTamp}'");
+            StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_type=3 AND time_stamp>'{timesTamp}'");
 
             //获取要同步的数据
             var readerMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
@@ -381,7 +381,7 @@ namespace TwSynchro.ResourceModule
             sql.Clear();
 
             // 获取区域，楼栋，单元数据
-            sql.Append("SELECT * FROM tb_base_masterdata_resource WHERE resource_attr=1 AND (resource_type=0 OR resource_type=1 OR resource_type=2);");
+            sql.Append("SELECT * FROM tb_base_masterdata_resource WHERE 1=1 AND (resource_type=0 OR resource_type=1 OR resource_type=2);");
 
             var readerMultiple_Father = await mySqlConn.QueryMultipleAsync(sql.ToString());
 
@@ -392,7 +392,7 @@ namespace TwSynchro.ResourceModule
             //获取customer_live表数据
             sql.Append(@$"SELECT comm_id,customer_id,resource_id FROM tb_base_masterdata_customer_live 
                         WHERE resource_id in (SELECT id FROM tb_base_masterdata_resource WHERE 
-                                                resource_attr=1 AND resource_type=3 AND time_stamp>'{timesTamp}') AND first_contact=2");
+                                                1=1 AND resource_type=3 AND time_stamp>'{timesTamp}') AND first_contact=2");
 
             var customerLiveMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
 
@@ -456,7 +456,7 @@ namespace TwSynchro.ResourceModule
 
             sql.Clear();
 
-            sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_base_masterdata_resource WHERE resource_attr=1 AND resource_type=3 ");
+            sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_base_masterdata_resource WHERE 1=1 AND resource_type=3 ");
 
             var newTimes_Tamp = (await mySqlConn.QueryAsync<string>(sql.ToString())).ToList();
 
@@ -689,7 +689,7 @@ namespace TwSynchro.ResourceModule
 
             string timesTamp = await UtilsSynchroTimestamp.GetTimestampAsync("ResourceCarpark");
 
-            StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_attr=2 AND resource_type=4 AND time_stamp>'{timesTamp}'");
+            StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_type=4 AND time_stamp>'{timesTamp}'");
 
             //获取要同步的数据
             var readerMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
@@ -730,7 +730,7 @@ namespace TwSynchro.ResourceModule
 
             sql.Clear();
 
-            sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_base_masterdata_resource WHERE resource_attr=2 AND resource_type=4");
+            sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_base_masterdata_resource WHERE resource_type=4");
 
             var newTimes_Tamp = (await mySqlConn.QueryAsync<string>(sql.ToString())).ToList();
 
@@ -833,7 +833,7 @@ namespace TwSynchro.ResourceModule
 
             string timesTamp =await UtilsSynchroTimestamp.GetTimestampAsync("ResourceParking");
 
-            StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_attr=2 AND resource_type=5 AND time_stamp>'{timesTamp}'");
+            StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_type=5 AND time_stamp>'{timesTamp}'");
 
             //获取要同步的数据
             var readerMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
@@ -854,7 +854,7 @@ namespace TwSynchro.ResourceModule
             //获取customer_live表数据
             sql.Append(@$"SELECT comm_id,customer_id,resource_id FROM tb_base_masterdata_customer_live 
                         WHERE resource_id in (SELECT id FROM tb_base_masterdata_resource WHERE 
-                                                resource_attr=2 AND resource_type=5 AND time_stamp>'{timesTamp}') AND first_contact=2");
+                                                 resource_type=5 AND time_stamp>'{timesTamp}') AND first_contact=2");
 
             var customerLiveMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
 
@@ -888,7 +888,7 @@ namespace TwSynchro.ResourceModule
 
             sql.Clear();
 
-            sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_base_masterdata_resource WHERE resource_attr=2 AND resource_type=5");
+            sql.Append("SELECT MAX(time_stamp) time_stamp  FROM tb_base_masterdata_resource WHERE resource_type=5");
 
             var newTimes_Tamp = (await mySqlConn.QueryAsync<string>(sql.ToString())).ToList();
 
@@ -1003,7 +1003,7 @@ namespace TwSynchro.ResourceModule
         /// <returns></returns>
         public static Resource GetResource(IList<Resource> list, string esource_attr, string resource_type)
         {
-            return list.Where(c => c.resource_attr.ToString() == esource_attr && c.resource_type.ToString() == resource_type).FirstOrDefault();
+            return list.Where(c => c.resource_type.ToString() == resource_type).FirstOrDefault();
         }
 
         /// <summary>
@@ -1124,7 +1124,7 @@ namespace TwSynchro.ResourceModule
         //    #region 获取本次同步房屋在sqlserver的数据
 
         //    string rommIDs = "'00000000-0000-0000-0000-000000000000'";
-        //    foreach (var item in ResourceData.Where(c => c.resource_attr == "1" && c.resource_type == "3"))
+        //    foreach (var item in ResourceData.Where(c => c.resource_type == "3"))
         //    {
         //        rommIDs += $",'{item.id}'";
         //    }
