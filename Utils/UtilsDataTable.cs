@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 
 namespace Utils
 {
@@ -17,6 +18,13 @@ namespace Utils
             if (val is null || string.IsNullOrEmpty(val.ToString()))
                 return;
 
+            if (dr.Table.Columns[columnName].DataType == typeof(DateTime))
+            {
+                DateTime dt = Convert.ToDateTime(val.ToString());
+                if (dt.Year < 1753) {
+                    val = dt.ToString("1753-MM-dd");
+                }
+            }
             dr[columnName] = val;
         }
     }
