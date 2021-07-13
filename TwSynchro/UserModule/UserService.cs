@@ -31,8 +31,12 @@ namespace TwSynchro.UserModule
 
             var timestamp = await UtilsSynchroTimestamp.GetTimestampAsync(TS_KEY);
 
-            StringBuilder sql = new($@"SELECT ID,Name,Account,Password,Sex,Email,Mobile,time_stamp FROM rf_user 
-                                       WHERE time_stamp > '{timestamp}'");
+            StringBuilder sql = new(
+                $@"SELECT a.ID,a.Name,a.Account,a.Password,a.Sex,a.Email,a.Mobile,a.time_stamp,d.id OrganizeId FROM rf_user a
+                        left join rf_organizeuser b on a.Id=b.UserId and b.IsMain=1 and  b.Is_Delete=0
+                        left join rf_organize c on b.OrganizeId=c.Id and c.Is_Delete=0
+                        left join rf_organize d on c.ParentId=d.Id and d.Is_Delete=0
+                   WHERE a.time_stamp > '{timestamp}'");
 
             using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
 
@@ -59,7 +63,7 @@ namespace TwSynchro.UserModule
 
             sql.Clear();
 
-            sql.AppendLine("SELECT UserCode,UserName,LoginCode,PassWord,Sex,MobileTel,Email,IsFirstLogin,IsUse,IsDelete FROM Tb_Sys_User WITH(NOLOCK) WHERE 1<>1;");
+            sql.AppendLine("SELECT UserCode,UserName,LoginCode,PassWord,DepCode,Sex,MobileTel,Email,IsFirstLogin,IsUse,IsDelete FROM Tb_Sys_User WITH(NOLOCK) WHERE 1<>1;");
 
             var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
 
@@ -79,6 +83,7 @@ namespace TwSynchro.UserModule
                 dr["UserName"] = itemUser.Name;
                 dr["LoginCode"] = itemUser.Account;
                 dr["PassWord"] = itemUser.Password;
+                dr["DepCode"] = itemUser.OrganizeId;
                 dr["Sex"] = itemUser.SexName;
                 dr["MobileTel"] = itemUser.Mobile;
                 dr["Email"] = itemUser.Email;

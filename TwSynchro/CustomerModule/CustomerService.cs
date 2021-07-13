@@ -161,14 +161,16 @@ namespace TwSynchro.CustomerModule
                 switch (itemCustomerLive.relation)
                 {
                     case 1:
+                        //sql.AppendLine($@"DELETE Tb_HSPR_CustomerLive WHERE LiveType !='1' AND CustID='{itemCustomerLive.customer_id}';");
                         dr["LiveType"] = 1;
                         break;
                     case 2:
+                        //sql.AppendLine($@"DELETE Tb_HSPR_CustomerLive WHERE LiveType !='2' AND CustID='{itemCustomerLive.customer_id}';");
                         dr["LiveType"] = 2;
                         break;
-                    case 5:
-                        dr["LiveType"] = 3;
-                        break;
+                    //case 5: java没有客户关系就是客户关系
+                    //    dr["LiveType"] = 3;
+                    //break;
                     default:
                         dr["LiveType"] = itemCustomerLive.relation;
                         break;
@@ -214,6 +216,11 @@ namespace TwSynchro.CustomerModule
 
             try
             {
+                sql.AppendLine($@"
+                    INSERT INTO Tb_HSPR_CustomerLive(LiveID,CommID,RoomID,CustID,IsActive,IsDelLive,LiveType)
+                    SELECT NEWID(),CommID,NULL,CustID,0,0,3 FROM Tb_HSPR_Customer
+                    WHERE CustID NOT IN(SELECT CustID FROM Tb_HSPR_CustomerLive);");
+
                 int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
                 log.Append($"\r\n删除客户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");

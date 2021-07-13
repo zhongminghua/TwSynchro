@@ -32,7 +32,7 @@ namespace TwSynchro.MenuUserModule
             StringBuilder sql = new($@"SELECT Id,MenuId,Organizes,Is_Delete,Buttons,time_stamp FROM rf_menuuser 
                                        WHERE time_stamp > '{timestamp}';
 
-                                       SELECT Id,menu_id MenuId,universal_role_id Organizes,Is_Delete,time_stamp FROM rf_universalrole_permission
+                                       SELECT Id,menu_id MenuId,universal_role_id Organizes,Is_Delete,buttons,time_stamp FROM rf_universalrole_permission
                                        WHERE time_stamp > '{timestamp}';");
 
             using var mySqlConn = DbService.GetDbConnection(DBType.MySql, DBLibraryName.Erp_Base);
@@ -91,7 +91,7 @@ namespace TwSynchro.MenuUserModule
             {
                 if (!string.IsNullOrEmpty(itemMenuUser.Buttons))
                 {
-                    arrBtnID = itemMenuUser.Buttons.Split(',');
+                    arrBtnID = itemMenuUser.Buttons.Trim(',').Split(',');
                     foreach (var id in arrBtnID)
                     {
                         strBtnID += $"'{id}',";

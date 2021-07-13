@@ -26,6 +26,12 @@ namespace Entity
         public string Password { get; set; }
 
         /// <summary>
+        /// 部门ID
+        /// </summary>
+        public object OrganizeId { get; set; }
+        
+
+        /// <summary>
         /// 性别
         /// </summary>
         public int Sex { get; set; }
