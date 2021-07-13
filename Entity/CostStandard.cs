@@ -116,5 +116,10 @@ namespace Entity
         /// 允许项目修改单价
         /// </summary>
         public string IsCanUpdate { get; set; }
+
+        /// <summary>
+        /// 是否停用/回收 固定选项：是/否，默认否，可修改；1-停用/回收，0-使用
+        /// </summary>
+        public int is_use { get; set; }
     }
 }

@@ -51,5 +51,10 @@ namespace Entity
         /// 是否删除
         /// </summary>
         public string IsDelete { get; set; }
+
+        /// <summary>
+        /// 是否停用
+        /// </summary>
+        public int is_use { get; set; }
     }
 }
