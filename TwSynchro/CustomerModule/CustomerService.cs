@@ -45,7 +45,7 @@ namespace TwSynchro.CustomerModule
                 SELECT a.id,a.customer_id,a.comm_id,a.resource_id,a.first_contact,a.is_delete,a.relation,a.owner_relation,
                     b.name,b.idcard_type,b.idcard_num,b.post_code,b.mobile,b.e_mail,b.fax,b.sex,b.birthday,
                     b.link_man,b.nationality,b.work_unit,b.industry,b.category,b.legal_representative,
-                    b.legal_representative_tel,b.is_trade,a.time_stamp
+                    b.legal_representative_tel,b.is_trade,a.active_status,a.time_stamp
                 FROM tb_base_masterdata_customer_live a
                     LEFT JOIN tb_base_masterdata_customer_comm b ON a.customer_id = b.id
                 WHERE a.time_stamp > '{timestampCustomerLive}';
@@ -149,36 +149,12 @@ namespace TwSynchro.CustomerModule
 
             foreach (var itemCustomerLive in dataCustomerLive)
             {
-                dr = dtTb_HSPR_CustomerLive.NewRow();
-
-                dr["LiveID"] = itemCustomerLive.id;
-                dr["CommID"] = itemCustomerLive.comm_id;
-                dr["RoomID"] = itemCustomerLive.resource_id;
-                dr["CustID"] = itemCustomerLive.customer_id;
-                dr["IsActive"] = itemCustomerLive.first_contact == 2 ? 1 : 0;
-                dr["IsDelLive"] = itemCustomerLive.is_delete;
-
-                switch (itemCustomerLive.relation)
+                if (itemCustomerLive.active_status == "2")
                 {
-                    case 1:
-                        //sql.AppendLine($@"DELETE Tb_HSPR_CustomerLive WHERE LiveType !='1' AND CustID='{itemCustomerLive.customer_id}';");
-                        dr["LiveType"] = 1;
-                        break;
-                    case 2:
-                        //sql.AppendLine($@"DELETE Tb_HSPR_CustomerLive WHERE LiveType !='2' AND CustID='{itemCustomerLive.customer_id}';");
-                        dr["LiveType"] = 2;
-                        break;
-                    //case 5: java没有客户关系就是客户关系
-                    //    dr["LiveType"] = 3;
-                    //break;
-                    default:
-                        dr["LiveType"] = itemCustomerLive.relation;
-                        break;
+                    itemCustomerLive.first_contact = 0;
+                    itemCustomerLive.is_delete = 1;
                 }
 
-                dtTb_HSPR_CustomerLive.Rows.Add(dr);
-
-                sql.AppendLine($@"DELETE Tb_HSPR_CustomerLive WHERE LiveID='{itemCustomerLive.id}';");
 
                 //业主成员
                 if (itemCustomerLive.relation == 3)
@@ -204,7 +180,41 @@ namespace TwSynchro.CustomerModule
                     dtTb_HSPR_Household.Rows.Add(dr);
 
                     sql.AppendLine($@"DELETE Tb_HSPR_Household WHERE HoldID='{itemCustomerLive.id}';");
+
+                    continue;
                 }
+
+
+                dr = dtTb_HSPR_CustomerLive.NewRow();
+
+                dr["LiveID"] = itemCustomerLive.id;
+                dr["CommID"] = itemCustomerLive.comm_id;
+                dr["RoomID"] = itemCustomerLive.resource_id;
+                dr["CustID"] = itemCustomerLive.customer_id;
+
+                dr["IsActive"] = itemCustomerLive.first_contact == 2 ? 1 : 0;
+                dr["IsDelLive"] = itemCustomerLive?.is_delete;
+
+                switch (itemCustomerLive.relation)
+                {
+                    case 1:
+                        dr["LiveType"] = 1;
+                        break;
+                    case 2:
+                        dr["LiveType"] = 2;
+                        break;
+                    //case 5: java没有客户关系就是客户关系
+                    //    dr["LiveType"] = 3;
+                    //break;
+                    default:
+                        dr["LiveType"] = itemCustomerLive.relation;
+                        break;
+                }
+
+                dtTb_HSPR_CustomerLive.Rows.Add(dr);
+
+                sql.AppendLine($@"DELETE Tb_HSPR_CustomerLive WHERE LiveType ='3' AND CustID='{itemCustomerLive.customer_id}';");
+                sql.AppendLine($@"DELETE Tb_HSPR_CustomerLive WHERE LiveID='{itemCustomerLive.id}';");
 
             }
 

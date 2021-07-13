@@ -27,7 +27,7 @@
         /// <summary>
         /// 记录是否删除状态,0-正常，1-已删除
         /// </summary>
-        public string is_delete { get; set; }
+        public int is_delete { get; set; }
 
         /// <summary>
         /// 删除人
