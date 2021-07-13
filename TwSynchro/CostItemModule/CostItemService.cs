@@ -533,7 +533,7 @@ namespace TwSynchro.CostItemModule
                 string timesTamp = await UtilsSynchroTimestamp.GetTimestampAsync("CostItem-" + Comm.CommID);
 
                 StringBuilder Strsql = new($@"select id AS CostID,comm_id AS CommID,parent_id AS Parent_Id,sort AS CostSNum,cost_name AS CostName,
-                    min_unit AS RoundingNum,corp_cost_id AS CorpCostID,is_delete AS IsDelete from tb_charge_cost  
+                    min_unit AS RoundingNum,corp_cost_id AS CorpCostID,is_delete AS IsDelete,is_use from tb_charge_cost  
                         WHERE comm_id='{Comm.CommID}' AND time_stamp>'{timesTamp}'");//WHERE comm_id='{Comm.CommID}'
 
                 //using var mySqlConn = DbService.GetDbConnection(DBType.MySql, "Erp_Develop");
@@ -625,6 +625,8 @@ namespace TwSynchro.CostItemModule
                         dr["DelinDelay"] = 0;//合同违约金 按 天之后推迟
 
                         dr["DelinRates"] = 0;//合同违约金比率(天)
+
+                        dr["IsDelete"] = item.is_use == 1 ? 1 : 0;//is_use 是否停用，1为停用，mysql停用我们这边则删除，启用则不删除
 
                         UtilsDataTable.DataRowIsNull(dr, "IsDelete", item.IsDelete);//是否删除
 
@@ -735,7 +737,7 @@ namespace TwSynchro.CostItemModule
                        stan_memo AS StanExplain,calc_type AS StanFormula,stan_price AS StanAmount,is_condition_calc AS IsCondition,
                        condition_content,calc_condition AS ConditionField,latefee_rate AS DelinRates,latefee_calc_date ,is_delete AS IsDelete,
                        calc_condition_type AS IsStanRange,corp_stan_id AS CorpStanID,corp_cost_id AS CorpCostID,
-                       min_unit AS AmountRounded,stan_ratio AS Modulus,allow_comm_modify AS IsCanUpdate FROM  tb_base_charge_comm_stan 
+                       min_unit AS AmountRounded,stan_ratio AS Modulus,allow_comm_modify AS IsCanUpdate,is_use FROM  tb_base_charge_comm_stan 
                         WHERE time_stamp>'{timesTamp}'");
 
             StringBuilder sql = new();
@@ -884,6 +886,8 @@ namespace TwSynchro.CostItemModule
                             dr["DelinDay"] = int.Parse(month) * 100 + int.Parse(day);//合同违约金延期   (按月几号开始)  DelinDay = iDelinMonth * 100 + iDelinDay;
                         }
                     }
+
+                    dr["IsDelete"] = item.is_use == 0 ? 0 : 1;//is_use 1-停用/回收，0-使用   非使用时删除
 
                     UtilsDataTable.DataRowIsNull(dr, "IsDelete", item.IsDelete);//是否删除
 
