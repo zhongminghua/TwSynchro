@@ -68,7 +68,7 @@ namespace TwSynchro.MenuUserModule
 
             sql.AppendLine("SELECT IID,RoleCode,PNodeCode FROM Tb_Sys_RolePope WITH(NOLOCK) WHERE 1<>1;");
 
-            sql.AppendLine("SELECT Id,RoleCode,FunCode,BtnName FROM Tb_Sys_FunctionPope WITH(NOLOCK) WHERE 1<>1;");
+            sql.AppendLine("SELECT Id,RoleCode,FunCode,BtnName,Sort,Note FROM Tb_Sys_FunctionPope WITH(NOLOCK) WHERE 1<>1;");
 
             var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
 
@@ -104,7 +104,7 @@ namespace TwSynchro.MenuUserModule
             List<AppLibraryButton> dataAppLibraryButton = new();
             AppLibraryButton modelAppLibraryButton = new();
             if (!string.IsNullOrEmpty(strBtnID)) {
-                sql.AppendLine($"SELECT Id,Name FROM RF_AppLibraryButton where Id IN({strBtnID.Trim(',')});");
+                sql.AppendLine($"SELECT Id,Name,Sort,Note FROM RF_AppLibraryButton where Id IN({strBtnID.Trim(',')});");
                 dataAppLibraryButton = (await mySqlConn.QueryAsync<AppLibraryButton>(sql.ToString())).ToList();
             }
 
@@ -137,6 +137,8 @@ namespace TwSynchro.MenuUserModule
                         dr["RoleCode"] = itemMenuUser.Organizes;
                         dr["FunCode"] = id;
                         dr["BtnName"] = modelAppLibraryButton?.Name;
+                        dr["Note"] = modelAppLibraryButton?.Note;
+                        dr["Sort"] = modelAppLibraryButton?.Sort;
                         dtTb_Sys_FunctionPope.Rows.Add(dr);
                     }
 
