@@ -130,8 +130,8 @@ namespace Entity
         /// </summary>
         public string sex_name => sex switch
         {
-            0 => "女",
-            1 => "男",
+            1 => "女",
+            0 => "男",
             _ => ""
         };
 
