@@ -36,11 +36,13 @@ namespace TwSynchro.CustomerModule
             var timestampCustomerLive = await UtilsSynchroTimestamp.GetTimestampAsync(TS_KEY_CUSTOMER_LIVE);
 
             StringBuilder sql = new($@"
-                SELECT id,comm_id,name,idcard_type,idcard_num,post_code,mobile,e_mail,
-                       fax,sex,birthday,link_man,nationality,work_unit,industry,category,
-                       legal_representative,legal_representative_tel,is_trade,is_delete,time_stamp,
-                       (SELECT COUNT(1) from tb_base_masterdata_customer_live b where b.is_delete=0 and b.customer_id=tb_base_masterdata_customer_comm.id) as 'LiveTotal'
-                FROM tb_base_masterdata_customer_comm
+                SELECT a.id,a.comm_id,a.name,a.idcard_type,a.idcard_num,a.post_code,a.mobile,a.e_mail,
+                       a.fax,a.sex,a.birthday,a.link_man,nationality,a.work_unit,a.industry,a.category,
+                       a.legal_representative,a.legal_representative_tel,a.is_trade,a.is_delete,a.time_stamp,
+                       (SELECT COUNT(1) from tb_base_masterdata_customer_live b where b.is_delete=0 and b.customer_id=a.id and b.relation=1) as 'LiveOwnerTotal',
+                       (SELECT COUNT(1) from tb_base_masterdata_customer_live b where b.is_delete=0 and b.customer_id=a.id and b.relation=2) as 'LiveTenantTotal',
+                       (SELECT COUNT(1) from tb_base_masterdata_customer_live b where b.is_delete=0 and b.customer_id=a.id) as 'LiveTempTotal'
+                FROM tb_base_masterdata_customer_comm a
                 WHERE time_stamp > '{timestampCustomer}';
 
                 SELECT a.id,a.customer_id,a.comm_id,a.resource_id,a.first_contact,a.is_delete,a.relation,a.owner_relation,
@@ -141,13 +143,19 @@ namespace TwSynchro.CustomerModule
                 dr["LegalReprTel"] = itemCustomerComm.legal_representative_tel;
                 dr["IsSupplier"] = itemCustomerComm.is_trade;
                 dr["IsDelete"] = itemCustomerComm.is_delete;
-                //dr["LiveType1"] = 1;
-                //dr["LiveType2"] = 0;
-                //dr["LiveType3"] = 0;
+                dr["LiveType1"] = 0;
+                dr["LiveType2"] = 0;
+                dr["LiveType3"] = 0;
+                if (itemCustomerComm.LiveOwnerTotal > 0)
+                    dr["LiveType1"] = 1;
+                if (itemCustomerComm.LiveTenantTotal > 0)
+                    dr["LiveType2"] = 2;
+                if (itemCustomerComm.LiveTempTotal > 0)
+                    dr["LiveType3"] = 3;
 
                 dtTb_HSPR_Customer.Rows.Add(dr);
 
-                if (itemCustomerComm.LiveTotal == 0)
+                if (itemCustomerComm.LiveTempTotal == 0)
                 {
                     sql.AppendLine($@"DELETE Tb_HSPR_CustomerLive WHERE LiveType ='3' AND CustID='{itemCustomerComm.id}';");
                     dr = dtTb_HSPR_CustomerLive.NewRow();
@@ -243,10 +251,14 @@ namespace TwSynchro.CustomerModule
 
             try
             {
-
-                int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
+                int rowsAffected = 0;
+                if (sql.ToString().Length > 0)
+                {
+                    rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
+                }
 
                 log.Append($"\r\n删除客户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
+
 
                 stopwatch.Restart();
 
