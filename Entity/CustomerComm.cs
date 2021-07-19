@@ -217,5 +217,11 @@ namespace Entity
         /// </summary>
         public DateTime time_stamp { get; set; }
 
+        /// <summary>
+        /// 关系总数
+        /// </summary>
+        public int LiveTotal { get; set; } = 0;
+        
+
     }
 }

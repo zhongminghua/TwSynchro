@@ -103,7 +103,8 @@ namespace TwSynchro.MenuUserModule
 
             List<AppLibraryButton> dataAppLibraryButton = new();
             AppLibraryButton modelAppLibraryButton = new();
-            if (!string.IsNullOrEmpty(strBtnID)) {
+            if (!string.IsNullOrEmpty(strBtnID))
+            {
                 sql.AppendLine($"SELECT Id,Name,Sort,Note FROM RF_AppLibraryButton where Id IN({strBtnID.Trim(',')});");
                 dataAppLibraryButton = (await mySqlConn.QueryAsync<AppLibraryButton>(sql.ToString())).ToList();
             }
@@ -132,14 +133,17 @@ namespace TwSynchro.MenuUserModule
 
                         modelAppLibraryButton = dataAppLibraryButton.Where(c => c.Id.ToString() == id).FirstOrDefault();
 
-                        dr = dtTb_Sys_FunctionPope.NewRow();
-                        dr["ID"] = Guid.NewGuid().ToString();
-                        dr["RoleCode"] = itemMenuUser.Organizes;
-                        dr["FunCode"] = id;
-                        dr["BtnName"] = modelAppLibraryButton?.Name;
-                        dr["Note"] = modelAppLibraryButton?.Note;
-                        dr["Sort"] = modelAppLibraryButton?.Sort;
-                        dtTb_Sys_FunctionPope.Rows.Add(dr);
+                        if (modelAppLibraryButton is not null)
+                        {
+                            dr = dtTb_Sys_FunctionPope.NewRow();
+                            dr["ID"] = Guid.NewGuid().ToString();
+                            dr["RoleCode"] = itemMenuUser.Organizes;
+                            dr["FunCode"] = id;
+                            dr["BtnName"] = modelAppLibraryButton?.Name;
+                            dr["Note"] = modelAppLibraryButton?.Note;
+                            UtilsDataTable.DataRowIsNull(dr, "Sort", modelAppLibraryButton?.Sort);
+                            dtTb_Sys_FunctionPope.Rows.Add(dr);
+                        }
                     }
 
 

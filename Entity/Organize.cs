@@ -165,7 +165,7 @@ namespace Entity
         /// </summary>
         public int SortCodeNum { get; set; } = 1;
 
-        public string SortParentCode = "0000";
+        public string SortParentCode { get; set; }= "0000";
 
     }
 }

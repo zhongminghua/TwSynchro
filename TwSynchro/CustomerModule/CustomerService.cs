@@ -38,7 +38,8 @@ namespace TwSynchro.CustomerModule
             StringBuilder sql = new($@"
                 SELECT id,comm_id,name,idcard_type,idcard_num,post_code,mobile,e_mail,
                        fax,sex,birthday,link_man,nationality,work_unit,industry,category,
-                       legal_representative,legal_representative_tel,is_trade,is_delete,time_stamp
+                       legal_representative,legal_representative_tel,is_trade,is_delete,time_stamp,
+                       (SELECT COUNT(1) from tb_base_masterdata_customer_live b where b.is_delete=0 and b.customer_id=tb_base_masterdata_customer_comm.id) as 'LiveTotal'
                 FROM tb_base_masterdata_customer_comm
                 WHERE time_stamp > '{timestampCustomer}';
 
@@ -64,14 +65,14 @@ namespace TwSynchro.CustomerModule
 
             var dataCustomerLive = (await readerMultiple.ReadAsync<CustomerLive>()).ToList();
 
-            if (!dataCustomerComm.Any() && !dataCustomerLive.Any())
-            {
-                log.Append($"\r\n数据为空SQL语句:\r\n{sql}");
+            //if (!dataCustomerComm.Any() && !dataCustomerLive.Any())
+            //{
+            //    log.Append($"\r\n数据为空SQL语句:\r\n{sql}");
 
-                _logger.LogInformation(log.ToString());
+            //    _logger.LogInformation(log.ToString());
 
-                return;
-            }
+            //    return;
+            //}
 
             log.Append($"\r\n读取客户数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -81,7 +82,7 @@ namespace TwSynchro.CustomerModule
 
             sql.AppendLine($@"
                 SELECT CustID,CommID,CustName,PaperName,PaperCode,PostCode,MobilePhone,EMail,FaxTel,Sex,Birthday,Linkman,Nationality,
-                        WorkUnit,Job,IsUnit,LegalRepr,LegalReprTel,IsSupplier,IsDelete
+                        WorkUnit,Job,IsUnit,LegalRepr,LegalReprTel,IsSupplier,IsDelete,LiveType1,LiveType2,LiveType3
                 FROM Tb_HSPR_Customer WITH(NOLOCK) WHERE 1<>1;
 
                 SELECT LiveID,CommID,RoomID,CustID,IsActive,IsDelLive,LiveType FROM Tb_HSPR_CustomerLive WITH(NOLOCK) WHERE 1<>1;
@@ -140,8 +141,24 @@ namespace TwSynchro.CustomerModule
                 dr["LegalReprTel"] = itemCustomerComm.legal_representative_tel;
                 dr["IsSupplier"] = itemCustomerComm.is_trade;
                 dr["IsDelete"] = itemCustomerComm.is_delete;
+                //dr["LiveType1"] = 1;
+                //dr["LiveType2"] = 0;
+                //dr["LiveType3"] = 0;
 
                 dtTb_HSPR_Customer.Rows.Add(dr);
+
+                if (itemCustomerComm.LiveTotal == 0)
+                {
+                    sql.AppendLine($@"DELETE Tb_HSPR_CustomerLive WHERE LiveType ='3' AND CustID='{itemCustomerComm.id}';");
+                    dr = dtTb_HSPR_CustomerLive.NewRow();
+                    dr["LiveID"] = Guid.NewGuid().ToString();
+                    dr["CommID"] = itemCustomerComm.comm_id;
+                    dr["CustID"] = itemCustomerComm.id;
+                    dr["IsActive"] = 0;
+                    dr["IsDelLive"] = 0;
+                    dr["LiveType"] = 3;
+                    dtTb_HSPR_CustomerLive.Rows.Add(dr);
+                }
 
                 sql.AppendLine($@"DELETE Tb_HSPR_Customer WHERE CustID='{itemCustomerComm.id}';");
 
@@ -203,7 +220,7 @@ namespace TwSynchro.CustomerModule
                     case 2:
                         dr["LiveType"] = 2;
                         break;
-                    //case 5: java没有客户关系就是客户关系
+                    //case 5: java没有客户关系就是临时客户
                     //    dr["LiveType"] = 3;
                     //break;
                     default:
@@ -226,10 +243,6 @@ namespace TwSynchro.CustomerModule
 
             try
             {
-                sql.AppendLine($@"
-                    INSERT INTO Tb_HSPR_CustomerLive(LiveID,CommID,RoomID,CustID,IsActive,IsDelLive,LiveType)
-                    SELECT NEWID(),CommID,NULL,CustID,0,0,3 FROM Tb_HSPR_Customer
-                    WHERE CustID NOT IN(SELECT CustID FROM Tb_HSPR_CustomerLive);");
 
                 int rowsAffected = await sqlServerConn.ExecuteAsync(sql.ToString(), transaction: trans);
 
