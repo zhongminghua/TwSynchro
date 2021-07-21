@@ -611,7 +611,7 @@ namespace TwSynchro.ResourceModule
                 #endregion
 
                 #region 房屋管家 
-                if (Resource.house_keeper is not null && string.IsNullOrEmpty(Resource.house_keeper.ToString()))
+                if (Resource.house_keeper is not null && !string.IsNullOrEmpty(Resource.house_keeper.ToString()))
                 {
                     dr = dtTb_HSPR_RoomHousekeeper.NewRow();
                     dr["CommID"] = Resource.comm_id;//项目编码
