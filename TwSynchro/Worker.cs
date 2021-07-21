@@ -12,6 +12,7 @@ using TwSynchro.MenuUserModule;
 using TwSynchro.OrganizeModule;
 using TwSynchro.OrganizeUserModule;
 using TwSynchro.PermissionModule;
+using TwSynchro.PropertyUsesModule;
 using TwSynchro.ResourceModule;
 using TwSynchro.UserModule;
 
@@ -75,10 +76,10 @@ namespace TwSynchro
             try
             {
                 //await Task.WhenAll(new[] { RunTaskCustomer(stoppingToken) });
-
+                //await Task.WhenAll(new[] { RunTaskPropertyUses(stoppingToken), RunTaskResource(stoppingToken) });
                 await Task.WhenAll(new[] { RunTaskUser(stoppingToken), RunTaskOrganize(stoppingToken), RunTaskCustomer(stoppingToken),
                 RunTaskMenu(stoppingToken), RunTaskOrganizeUser(stoppingToken), RunTaskMenuUser(stoppingToken), RunTaskPermission(stoppingToken),
-                RunTaskCostItem(stoppingToken), RunTaskTaxRateSetting(stoppingToken), RunTaskResource(stoppingToken)});
+                RunTaskCostItem(stoppingToken), RunTaskTaxRateSetting(stoppingToken), RunTaskResource(stoppingToken),RunTaskPropertyUses(stoppingToken)});
             }
             catch (Exception ex)
             {
@@ -303,6 +304,27 @@ namespace TwSynchro
                    Thread.Sleep(_appSettings.ResourceStopMsec);
                }
            }, stoppingToken);
+        }
+
+        protected Task RunTaskPropertyUses(CancellationToken stoppingToken)
+        {
+            return Task.Run(async () =>
+            {
+
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        await PropertyUsesService.Synchro(_logger, stoppingToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"”√ªß:\r\n{ex.Message}{ex.StackTrace}");
+                    }
+
+                    Thread.Sleep(_appSettings.UserStopMsec);
+                }
+            }, stoppingToken);
         }
 
     }

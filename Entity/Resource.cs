@@ -279,5 +279,10 @@ namespace Entity
         /// </summary>
         public string deal_user { get; set; }
 
+        /// <summary>
+        /// 管家移动电话
+        /// </summary>
+        public string mobile { get; set; }
+
     }
 }

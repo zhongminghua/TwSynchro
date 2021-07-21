@@ -57,5 +57,10 @@ namespace Entity
         /// </summary>
         public string Title_zh { get; set; }
 
+        /// <summary>
+        /// 时间戳
+        /// </summary>
+        public DateTime time_stamp { get; set; }
+
     }
 }

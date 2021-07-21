@@ -25,7 +25,7 @@ namespace TwSynchro.ResourceModule
         public static async Task Synchro(ILogger<Worker> _logger, CancellationToken stoppingToken)
         {
 
-           await  SynchroRegion(_logger, stoppingToken);//区域
+            await SynchroRegion(_logger, stoppingToken);//区域
             await SynchroBuilding(_logger, stoppingToken);//楼栋
             await SynchroRoom(_logger, stoppingToken);//房屋
             await SynchroCarpark(_logger, stoppingToken);//车位区域
@@ -299,7 +299,7 @@ namespace TwSynchro.ResourceModule
 
                 stopwatch.Restart();
 
-                await DbBatch.InsertSingleTableAsync(sqlServerConn, dtTb_HSPR_Building, "Tb_HSPR_Building",stoppingToken, trans);
+                await DbBatch.InsertSingleTableAsync(sqlServerConn, dtTb_HSPR_Building, "Tb_HSPR_Building", stoppingToken, trans);
 
                 logMsg.Append($"\r\n插入楼栋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -362,7 +362,7 @@ namespace TwSynchro.ResourceModule
 
             string timesTamp = await UtilsSynchroTimestamp.GetTimestampAsync("ResourceRoom");
 
-            StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_type=3 AND time_stamp>'{timesTamp}'");
+            StringBuilder sql = new($"SELECT t.*,u.Mobile FROM tb_base_masterdata_resource t LEFT JOIN rf_user u on t.house_keeper=u.Id WHERE t.resource_type=3 AND t.time_stamp>'{timesTamp}'");
 
             //获取要同步的数据
             var readerMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
@@ -396,7 +396,7 @@ namespace TwSynchro.ResourceModule
 
             var customerLiveMultiple = await mySqlConn.QueryMultipleAsync(sql.ToString());
 
-            var customerLiveData = (await customerLiveMultiple.ReadAsync<(Guid comm_id, Guid customer_id, Guid resource_id)>()).ToList();
+            var customerLiveData = (await customerLiveMultiple.ReadAsync<(object comm_id, object customer_id, object resource_id)>()).ToList();
 
             logMsg.Append($"\r\n读取房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -413,6 +413,10 @@ namespace TwSynchro.ResourceModule
 
             sql.AppendLine("SELECT [CommID], [CustID], [RoomID], [NewRoomState], [RoomState], [UserCode], [ChangeDate]  FROM Tb_HSPR_RoomStateHis WHERE 1<>1;");
 
+            //房屋管家
+            sql.AppendLine("SELECT RoomHousekeeperID,RoomID,UserCode,Tel,CommID  FROM Tb_HSPR_RoomHousekeeper WHERE 1<>1;");
+
+
             var reader = await sqlServerConn.ExecuteReaderAsync(sql.ToString());
 
             //房屋
@@ -424,6 +428,12 @@ namespace TwSynchro.ResourceModule
             DataTable dtTb_HSPR_RoomStateHis = new DataTable("Tb_HSPR_RoomStateHis");
 
             dtTb_HSPR_RoomStateHis.Load(reader);
+
+            //房屋管家
+            DataTable dtTb_HSPR_RoomHousekeeper = new DataTable("Tb_HSPR_RoomHousekeeper");
+
+            dtTb_HSPR_RoomHousekeeper.Load(reader);
+
 
 
             #region 获取本次同步房屋在sqlserver的数据
@@ -447,6 +457,8 @@ namespace TwSynchro.ResourceModule
             stopwatch.Restart();
 
             StringBuilder sqlRoomDel = new();
+
+            StringBuilder sqlRoomHouseKeeperDel = new();
 
             DataRow dr;
 
@@ -541,7 +553,7 @@ namespace TwSynchro.ResourceModule
 
                 dr["IsDelete"] = Resource.is_delete;//是否删除
 
-                dr["IsSplitUnite"] = !string.IsNullOrEmpty(Resource.is_split_merge)? Resource.is_split_merge:"0";
+                dr["IsSplitUnite"] = !string.IsNullOrEmpty(Resource.is_split_merge) ? Resource.is_split_merge : "0";
                 //拆分合并状态 (0未处理，1被拆分，2已拆分，3被合并，4已合并)
 
                 UtilsDataTable.DataRowIsNull(dr, "GardenArea", Resource.garden_area);//花园面积
@@ -598,9 +610,31 @@ namespace TwSynchro.ResourceModule
 
                 #endregion
 
-                #endregion
+                #region 房屋管家 
+                if (Resource.house_keeper is not null && string.IsNullOrEmpty(Resource.house_keeper.ToString()))
+                {
+                    dr = dtTb_HSPR_RoomHousekeeper.NewRow();
+                    dr["CommID"] = Resource.comm_id;//项目编码
 
+                    dr["RoomID"] = Resource.id;//房屋ID
+
+                    dr["UserCode"] = Resource.house_keeper;//管家ID
+
+                    dr["Tel"] = Resource.mobile; // 管家电话号码
+
+                    dr["RoomHousekeeperID"] = Guid.NewGuid().ToString(); // 管家主键ID
+
+                    dtTb_HSPR_RoomHousekeeper.Rows.Add(dr);
+                }
+
+                #endregion 
+
+                #endregion
+                //删除房屋
                 sqlRoomDel.AppendLine($"DELETE FROM Tb_HSPR_Room WHERE RoomID='{Resource.id}'");
+
+                //删除房屋对应的管家
+                sqlRoomHouseKeeperDel.AppendLine($"DELETE FROM Tb_HSPR_RoomHousekeeper WHERE RoomID='{Resource.id}'");
             }
 
             logMsg.Append($"\r\n生成房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
@@ -620,7 +654,7 @@ namespace TwSynchro.ResourceModule
 
                 stopwatch.Restart();
 
-                await DbBatch.InsertSingleTableAsync(sqlServerConn, dtTb_HSPR_Room, "Tb_HSPR_Room",stoppingToken,  trans);
+                await DbBatch.InsertSingleTableAsync(sqlServerConn, dtTb_HSPR_Room, "Tb_HSPR_Room", stoppingToken, trans);
 
                 logMsg.Append($"\r\n插入房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -629,6 +663,19 @@ namespace TwSynchro.ResourceModule
                 await DbBatch.InsertSingleTableAsync(sqlServerConn, dtTb_HSPR_RoomStateHis, "Tb_HSPR_RoomStateHis", stoppingToken, trans);
 
                 logMsg.Append($"\r\n插入历史房屋数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
+
+                stopwatch.Restart();
+
+                if (!string.IsNullOrEmpty(sqlRoomHouseKeeperDel.ToString()))
+                    rowsAffected = await sqlServerConn.ExecuteAsync(sqlRoomHouseKeeperDel.ToString(), transaction: trans);
+
+                logMsg.Append($"\r\n删除房屋管家数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!删除数据总数: {rowsAffected}条");
+
+                stopwatch.Restart();
+
+                await DbBatch.InsertSingleTableAsync(sqlServerConn, dtTb_HSPR_RoomHousekeeper, "Tb_HSPR_RoomHousekeeper", stoppingToken, trans);
+
+                logMsg.Append($"\r\n插入房屋管家数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
                 stopwatch.Restart();
 
@@ -774,7 +821,7 @@ namespace TwSynchro.ResourceModule
 
                 stopwatch.Restart();
 
-                await DbBatch.InsertSingleTableAsync(sqlServerConn, dtTb_HSPR_Carpark, "Tb_HSPR_Carpark",stoppingToken,  trans);
+                await DbBatch.InsertSingleTableAsync(sqlServerConn, dtTb_HSPR_Carpark, "Tb_HSPR_Carpark", stoppingToken, trans);
 
                 logMsg.Append($"\r\n插入车位区域数据 耗时{stopwatch.ElapsedMilliseconds}毫秒!");
 
@@ -831,7 +878,7 @@ namespace TwSynchro.ResourceModule
 
             stopwatch.Restart();
 
-            string timesTamp =await UtilsSynchroTimestamp.GetTimestampAsync("ResourceParking");
+            string timesTamp = await UtilsSynchroTimestamp.GetTimestampAsync("ResourceParking");
 
             StringBuilder sql = new($"SELECT * FROM tb_base_masterdata_resource WHERE resource_type=5 AND time_stamp>'{timesTamp}'");
 
@@ -923,7 +970,7 @@ namespace TwSynchro.ResourceModule
 
                 UtilsDataTable.DataRowIsNull(dr, "ParkingNum", Resource.number_parking_spaces);//泊车数量
 
-                UtilsDataTable.DataRowIsNull(dr, "PropertyUses", Resource.use_parking_space);//使用状态
+                UtilsDataTable.DataRowIsNull(dr, "PropertyUses", Resource.property_rights);//使用性质
 
                 dr["UseState"] = "闲置";//使用状态
 
