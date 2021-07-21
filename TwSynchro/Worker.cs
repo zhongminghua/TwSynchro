@@ -319,10 +319,10 @@ namespace TwSynchro
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError($"用户:\r\n{ex.Message}{ex.StackTrace}");
+                        _logger.LogError($"房屋使用性质:\r\n{ex.Message}{ex.StackTrace}");
                     }
 
-                    Thread.Sleep(_appSettings.UserStopMsec);
+                    Thread.Sleep(_appSettings.PropertyUsesStopMsec);
                 }
             }, stoppingToken);
         }

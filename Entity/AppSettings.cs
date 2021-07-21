@@ -59,5 +59,10 @@ namespace Entity
         /// </summary>
         public int ResourceStopMsec { set; get; } = 60000;
 
+        /// <summary>
+        /// 同步房屋使用性质停留时间。
+        /// </summary>
+        public int PropertyUsesStopMsec { set; get; } = 60000;
+
     }
 }
