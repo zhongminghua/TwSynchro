@@ -38,7 +38,7 @@ namespace TwSynchro.CustomerModule
             StringBuilder sql = new($@"
                 SELECT a.id,a.comm_id,a.name,a.idcard_type,a.idcard_num,a.post_code,a.mobile,a.e_mail,
                        a.fax,a.sex,a.birthday,a.link_man,nationality,a.work_unit,a.industry,a.category,
-                       a.legal_representative,a.legal_representative_tel,a.is_trade,a.is_delete,a.time_stamp,
+                       a.legal_representative,a.legal_representative_tel,a.is_trade,a.is_delete,a.time_stamp,a.comm_resource_code,
                        (SELECT COUNT(1) from tb_base_masterdata_customer_live b where b.is_delete=0 and b.customer_id=a.id and b.relation=1) as 'LiveOwnerTotal',
                        (SELECT COUNT(1) from tb_base_masterdata_customer_live b where b.is_delete=0 and b.customer_id=a.id and b.relation=2) as 'LiveTenantTotal',
                        (SELECT COUNT(1) from tb_base_masterdata_customer_live b where b.is_delete=0 and b.customer_id=a.id) as 'LiveTempTotal'
@@ -131,8 +131,9 @@ namespace TwSynchro.CustomerModule
                 dr["PostCode"] = itemCustomerComm.post_code;
                 dr["MobilePhone"] = itemCustomerComm.mobile;
                 dr["EMail"] = itemCustomerComm.e_mail;
-                dr["FaxTel"] = itemCustomerComm.fax;
+                dr["FaxTel"] = itemCustomerComm.fax; 
                 dr["Sex"] = itemCustomerComm.sex_name;
+                dr["RoomSigns"] = itemCustomerComm.comm_resource_code;
                 UtilsDataTable.DataRowIsNull(dr, "Birthday", itemCustomerComm.birthday);
                 dr["Linkman"] = itemCustomerComm.link_man;
                 dr["Nationality"] = itemCustomerComm.nationality;

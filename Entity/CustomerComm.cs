@@ -213,6 +213,11 @@ namespace Entity
         public string customer_field { get; set; }
 
         /// <summary>
+        /// 客户资源编号
+        /// </summary>
+        public string comm_resource_code { get; set; }
+
+        /// <summary>
         /// 时间戳
         /// </summary>
         public DateTime time_stamp { get; set; }
