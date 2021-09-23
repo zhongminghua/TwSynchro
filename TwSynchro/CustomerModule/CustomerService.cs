@@ -133,7 +133,7 @@ namespace TwSynchro.CustomerModule
                 dr["EMail"] = itemCustomerComm.e_mail;
                 dr["FaxTel"] = itemCustomerComm.fax; 
                 dr["Sex"] = itemCustomerComm.sex_name;
-                dr["RoomSigns"] = itemCustomerComm.comm_resource_code;
+                //dr["RoomSigns"] = itemCustomerComm.comm_resource_code;
                 UtilsDataTable.DataRowIsNull(dr, "Birthday", itemCustomerComm.birthday);
                 dr["Linkman"] = itemCustomerComm.link_man;
                 dr["Nationality"] = itemCustomerComm.nationality;
